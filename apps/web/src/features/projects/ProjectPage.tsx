@@ -7,7 +7,7 @@ import { useProjects } from '../../api/projects';
 import { useSummaryReport } from '../../api/reports';
 import { useDependencies, useTasks } from '../../api/tasks';
 import { useClients, useMembers } from '../../api/workspace';
-import { usePreferences, useWorkspace } from '../../app/session';
+import { usePreferences } from '../../app/session';
 import { HorizontalBars, StackedMeter, StatTile } from '../../components/charts/Charts';
 import { StatusIcon } from '../../components/pickers/TaskIcons';
 import { Avatar } from '../../components/ui/Avatar';
@@ -16,6 +16,7 @@ import { EmptyState, LoadingBlock } from '../../components/ui/EmptyState';
 import { ColorDot } from '../../components/ui/ProjectLabel';
 import { Segmented, Toolbar, ToolbarSpacer } from '../../components/ui/Toolbar';
 import { useT } from '../../i18n';
+import { useWorkCalendar } from '../../lib/calendar';
 import { useFormat } from '../../lib/format';
 import { useStoredState } from '../../lib/hooks';
 import { ProjectGantt } from '../gantt/ProjectGantt';
@@ -151,7 +152,7 @@ function ProjectTasks({ project }: { project: Project }) {
 function ProjectOverview({ project }: { project: Project }) {
   const t = useT();
   const format = useFormat();
-  const workspace = useWorkspace();
+  const { calendar } = useWorkCalendar();
   const { timezone } = usePreferences();
   const panel = useTaskPanel();
   const { data: allTasks = [] } = useTasks();
@@ -165,8 +166,8 @@ function ProjectOverview({ project }: { project: Project }) {
   const plan = useMemo(() => {
     const ids = new Set(tasks.map((task) => task.id));
     const dependencies = allDependencies.filter((dep) => ids.has(dep.predecessorId) && ids.has(dep.successorId));
-    return computeCriticalPath(tasks, dependencies, workspace.workingDays);
-  }, [tasks, allDependencies, workspace.workingDays]);
+    return computeCriticalPath(tasks, dependencies, calendar);
+  }, [tasks, allDependencies, calendar]);
 
   // Tarefas-mãe ficam de fora das contagens: o trabalho está nas filhas.
   const parentIds = new Set(tasks.map((task) => task.parentId));

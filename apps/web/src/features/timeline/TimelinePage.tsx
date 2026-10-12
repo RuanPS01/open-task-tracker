@@ -8,6 +8,7 @@ import {
   dailyCapacitySeconds,
   diffDays,
   eachDay,
+  isWorkday,
   startOfWeekIso,
   toIsoDate,
   UNASSIGNED,
@@ -32,6 +33,7 @@ import { ColorDot } from '../../components/ui/ProjectLabel';
 import { ChipButton, Toolbar, ToolbarSpacer } from '../../components/ui/Toolbar';
 import { useT } from '../../i18n';
 import { PageHeader } from '../../layout/PageHeader';
+import { useWorkCalendar } from '../../lib/calendar';
 import { useFormat } from '../../lib/format';
 import { useStoredState } from '../../lib/hooks';
 import { useTaskPanel } from '../tasks/TaskPanelContext';
@@ -67,6 +69,7 @@ export function TimelinePage() {
   const isAdmin = useIsAdmin();
   const workspace = useWorkspace();
   const { weekStart } = usePreferences();
+  const { calendar, holidayNames } = useWorkCalendar();
   const projects = useProjectMap();
   const { data: tasks = [], isLoading } = useTasks();
   const { data: members = [] } = useMembers();
@@ -118,12 +121,12 @@ export function TimelinePage() {
   }, [period, today, weekStart]);
 
   const visibleAllocation = useMemo(
-    () => computeAllocations(shown, { start: rangeStart, end: rangeEnd }, workspace.workingDays),
-    [shown, rangeStart, rangeEnd, workspace.workingDays],
+    () => computeAllocations(shown, { start: rangeStart, end: rangeEnd }, calendar),
+    [shown, rangeStart, rangeEnd, calendar],
   );
   const periodAllocation = useMemo(
-    () => computeAllocations(shown, capacityRange, workspace.workingDays),
-    [shown, capacityRange, workspace.workingDays],
+    () => computeAllocations(shown, capacityRange, calendar),
+    [shown, capacityRange, calendar],
   );
 
   const lanes: Lane[] = useMemo(() => {
@@ -279,8 +282,13 @@ export function TimelinePage() {
                 {days.map((day) => (
                   <span
                     key={day}
-                    className={clsx(day === today && styles.today, !workspace.workingDays.includes(weekday(day)) && styles.weekendHead)}
+                    className={clsx(
+                      day === today && styles.today,
+                      !workspace.workingDays.includes(weekday(day)) && styles.weekendHead,
+                      holidayNames.has(day) && styles.holidayHead,
+                    )}
                     style={{ left: xOf(day), width: dayWidth }}
+                    title={holidayNames.has(day) ? t.gantt.holiday(holidayNames.get(day)!) : undefined}
                   >
                     {dayWidth >= 56 ? `${format.weekdayShort(day)} ${Number(day.slice(8))}` : Number(day.slice(8))}
                   </span>
@@ -296,7 +304,7 @@ export function TimelinePage() {
             const height = Math.max(64, packed.count * (BAR_HEIGHT + LANE_GAP) + LANE_GAP + LOAD_STRIP + 6);
             const userKey = lane.userId ?? (lane.key === 'none' ? UNASSIGNED : null);
             const dailyLoad = userKey !== null ? visibleAllocation.byUser.get(userKey) : undefined;
-            const capacity = lane.weeklyCapacity !== undefined ? capacityInRange(lane.weeklyCapacity, capacityRange, workspace.workingDays) : null;
+            const capacity = lane.weeklyCapacity !== undefined ? capacityInRange(lane.weeklyCapacity, capacityRange, calendar) : null;
             const allocated = userKey !== null ? [...(periodAllocation.byUser.get(userKey)?.values() ?? [])].reduce((a, b) => a + b, 0) : 0;
             const free = capacity !== null ? capacity - allocated : null;
             const perDayCapacity = lane.weeklyCapacity !== undefined ? dailyCapacitySeconds(lane.weeklyCapacity, workspace.workingDays) : null;
@@ -329,8 +337,8 @@ export function TimelinePage() {
                 </div>
                 <div className={styles.laneBody} style={{ width: timelineWidth }}>
                   {days.map((day) =>
-                    workspace.workingDays.includes(weekday(day)) ? null : (
-                      <div key={day} className={styles.weekend} style={{ left: xOf(day), width: dayWidth }} />
+                    isWorkday(day, calendar) ? null : (
+                      <div key={day} className={holidayNames.has(day) ? styles.holiday : styles.weekend} style={{ left: xOf(day), width: dayWidth }} />
                     ),
                   )}
                   {todayX !== null && <div className={styles.todayLine} style={{ left: todayX + dayWidth / 2 }} />}
@@ -367,7 +375,8 @@ export function TimelinePage() {
                       {days.map((day) => {
                         const seconds = dailyLoad.get(day) ?? 0;
                         if (!seconds) return null;
-                        const over = perDayCapacity !== null && seconds > perDayCapacity + 60;
+                        // Em fim de semana e feriado a capacidade do dia é zero: qualquer carga estoura.
+                        const over = perDayCapacity !== null && seconds > (isWorkday(day, calendar) ? perDayCapacity : 0) + 60;
                         return (
                           <span
                             key={day}

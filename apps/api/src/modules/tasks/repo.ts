@@ -25,6 +25,7 @@ interface TaskRow {
   estimate_mode: EstimateMode;
   progress: number;
   is_milestone: number;
+  allow_non_working_days: number;
   billable: number;
   position: number;
   created_by: number;
@@ -52,6 +53,7 @@ const toTask = (row: TaskRow): Task => ({
   estimateMode: row.estimate_mode,
   progress: row.progress,
   isMilestone: row.is_milestone === 1,
+  allowNonWorkingDays: row.allow_non_working_days === 1,
   billable: row.billable === 1,
   position: row.position,
   assigneeIds: idList(row.assignee_ids),
@@ -110,13 +112,14 @@ export interface ScheduleRow {
   start_date: string | null;
   due_date: string | null;
   is_milestone: number;
+  allow_non_working_days: number;
   progress: number;
   status: TaskStatus;
 }
 
 export function listScheduleRows(db: Db, workspaceId: number): ScheduleRow[] {
   return db.all<ScheduleRow>(
-    'SELECT id, parent_id, start_date, due_date, is_milestone, progress, status FROM tasks WHERE workspace_id = ?',
+    'SELECT id, parent_id, start_date, due_date, is_milestone, allow_non_working_days, progress, status FROM tasks WHERE workspace_id = ?',
     workspaceId,
   );
 }
@@ -144,6 +147,7 @@ export interface TaskRecord {
   estimateMode: EstimateMode;
   progress: number;
   isMilestone: boolean;
+  allowNonWorkingDays: boolean;
   billable: boolean;
   position: number;
   completedAt: string | null;
@@ -163,6 +167,7 @@ const COLUMNS: Record<keyof TaskRecord, string> = {
   estimateMode: 'estimate_mode',
   progress: 'progress',
   isMilestone: 'is_milestone',
+  allowNonWorkingDays: 'allow_non_working_days',
   billable: 'billable',
   position: 'position',
   completedAt: 'completed_at',

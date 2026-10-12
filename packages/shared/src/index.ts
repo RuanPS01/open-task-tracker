@@ -5,4 +5,5 @@ export * from './dates';
 export * from './duration';
 export * from './scheduling';
 export * from './capacity';
+export * from './holidays';
 export * from './schemas';

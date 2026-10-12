@@ -14,6 +14,7 @@ import { toast } from '../../components/ui/Toast';
 import { Segmented, Toolbar, ToolbarDivider, ToolbarSpacer } from '../../components/ui/Toolbar';
 import { useT } from '../../i18n';
 import { useFormat } from '../../lib/format';
+import { useWorkCalendar } from '../../lib/calendar';
 import { useStoredState } from '../../lib/hooks';
 import { useTaskPanel } from '../tasks/TaskPanelContext';
 import { GanttChart } from './GanttChart';
@@ -50,7 +51,8 @@ export function ProjectGantt({ project }: { project: Project }) {
     [allDependencies, taskIds],
   );
   const members = useMemo(() => new Map(memberList.map((member) => [member.userId, member])), [memberList]);
-  const plan = useMemo(() => computeCriticalPath(tasks, dependencies, workspace.workingDays), [tasks, dependencies, workspace.workingDays]);
+  const { calendar, holidayNames } = useWorkCalendar();
+  const plan = useMemo(() => computeCriticalPath(tasks, dependencies, calendar), [tasks, dependencies, calendar]);
   const parentIds = useMemo(() => new Set(tasks.map((task) => task.parentId).filter((id): id is Id => id !== null)), [tasks]);
   const late = Boolean(project.endDate && plan.projectEnd && plan.projectEnd > project.endDate);
 
@@ -133,7 +135,8 @@ export function ProjectGantt({ project }: { project: Project }) {
             zoom={zoom}
             showCritical={showCritical}
             autoSchedule={workspace.autoSchedule}
-            workingDays={workspace.workingDays}
+            calendar={calendar}
+            holidayNames={holidayNames}
             weekStart={weekStart}
             collapsed={collapsed}
             compactGrid={compactGrid}

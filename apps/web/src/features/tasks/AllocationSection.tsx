@@ -1,8 +1,8 @@
 // Alocação: como a estimativa se distribui pelos dias úteis, por responsável.
 // Usa o mesmo cálculo da Linha do tempo (computeAllocations do pacote shared).
-import { computeAllocations, UNASSIGNED, workdaysBetween, type Task } from '@ott/shared';
+import { calendarFor, computeAllocations, UNASSIGNED, workdaysBetween, type Task } from '@ott/shared';
 import { useMembers } from '../../api/workspace';
-import { useWorkspace } from '../../app/session';
+import { useWorkCalendar } from '../../lib/calendar';
 import { Avatar } from '../../components/ui/Avatar';
 import { useT } from '../../i18n';
 import { useFormat } from '../../lib/format';
@@ -12,15 +12,15 @@ import styles from './TaskPanel.module.css';
 export function AllocationSection({ task, tasks }: { task: Task; tasks: Task[] }) {
   const t = useT();
   const format = useFormat();
-  const workspace = useWorkspace();
+  const { calendar } = useWorkCalendar();
   const { data: members = [] } = useMembers();
   const isParent = tasks.some((item) => item.parentId === task.id);
   const ready = !isParent && task.startDate && task.dueDate && task.estimateSeconds;
   const result = ready
-    ? computeAllocations([{ ...task, status: 'todo' }], { start: task.startDate!, end: task.dueDate! }, workspace.workingDays)
+    ? computeAllocations([{ ...task, status: 'todo' }], { start: task.startDate!, end: task.dueDate! }, calendar)
     : null;
   const perUser = result?.byTask.get(task.id);
-  const workdays = ready ? workdaysBetween(task.startDate!, task.dueDate!, workspace.workingDays) : 0;
+  const workdays = ready ? workdaysBetween(task.startDate!, task.dueDate!, calendarFor(task, calendar)) : 0;
 
   return (
     <Section title={t.tasks.allocation} defaultOpen={false}>

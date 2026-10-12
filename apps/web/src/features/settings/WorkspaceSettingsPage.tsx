@@ -9,6 +9,7 @@ import { toast } from '../../components/ui/Toast';
 import { useT } from '../../i18n';
 import { PageHeader } from '../../layout/PageHeader';
 import { useFormat } from '../../lib/format';
+import { HolidaysSection } from './HolidaysSection';
 import styles from './Settings.module.css';
 
 // 2023-01-01 foi domingo: base para nomear os dias da semana no idioma atual.
@@ -66,7 +67,7 @@ export function WorkspaceSettingsPage() {
                 {(id) => <Input id={id} inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} />}
               </Field>
             </div>
-            <Field label={t.settings.workingDays} hint={t.settings.workingDaysHint}>
+            <Field label={t.settings.workingDays} hint={`${t.settings.workingDaysHint} ${t.settings.weekendHint}`}>
               {() => (
                 <div className={styles.days}>
                   {[1, 2, 3, 4, 5, 6, 0].map((day) => (
@@ -89,6 +90,8 @@ export function WorkspaceSettingsPage() {
               </Button>
             </div>
           </section>
+
+          <HolidaysSection disabled={!isAdmin} />
 
           <section className={styles.section}>
             <div className={styles.switchRow}>

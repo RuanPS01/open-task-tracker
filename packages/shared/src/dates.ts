@@ -78,61 +78,97 @@ export function eachDay(start: IsoDate, end: IsoDate): IsoDate[] {
   return days;
 }
 
-// Um calendário sem dias úteis faria os laços abaixo nunca terminarem.
-function safeWorkingDays(workingDays: readonly number[]): readonly number[] {
-  return workingDays.length > 0 ? workingDays : [0, 1, 2, 3, 4, 5, 6];
+/**
+ * Calendário de trabalho: dias da semana úteis e feriados. As funções abaixo também
+ * aceitam só a lista de dias da semana (sem feriados), por compatibilidade.
+ */
+export interface WorkCalendar {
+  /** Dias úteis como números de 0 (domingo) a 6 (sábado). */
+  workingDays: readonly number[];
+  /** Datas que não são úteis mesmo caindo num dia útil da semana. */
+  holidays?: ReadonlySet<IsoDate>;
 }
 
-export function isWorkday(iso: IsoDate, workingDays: readonly number[]): boolean {
-  return safeWorkingDays(workingDays).includes(weekday(iso));
+export type CalendarInput = readonly number[] | WorkCalendar;
+
+/** Calendário em que todo dia é útil (tarefa liberada para fins de semana e feriados). */
+export const ALL_DAYS: WorkCalendar = { workingDays: [0, 1, 2, 3, 4, 5, 6] };
+
+const NO_HOLIDAYS: ReadonlySet<IsoDate> = new Set();
+// Teto de passos ao procurar dia útil: evita laço infinito se o calendário não tiver
+// nenhum dia útil alcançável (por exemplo, todos os dias cadastrados como feriado).
+const MAX_SEARCH = 3700;
+
+interface Resolved {
+  days: readonly number[];
+  holidays: ReadonlySet<IsoDate>;
+}
+
+function resolve(calendar: CalendarInput): Resolved {
+  const workingDays = 'workingDays' in calendar ? calendar.workingDays : calendar;
+  const holidays = 'workingDays' in calendar ? (calendar.holidays ?? NO_HOLIDAYS) : NO_HOLIDAYS;
+  // Um calendário sem dias úteis faria os laços abaixo nunca terminarem.
+  return { days: workingDays.length > 0 ? workingDays : [0, 1, 2, 3, 4, 5, 6], holidays };
+}
+
+const open = (iso: IsoDate, calendar: Resolved) => calendar.days.includes(weekday(iso)) && !calendar.holidays.has(iso);
+
+export function isWorkday(iso: IsoDate, calendar: CalendarInput): boolean {
+  return open(iso, resolve(calendar));
+}
+
+export function isHoliday(iso: IsoDate, calendar: CalendarInput): boolean {
+  return resolve(calendar).holidays.has(iso);
+}
+
+function seek(iso: IsoDate, step: 1 | -1, calendar: Resolved): IsoDate {
+  let current = iso;
+  for (let i = 0; i < MAX_SEARCH && !open(current, calendar); i += 1) current = addDays(current, step);
+  return open(current, calendar) ? current : iso;
 }
 
 /** Próximo dia útil a partir de `iso`, inclusive. */
-export function nextWorkday(iso: IsoDate, workingDays: readonly number[]): IsoDate {
-  const days = safeWorkingDays(workingDays);
-  let current = iso;
-  while (!days.includes(weekday(current))) current = addDays(current, 1);
-  return current;
+export function nextWorkday(iso: IsoDate, calendar: CalendarInput): IsoDate {
+  return seek(iso, 1, resolve(calendar));
 }
 
 /** Dia útil anterior a `iso`, inclusive. */
-export function previousWorkday(iso: IsoDate, workingDays: readonly number[]): IsoDate {
-  const days = safeWorkingDays(workingDays);
-  let current = iso;
-  while (!days.includes(weekday(current))) current = addDays(current, -1);
-  return current;
+export function previousWorkday(iso: IsoDate, calendar: CalendarInput): IsoDate {
+  return seek(iso, -1, resolve(calendar));
 }
 
 /**
  * Anda `amount` dias úteis a partir de `iso`. Com amount 0 devolve o próprio dia
  * ajustado para dia útil. Aceita valores negativos.
  */
-export function addWorkdays(iso: IsoDate, amount: number, workingDays: readonly number[]): IsoDate {
-  const days = safeWorkingDays(workingDays);
+export function addWorkdays(iso: IsoDate, amount: number, calendar: CalendarInput): IsoDate {
+  const resolved = resolve(calendar);
   const step = amount >= 0 ? 1 : -1;
-  let current = step > 0 ? nextWorkday(iso, days) : previousWorkday(iso, days);
+  let current = seek(iso, step, resolved);
   let remaining = Math.abs(amount);
-  while (remaining > 0) {
+  let guard = 0;
+  while (remaining > 0 && guard < MAX_SEARCH * 4) {
     current = addDays(current, step);
-    if (days.includes(weekday(current))) remaining -= 1;
+    if (open(current, resolved)) remaining -= 1;
+    guard += 1;
   }
   return current;
 }
 
 /** Quantidade de dias úteis no intervalo fechado [start, end]. Zero se end < start. */
-export function workdaysBetween(
-  start: IsoDate,
-  end: IsoDate,
-  workingDays: readonly number[],
-): number {
+export function workdaysBetween(start: IsoDate, end: IsoDate, calendar: CalendarInput): number {
   if (end < start) return 0;
-  const days = safeWorkingDays(workingDays);
+  const { days, holidays } = resolve(calendar);
   const total = diffDays(start, end) + 1;
   const fullWeeks = Math.floor(total / 7);
   let count = fullWeeks * days.length;
   const startWeekday = weekday(start);
   for (let i = 0; i < total % 7; i += 1) {
     if (days.includes((startWeekday + fullWeeks * 7 + i) % 7)) count += 1;
+  }
+  // Feriados só descontam quando caem num dia que seria útil.
+  for (const holiday of holidays) {
+    if (holiday >= start && holiday <= end && days.includes(weekday(holiday))) count -= 1;
   }
   return count;
 }

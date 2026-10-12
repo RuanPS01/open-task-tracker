@@ -13,6 +13,7 @@ import {
   BarChart3,
   Calendar,
   CircleCheck,
+  CalendarCheck,
   CircleDollarSign,
   Clock,
   Diamond,
@@ -57,6 +58,7 @@ export interface TaskDraft {
   status: TaskStatus;
   billable: boolean;
   isMilestone: boolean;
+  allowNonWorkingDays: boolean;
   progress: number;
 }
 
@@ -253,6 +255,18 @@ export function TaskFields({
           label={t.tasks.milestone}
           onChange={(isMilestone) => onChange({ isMilestone, ...(isMilestone && values.startDate ? { dueDate: values.startDate } : {}) })}
         />
+      </Row>
+
+      <Row icon={<CalendarCheck />} label={t.tasks.nonWorkingDays}>
+        <span className={styles.switchWithHint} title={t.tasks.nonWorkingDaysHint}>
+          <Switch
+            checked={values.allowNonWorkingDays}
+            disabled={isSummary}
+            label={t.tasks.nonWorkingDays}
+            onChange={(allowNonWorkingDays) => onChange({ allowNonWorkingDays })}
+          />
+          {values.allowNonWorkingDays && <span className={styles.switchHint}>{t.tasks.nonWorkingDaysHint}</span>}
+        </span>
       </Row>
 
       <Row icon={<CircleDollarSign />} label={t.tasks.billable}>

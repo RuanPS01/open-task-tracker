@@ -121,6 +121,8 @@ export interface Task {
   /** Percentual de 0 a 100 exibido na barra do Gantt. */
   progress: number;
   isMilestone: boolean;
+  /** Liberada para fins de semana e feriados: usa todos os dias do calendário. */
+  allowNonWorkingDays: boolean;
   billable: boolean;
   /** Ordem manual dentro do mesmo pai (Gantt e quadro). */
   position: number;
@@ -131,6 +133,13 @@ export interface Task {
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
   completedAt: IsoDateTime | null;
+}
+
+export interface Holiday {
+  id: Id;
+  workspaceId: Id;
+  date: IsoDate;
+  name: string;
 }
 
 export interface TaskDependency {

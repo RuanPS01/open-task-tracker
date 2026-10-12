@@ -1,4 +1,7 @@
 import type {
+  CreateHolidayInput,
+  Holiday,
+  ImportHolidaysInput,
   AddMemberInput,
   AddMemberResponse,
   Client,
@@ -169,5 +172,50 @@ export function useDeleteTag() {
       void client.invalidateQueries({ queryKey: keys.tasks(wid) });
       void client.invalidateQueries({ queryKey: keys.timeEntries(wid) });
     },
+  });
+}
+
+// --- Feriados ----------------------------------------------------------------
+
+export function useHolidays() {
+  const wid = useWorkspaceId();
+  return useQuery({
+    queryKey: keys.holidays(wid),
+    queryFn: () => request<Holiday[]>(`/workspaces/${wid}/holidays`),
+    staleTime: 5 * 60_000,
+  });
+}
+
+/** Feriados mudam o calendário: datas e durações calculadas no servidor também mudam. */
+function invalidateCalendar(client: ReturnType<typeof useQueryClient>, wid: number) {
+  void client.invalidateQueries({ queryKey: keys.holidays(wid) });
+  void client.invalidateQueries({ queryKey: keys.tasks(wid) });
+}
+
+export function useCreateHoliday() {
+  const client = useQueryClient();
+  const wid = useWorkspaceId();
+  return useMutation({
+    mutationFn: (input: CreateHolidayInput) => request<Holiday>(`/workspaces/${wid}/holidays`, { method: 'POST', body: input }),
+    onSuccess: () => invalidateCalendar(client, wid),
+  });
+}
+
+export function useImportHolidays() {
+  const client = useQueryClient();
+  const wid = useWorkspaceId();
+  return useMutation({
+    mutationFn: (input: ImportHolidaysInput) =>
+      request<{ created: number; holidays: Holiday[] }>(`/workspaces/${wid}/holidays/import`, { method: 'POST', body: input }),
+    onSuccess: () => invalidateCalendar(client, wid),
+  });
+}
+
+export function useDeleteHoliday() {
+  const client = useQueryClient();
+  const wid = useWorkspaceId();
+  return useMutation({
+    mutationFn: (id: number) => request<void>(`/workspaces/${wid}/holidays/${id}`, { method: 'DELETE' }),
+    onSuccess: () => invalidateCalendar(client, wid),
   });
 }

@@ -3,7 +3,7 @@
 // - arrastar um apontamento move (inclusive para outro dia);
 // - arrastar a borda de baixo muda o fim;
 // - clicar abre o editor.
-import { formatClock, type Project, type TimeEntry } from '@ott/shared';
+import { formatClock, toIsoDate, type Project, type TimeEntry } from '@ott/shared';
 import clsx from 'clsx';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useT } from '../../i18n';
@@ -35,6 +35,7 @@ export interface CalendarViewProps {
   entries: TimeEntry[];
   projects: Map<number, Project>;
   totals: Map<string, number>;
+  holidayNames?: Map<string, string>;
   onOpen: (entry: TimeEntry) => void;
   onCreate: (start: Date, end: Date) => void;
   onChangeTimes: (entry: TimeEntry, start: Date, end: Date) => void;
@@ -42,7 +43,7 @@ export interface CalendarViewProps {
 
 const dayKey = (date: Date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
-export function CalendarView({ days, entries, projects, totals, onOpen, onCreate, onChangeTimes }: CalendarViewProps) {
+export function CalendarView({ days, entries, projects, totals, holidayNames, onOpen, onCreate, onChangeTimes }: CalendarViewProps) {
   const t = useT();
   const format = useFormat();
   const now = useNow(30_000);
@@ -189,12 +190,16 @@ export function CalendarView({ days, entries, projects, totals, onOpen, onCreate
         {days.map((day) => {
           const total = totals.get(dayKey(day)) ?? 0;
           const isToday = dayKey(day) === today;
+          const holiday = holidayNames?.get(toIsoDate(day));
           return (
-            <div key={day.toISOString()} className={styles.dayHead}>
+            <div key={day.toISOString()} className={styles.dayHead} title={holiday ? t.gantt.holiday(holiday) : undefined}>
               <span className={clsx(styles.dayNumber, isToday && styles.today)}>{day.getDate()}</span>
               <span className={styles.dayMeta}>
                 <span className={styles.dayName}>{format.weekdayShort(day)}</span>
-                <span className={styles.dayTotal}>{total > 0 ? formatClock(total) : '-'}</span>
+                <span className={styles.dayTotal}>
+                  {total > 0 ? formatClock(total) : '-'}
+                  {holiday && <span className={styles.holidayTag}>{holiday}</span>}
+                </span>
               </span>
             </div>
           );

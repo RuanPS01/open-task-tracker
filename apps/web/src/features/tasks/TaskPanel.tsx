@@ -39,6 +39,7 @@ function draftFrom(task: Task): TaskDraft {
     status: task.status,
     billable: task.billable,
     isMilestone: task.isMilestone,
+    allowNonWorkingDays: task.allowNonWorkingDays,
     progress: task.progress,
   };
 }
@@ -132,6 +133,7 @@ function NewTask({ defaults, onClose }: { defaults: Partial<TaskDraft>; onClose:
     status: 'todo',
     billable: false,
     isMilestone: false,
+    allowNonWorkingDays: false,
     progress: 0,
     ...defaults,
   });

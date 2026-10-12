@@ -9,6 +9,7 @@
 import {
   addDays,
   addWorkdays,
+  calendarFor,
   cascadeSchedule,
   computeCriticalPath,
   isWorkday,
@@ -19,10 +20,12 @@ import {
   workdayDuration,
   type DateChange,
   type Id,
+  type IsoDate,
   type Member,
   type Project,
   type Task,
   type TaskDependency,
+  type WorkCalendar,
 } from '@ott/shared';
 import clsx from 'clsx';
 import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
@@ -65,7 +68,8 @@ export interface GanttChartProps {
   zoom: Zoom;
   showCritical: boolean;
   autoSchedule: boolean;
-  workingDays: number[];
+  calendar: WorkCalendar;
+  holidayNames: Map<IsoDate, string>;
   weekStart: number;
   collapsed: ReadonlySet<Id>;
   compactGrid: boolean;
@@ -83,7 +87,7 @@ const SUMMARY_HEIGHT = 8;
 const DRAG_THRESHOLD = 3;
 
 export function GanttChart(props: GanttChartProps) {
-  const { tasks, dependencies, projects, members, zoom, showCritical, autoSchedule, workingDays, weekStart, collapsed, compactGrid } = props;
+  const { tasks, dependencies, projects, members, zoom, showCritical, autoSchedule, calendar, holidayNames, weekStart, collapsed, compactGrid } = props;
   const t = useT();
   const format = useFormat();
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -103,14 +107,16 @@ export function GanttChart(props: GanttChartProps) {
     // O arraste encaixa em dias úteis: mover preserva a duração em dias úteis, e
     // as bordas nunca param num fim de semana.
     const shifted = (date: string) => addDays(date, drag.deltaDays);
-    const snapForward = (date: string) => (isWorkday(date, workingDays) ? date : nextWorkday(date, workingDays));
-    const snapBack = (date: string) => (isWorkday(date, workingDays) ? date : previousWorkday(date, workingDays));
+    // Tarefa liberada para fins de semana e feriados encaixa em qualquer dia.
+    const taskCalendar = calendarFor(task, calendar);
+    const snapForward = (date: string) => (isWorkday(date, taskCalendar) ? date : nextWorkday(date, taskCalendar));
+    const snapBack = (date: string) => (isWorkday(date, taskCalendar) ? date : previousWorkday(date, taskCalendar));
     let startDate = task.startDate;
     let dueDate = task.dueDate;
     if (drag.kind === 'move' || task.isMilestone) {
-      const duration = workdayDuration(task, workingDays);
+      const duration = workdayDuration(task, calendar);
       startDate = drag.deltaDays > 0 ? snapForward(shifted(startDate)) : snapBack(shifted(startDate));
-      dueDate = task.isMilestone ? startDate : addWorkdays(startDate, Math.max(1, duration) - 1, workingDays);
+      dueDate = task.isMilestone ? startDate : addWorkdays(startDate, Math.max(1, duration) - 1, taskCalendar);
     } else if (drag.kind === 'start') {
       startDate = snapForward(shifted(startDate));
       if (startDate > dueDate) startDate = dueDate;
@@ -121,7 +127,7 @@ export function GanttChart(props: GanttChartProps) {
     let next = tasks.map((item) => (item.id === task.id ? { ...item, startDate, dueDate } : item));
     const changes: DateChange[] = [{ id: task.id, startDate, dueDate }];
     if (autoSchedule) {
-      const cascade = cascadeSchedule(next, dependencies, workingDays).filter((change) => change.id !== task.id);
+      const cascade = cascadeSchedule(next, dependencies, calendar).filter((change) => change.id !== task.id);
       const byId = new Map(cascade.map((change) => [change.id, change]));
       next = next.map((item) => {
         const change = byId.get(item.id);
@@ -130,13 +136,13 @@ export function GanttChart(props: GanttChartProps) {
       changes.push(...cascade);
     }
     return { tasks: next, changes };
-  }, [drag, tasks, dependencies, autoSchedule, workingDays]);
+  }, [drag, tasks, dependencies, autoSchedule, calendar]);
 
   const shownTasks = preview.tasks;
   const summaries = useMemo(() => rollupSummaries(shownTasks), [shownTasks]);
   const critical = useMemo(
-    () => (showCritical ? computeCriticalPath(shownTasks, dependencies, workingDays) : null),
-    [showCritical, shownTasks, dependencies, workingDays],
+    () => (showCritical ? computeCriticalPath(shownTasks, dependencies, calendar) : null),
+    [showCritical, shownTasks, dependencies, calendar],
   );
   const rows = useMemo(() => buildRows(shownTasks, collapsed), [shownTasks, collapsed]);
 
@@ -166,7 +172,7 @@ export function GanttChart(props: GanttChartProps) {
       ),
     [range, zoom, format, t, weekStart],
   );
-  const weekend = useMemo(() => (zoom === 'months' ? [] : nonWorkingDays(range, workingDays)), [range, zoom, workingDays]);
+  const weekend = useMemo(() => (zoom === 'months' ? [] : nonWorkingDays(range, calendar)), [range, zoom, calendar]);
   const timelineWidth = range.days * dayWidth;
   const bodyHeight = Math.max(rows.length + 1, 6) * ROW_HEIGHT;
 
@@ -269,7 +275,7 @@ export function GanttChart(props: GanttChartProps) {
     if (hasChildren || task.startDate || task.dueDate || event.button !== 0) return;
     const start = xToDate(timelineX(event.clientX), range, dayWidth);
     const days = task.isMilestone ? 1 : Math.max(1, Math.ceil((task.estimateSeconds ?? 0) / (8 * 3600)));
-    const dueDate = task.isMilestone ? start : addWorkdays(start, days - 1, workingDays);
+    const dueDate = task.isMilestone ? start : addWorkdays(start, days - 1, calendarFor(task, calendar));
     props.onSchedule([{ id: task.id, startDate: start, dueDate }]);
   };
 
@@ -306,7 +312,13 @@ export function GanttChart(props: GanttChartProps) {
               {header.bottom.map((cell) => (
                 <span
                   key={cell.key}
-                  className={clsx(styles.tierCell, styles.tierBottom, zoom === 'days' && cell.date === today && styles.tierToday)}
+                  className={clsx(
+                    styles.tierCell,
+                    styles.tierBottom,
+                    zoom === 'days' && holidayNames.has(cell.date) && styles.tierHoliday,
+                    zoom === 'days' && cell.date === today && styles.tierToday,
+                  )}
+                  title={zoom === 'days' && holidayNames.has(cell.date) ? t.gantt.holiday(holidayNames.get(cell.date)!) : undefined}
                   style={{ left: cell.x, width: cell.width }}
                 >
                   {cell.width >= 18 ? cell.label : ''}
@@ -323,7 +335,7 @@ export function GanttChart(props: GanttChartProps) {
               const dates = datesOf(row.task);
               const project = row.task.projectId ? projects.get(row.task.projectId) : undefined;
               const duration =
-                dates.startDate && dates.dueDate ? workdayDuration({ ...dates, isMilestone: row.task.isMilestone && !row.hasChildren }, workingDays) : null;
+                dates.startDate && dates.dueDate ? workdayDuration({ ...dates, isMilestone: row.task.isMilestone && !row.hasChildren, allowNonWorkingDays: row.task.allowNonWorkingDays }, calendar) : null;
               const assignees = row.task.assigneeIds
                 .map((id) => members.get(id))
                 .filter((member): member is Member => Boolean(member))
@@ -384,9 +396,17 @@ export function GanttChart(props: GanttChartProps) {
 
           {/* Linha do tempo */}
           <div ref={timelineRef} className={styles.timeline} style={{ width: timelineWidth, height: bodyHeight }}>
-            {weekend.map((day) => (
-              <div key={day} className={styles.weekend} style={{ left: dateToX(day, range, dayWidth), width: dayWidth }} />
-            ))}
+            {weekend.map((day) => {
+              const holiday = holidayNames.get(day);
+              return (
+                <div
+                  key={day}
+                  className={holiday ? styles.holiday : styles.weekend}
+                  style={{ left: dateToX(day, range, dayWidth), width: dayWidth }}
+                  title={holiday ? t.gantt.holiday(holiday) : undefined}
+                />
+              );
+            })}
             {rows.map((row, index) => (
               <div
                 key={row.task.id}
@@ -449,6 +469,7 @@ export function GanttChart(props: GanttChartProps) {
                 row.task.name,
                 dates.startDate === dates.dueDate ? format.dayLabel(dates.startDate) : format.range(dates.startDate, dates.dueDate),
                 isCritical ? t.gantt.critical : float !== undefined ? t.gantt.float(float) : '',
+                row.task.allowNonWorkingDays ? t.gantt.nonWorkingTask : '',
               ]
                 .filter(Boolean)
                 .join('\n');
@@ -524,7 +545,7 @@ export function GanttChart(props: GanttChartProps) {
                 <div className={styles.dragTip} style={{ left: box.x1, top: index * ROW_HEIGHT - 22 }}>
                   {task.startDate === task.dueDate ? format.dayMonth(task.startDate) : format.range(task.startDate, task.dueDate)}
                   {' · '}
-                  {t.gantt.durationDays(workdayDuration(task, workingDays))}
+                  {t.gantt.durationDays(workdayDuration(task, calendar))}
                 </div>
               );
             })()}

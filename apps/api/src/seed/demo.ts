@@ -3,6 +3,7 @@
 // apontamentos. Usa os mesmos serviços das rotas, então respeita todas as regras.
 import {
   addDays,
+  brazilianHolidays,
   isWorkday,
   startOfWeekIso,
   toIsoDate,
@@ -11,6 +12,7 @@ import {
 import type { Db } from '../db/database';
 import { hashPassword } from '../modules/auth/password';
 import { insertClient } from '../modules/clients/repo';
+import { holidayDates, insertHoliday } from '../modules/holidays/repo';
 import { insertMember } from '../modules/members/repo';
 import { insertProject } from '../modules/projects/repo';
 import { insertTag } from '../modules/tags/repo';
@@ -59,6 +61,12 @@ export async function seedDemo(db: Db, today = toIsoDate(new Date())): Promise<{
   }
   for (const user of Object.values(people)) setCurrentWorkspace(db, user.id, workspaceId);
   const workspace: Workspace = getWorkspaceForUser(db, workspaceId, people.ana.id)!;
+  // Feriados nacionais do ano atual e do próximo, como faria um admin pelo botão de importar.
+  const year = Number(today.slice(0, 4));
+  for (const holiday of [...brazilianHolidays(year), ...brazilianHolidays(year + 1)]) {
+    insertHoliday(db, workspaceId, holiday.date, holiday.name);
+  }
+  const calendar = { workingDays: workspace.workingDays, holidays: holidayDates(db, workspaceId) };
 
   const clients = {
     padaria: insertClient(db, workspaceId, { name: 'Padaria Pão Dourado' }),
@@ -189,6 +197,17 @@ export async function seedDemo(db: Db, today = toIsoDate(new Date())): Promise<{
     { key: 'backup', name: 'Verificar backups dos clientes', start: 0, end: 0, priority: 3, assignees: ['bruno'] },
     { key: 'ssl', name: 'Renovar certificados SSL', start: 4, end: 4, priority: 4, assignees: ['bruno'] },
   ]);
+  // Exemplo de tarefa liberada para fim de semana: a janela de manutenção é no sábado.
+  createTask(db, workspace, people.ana.id, {
+    name: 'Janela de manutenção dos servidores',
+    projectId: projects.suporte,
+    startDate: day(5),
+    dueDate: day(6),
+    allowNonWorkingDays: true,
+    estimateSeconds: 6 * 3600,
+    priority: 3,
+    assigneeIds: [people.bruno.id, people.diego.id],
+  });
   createTask(db, workspace, people.ana.id, { name: 'Responder e-mails pendentes', priority: 1, dueDate: today, assigneeIds: [people.ana.id] });
   createTask(db, workspace, people.ana.id, { name: 'Planejar sprint da próxima semana', priority: 2, dueDate: day(4), assigneeIds: [people.ana.id] });
 
@@ -230,7 +249,7 @@ export async function seedDemo(db: Db, today = toIsoDate(new Date())): Promise<{
   };
   for (let offset = -14; offset <= 0; offset += 1) {
     const date = addDays(today, offset);
-    if (!isWorkday(date, workspace.workingDays)) continue;
+    if (!isWorkday(date, calendar)) continue;
     for (const [key, plan] of Object.entries(plans)) {
       const user = people[key as keyof typeof people];
       const count = key === 'diego' ? 2 : offset === 0 ? 2 : 3 + Math.floor(random() * 2);

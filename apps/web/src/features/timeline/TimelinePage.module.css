@@ -96,6 +96,22 @@
   background: var(--bg-weekend);
 }
 
+.holidayHead {
+  color: var(--warning) !important;
+  font-weight: 700 !important;
+}
+
+.holiday {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--bg-weekend) 0 6px,
+    color-mix(in srgb, var(--warning) 12%, var(--bg-weekend)) 6px 12px
+  );
+}
+
 .today {
   background: var(--accent-subtle);
   color: var(--accent-text) !important;

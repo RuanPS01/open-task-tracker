@@ -21,6 +21,7 @@ function task(id: number, extra: Partial<Task> = {}): Task {
     estimateMode: 'total',
     progress: 0,
     isMilestone: false,
+    allowNonWorkingDays: false,
     billable: false,
     position: id,
     assigneeIds: [],

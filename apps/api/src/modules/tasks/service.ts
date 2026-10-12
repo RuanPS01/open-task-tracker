@@ -14,10 +14,12 @@ import {
   type TaskStatus,
   type UpdateDependencyInput,
   type UpdateTaskInput,
+  type WorkCalendar,
   type Workspace,
 } from '@ott/shared';
 import { nowIso, type Db } from '../../db/database';
 import { badRequest, conflict, notFound } from '../../http/errors';
+import { holidayDates } from '../holidays/repo';
 import { memberIdsOf } from '../members/repo';
 import { projectExists } from '../projects/repo';
 import { tagIdsOf } from '../tags/repo';
@@ -45,8 +47,14 @@ const toSchedulable = (row: ScheduleRow): SchedulableTask => ({
   startDate: row.start_date,
   dueDate: row.due_date,
   isMilestone: row.is_milestone === 1,
+  allowNonWorkingDays: row.allow_non_working_days === 1,
   progress: row.progress,
 });
+
+/** Calendário do workspace: dias úteis da semana e feriados cadastrados. */
+export function workCalendar(db: Db, workspace: Workspace): WorkCalendar {
+  return { workingDays: workspace.workingDays, holidays: holidayDates(db, workspace.id) };
+}
 
 /**
  * Aplica a cascata de dependências (se o workspace usa agendamento automático) e
@@ -58,7 +66,7 @@ export function applyScheduling(db: Db, workspace: Workspace): number[] {
 
   if (workspace.autoSchedule) {
     const dependencies = listDependencies(db, workspace.id);
-    const moves = cascadeSchedule(tasks, dependencies, workspace.workingDays);
+    const moves = cascadeSchedule(tasks, dependencies, workCalendar(db, workspace));
     for (const move of moves) {
       updateTaskRecord(db, workspace.id, move.id, { startDate: move.startDate, dueDate: move.dueDate });
       changed.add(move.id);
@@ -167,6 +175,7 @@ export function createTask(db: Db, workspace: Workspace, userId: number, input: 
       estimateMode: input.estimateMode ?? 'total',
       progress: status === 'done' ? 100 : (input.progress ?? 0),
       isMilestone,
+      allowNonWorkingDays: input.allowNonWorkingDays ?? false,
       billable: input.billable ?? false,
       position: input.position ?? nextPosition(db, workspace.id, parentId),
       completedAt: status === 'done' ? nowIso() : null,
@@ -205,7 +214,7 @@ export function updateTask(db: Db, workspace: Workspace, id: number, input: Upda
     }
     if (projectId !== current.projectId) changes.projectId = projectId;
 
-    for (const key of ['name', 'description', 'notes', 'priority', 'estimateSeconds', 'estimateMode', 'progress', 'billable', 'position'] as const) {
+    for (const key of ['name', 'description', 'notes', 'priority', 'estimateSeconds', 'estimateMode', 'progress', 'billable', 'position', 'allowNonWorkingDays'] as const) {
       if (input[key] !== undefined) (changes as Record<string, unknown>)[key] = input[key];
     }
 
@@ -244,6 +253,7 @@ export function updateTask(db: Db, workspace: Workspace, id: number, input: Upda
       changes.dueDate !== undefined ||
       changes.parentId !== undefined ||
       changes.progress !== undefined ||
+      changes.allowNonWorkingDays !== undefined ||
       changes.isMilestone !== undefined;
     if (touchesSchedule) applyScheduling(db, workspace);
     return getTask(db, workspace.id, id)!;

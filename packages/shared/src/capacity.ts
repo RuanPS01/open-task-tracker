@@ -2,7 +2,8 @@
 // Regra detalhada em docs/08-planejamento-gantt-e-algoritmos.md, seção "Capacidade".
 import type { EstimateMode, TaskStatus } from './constants';
 import type { Id, IsoDate } from './entities';
-import { eachDay, isWorkday, maxIsoDate, minIsoDate, workdaysBetween } from './dates';
+import { eachDay, isWorkday, maxIsoDate, minIsoDate, workdaysBetween, type CalendarInput } from './dates';
+import { calendarFor } from './scheduling';
 
 export interface AllocatableTask {
   id: Id;
@@ -13,6 +14,7 @@ export interface AllocatableTask {
   estimateSeconds: number | null;
   estimateMode: EstimateMode;
   assigneeIds: Id[];
+  allowNonWorkingDays?: boolean;
 }
 
 /** Chave usada para tarefas sem responsável. */
@@ -31,11 +33,12 @@ export interface AllocationResult {
  * - estimativa "por dia": cada responsável recebe o valor inteiro em cada dia útil.
  * Tarefas concluídas, sem datas, sem estimativa ou com subtarefas ficam de fora: a
  * mãe não conta para não somar duas vezes o trabalho que já está nas filhas.
+ * Tarefa liberada para fins de semana e feriados distribui por todos os dias.
  */
 export function computeAllocations(
   tasks: readonly AllocatableTask[],
   range: { start: IsoDate; end: IsoDate },
-  workingDays: readonly number[],
+  calendar: CalendarInput,
 ): AllocationResult {
   const parents = new Set(tasks.map((task) => task.parentId).filter((id): id is Id => id !== null));
   const byUser = new Map<Id, Map<IsoDate, number>>();
@@ -44,7 +47,8 @@ export function computeAllocations(
   for (const task of tasks) {
     if (task.status === 'done' || parents.has(task.id)) continue;
     if (!task.startDate || !task.dueDate || !task.estimateSeconds) continue;
-    const workdays = workdaysBetween(task.startDate, task.dueDate, workingDays);
+    const taskCalendar = calendarFor(task, calendar);
+    const workdays = workdaysBetween(task.startDate, task.dueDate, taskCalendar);
     if (workdays === 0) continue;
     const assignees = task.assigneeIds.length > 0 ? task.assigneeIds : [UNASSIGNED];
     const perDay =
@@ -57,7 +61,7 @@ export function computeAllocations(
     if (from > to) continue;
 
     for (const day of eachDay(from, to)) {
-      if (!isWorkday(day, workingDays)) continue;
+      if (!isWorkday(day, taskCalendar)) continue;
       for (const userId of assignees) {
         let days = byUser.get(userId);
         if (!days) {
@@ -86,14 +90,15 @@ export function dailyCapacitySeconds(
   return (weeklyCapacityHours * 3600) / workingDays.length;
 }
 
-/** Capacidade total de uma pessoa no intervalo, contando só dias úteis. */
+/** Capacidade total de uma pessoa no intervalo, contando só dias úteis (sem feriados). */
 export function capacityInRange(
   weeklyCapacityHours: number,
   range: { start: IsoDate; end: IsoDate },
-  workingDays: readonly number[],
+  calendar: CalendarInput,
 ): number {
+  const workingDays = 'workingDays' in calendar ? calendar.workingDays : calendar;
   return (
     dailyCapacitySeconds(weeklyCapacityHours, workingDays) *
-    workdaysBetween(range.start, range.end, workingDays)
+    workdaysBetween(range.start, range.end, calendar)
   );
 }

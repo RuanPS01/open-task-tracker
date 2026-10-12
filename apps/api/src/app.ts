@@ -13,6 +13,7 @@ import { AppError } from './http/errors';
 import { authRoutes } from './modules/auth/routes';
 import { findSessionUserId, SESSION_COOKIE } from './modules/auth/sessions';
 import { clientRoutes } from './modules/clients/routes';
+import { holidayRoutes } from './modules/holidays/routes';
 import { memberRoutes } from './modules/members/routes';
 import { projectRoutes } from './modules/projects/routes';
 import { reportRoutes } from './modules/reports/routes';
@@ -88,6 +89,7 @@ export async function buildApp({ db, config, logger = false }: BuildAppOptions):
           await scoped.register(memberRoutes);
           await scoped.register(clientRoutes);
           await scoped.register(tagRoutes);
+          await scoped.register(holidayRoutes);
           await scoped.register(projectRoutes);
           await scoped.register(taskRoutes);
           await scoped.register(timeEntryRoutes);

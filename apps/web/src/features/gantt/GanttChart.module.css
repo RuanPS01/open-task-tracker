@@ -75,6 +75,11 @@
   color: var(--text-muted);
 }
 
+.tierHoliday {
+  color: var(--warning);
+  font-weight: 700;
+}
+
 .tierToday {
   color: var(--accent-text);
   font-weight: 700;
@@ -229,6 +234,18 @@
   top: 0;
   bottom: 0;
   background: var(--bg-weekend);
+  pointer-events: none;
+}
+
+.holiday {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--bg-weekend) 0 6px,
+    color-mix(in srgb, var(--warning) 12%, var(--bg-weekend)) 6px 12px
+  );
   pointer-events: none;
 }
 

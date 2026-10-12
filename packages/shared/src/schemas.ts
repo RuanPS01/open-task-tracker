@@ -104,6 +104,18 @@ export const updateMemberSchema = z.object({
 });
 export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;
 
+export const createHolidaySchema = z.object({
+  date: isoDateSchema,
+  name: z.string().trim().min(1).max(120),
+});
+export type CreateHolidayInput = z.infer<typeof createHolidaySchema>;
+
+export const importHolidaysSchema = z.object({
+  year: z.number().int().min(1900).max(2200),
+  includeOptional: z.boolean().default(false),
+});
+export type ImportHolidaysInput = z.input<typeof importHolidaysSchema>;
+
 // --- Clientes e tags -------------------------------------------------------
 
 export const createClientSchema = z.object({ name: nameSchema });
@@ -154,6 +166,7 @@ const taskFields = {
   estimateMode: z.enum(ESTIMATE_MODES).optional(),
   progress: z.number().int().min(0).max(100).optional(),
   isMilestone: z.boolean().optional(),
+  allowNonWorkingDays: z.boolean().optional(),
   billable: z.boolean().optional(),
   position: z.number().optional(),
   assigneeIds: z.array(idSchema).max(50).optional(),

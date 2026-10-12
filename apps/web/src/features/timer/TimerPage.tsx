@@ -13,6 +13,7 @@ import { Menu } from '../../components/ui/Menu';
 import { Popover } from '../../components/ui/Popover';
 import { ChipButton, Segmented, Toolbar, ToolbarSpacer } from '../../components/ui/Toolbar';
 import { useT } from '../../i18n';
+import { useWorkCalendar } from '../../lib/calendar';
 import { useFormat } from '../../lib/format';
 import { useStoredState } from '../../lib/hooks';
 import { CalendarView } from './CalendarView';
@@ -46,6 +47,7 @@ export function TimerPage() {
   const projects = useProjectMap();
   const { data: tasks = [] } = useTasks();
   const updateEntry = useUpdateTimeEntry();
+  const { holidayNames } = useWorkCalendar();
   const tasksById = useMemo(() => new Map(tasks.map((task) => [task.id, task.name])), [tasks]);
 
   const days = useMemo(() => {
@@ -153,6 +155,7 @@ export function TimerPage() {
             entries={entries}
             projects={projects}
             totals={totals}
+            holidayNames={holidayNames}
             onOpen={(entry) => setEditor({ mode: 'edit', entry })}
             onCreate={(start, end) => setEditor({ mode: 'new', start, end })}
             onChangeTimes={changeTimes}

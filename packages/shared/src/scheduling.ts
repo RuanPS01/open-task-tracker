@@ -5,6 +5,7 @@ import type { DependencyType } from './constants';
 import type { Id, IsoDate } from './entities';
 import {
   addWorkdays,
+  ALL_DAYS,
   diffDays,
   isWorkday,
   maxIsoDate,
@@ -12,6 +13,7 @@ import {
   nextWorkday,
   previousWorkday,
   workdaysBetween,
+  type CalendarInput,
 } from './dates';
 
 export interface SchedulableTask {
@@ -21,6 +23,13 @@ export interface SchedulableTask {
   dueDate: IsoDate | null;
   isMilestone: boolean;
   progress?: number;
+  /** Tarefa liberada para fins de semana e feriados. */
+  allowNonWorkingDays?: boolean;
+}
+
+/** Calendário que vale para a tarefa: o do workspace ou todos os dias, se liberada. */
+export function calendarFor(task: { allowNonWorkingDays?: boolean }, calendar: CalendarInput): CalendarInput {
+  return task.allowNonWorkingDays ? ALL_DAYS : calendar;
 }
 
 export interface SchedulableDependency {
@@ -244,14 +253,17 @@ export function validateDependency(
 // Duração e restrições
 // ---------------------------------------------------------------------------
 
-/** Duração em dias úteis. Marco vale 0; tarefa comum vale no mínimo 1. */
+/**
+ * Duração em dias úteis no calendário da tarefa. Marco vale 0; tarefa comum vale no
+ * mínimo 1. Tarefa liberada para fins de semana e feriados conta dias corridos.
+ */
 export function workdayDuration(
-  task: Pick<SchedulableTask, 'startDate' | 'dueDate' | 'isMilestone'>,
-  workingDays: readonly number[],
+  task: Pick<SchedulableTask, 'startDate' | 'dueDate' | 'isMilestone' | 'allowNonWorkingDays'>,
+  calendar: CalendarInput,
 ): number {
   if (task.isMilestone) return 0;
   if (!task.startDate || !task.dueDate) return 1;
-  return Math.max(1, workdaysBetween(task.startDate, task.dueDate, workingDays));
+  return Math.max(1, workdaysBetween(task.startDate, task.dueDate, calendarFor(task, calendar)));
 }
 
 /** Coloca a tarefa começando em `start` mantendo a duração em dias úteis. */
@@ -259,40 +271,40 @@ export function placeAt(
   start: IsoDate,
   duration: number,
   isMilestone: boolean,
-  workingDays: readonly number[],
+  calendar: CalendarInput,
 ): DateRange {
-  const startDate = nextWorkday(start, workingDays);
+  const startDate = nextWorkday(start, calendar);
   if (isMilestone || duration <= 0) return { startDate, dueDate: startDate };
-  return { startDate, dueDate: addWorkdays(startDate, duration - 1, workingDays) };
+  return { startDate, dueDate: addWorkdays(startDate, duration - 1, calendar) };
 }
 
 /**
  * Data mais cedo em que a sucessora pode começar por causa de uma dependência.
  * Um marco termina no fim do próprio dia; por isso um marco sucessor de FS pode cair
  * no mesmo dia em que a predecessora termina, e uma tarefa comum começa no dia útil
- * seguinte.
+ * seguinte. O atraso e o encaixe usam o calendário da sucessora (regra do MS Project).
  */
 export function earliestStartFor(
   dependency: SchedulableDependency,
   predecessor: DateRange,
   successor: { isMilestone: boolean; duration: number },
-  workingDays: readonly number[],
+  calendar: CalendarInput,
 ): IsoDate {
   const lag = dependency.lagDays;
   const fromDue = (requiredDue: IsoDate) =>
     successor.isMilestone
       ? requiredDue
-      : addWorkdays(requiredDue, -(Math.max(1, successor.duration) - 1), workingDays);
+      : addWorkdays(requiredDue, -(Math.max(1, successor.duration) - 1), calendar);
   switch (dependency.type) {
     case 'SS':
-      return addWorkdays(predecessor.startDate, lag, workingDays);
+      return addWorkdays(predecessor.startDate, lag, calendar);
     case 'FF':
-      return fromDue(addWorkdays(predecessor.dueDate, lag, workingDays));
+      return fromDue(addWorkdays(predecessor.dueDate, lag, calendar));
     case 'SF':
-      return fromDue(addWorkdays(predecessor.startDate, lag, workingDays));
+      return fromDue(addWorkdays(predecessor.startDate, lag, calendar));
     case 'FS':
     default:
-      return addWorkdays(predecessor.dueDate, (successor.isMilestone ? 0 : 1) + lag, workingDays);
+      return addWorkdays(predecessor.dueDate, (successor.isMilestone ? 0 : 1) + lag, calendar);
   }
 }
 
@@ -309,7 +321,7 @@ export function earliestStartFor(
 export function cascadeSchedule(
   tasks: readonly SchedulableTask[],
   dependencies: readonly SchedulableDependency[],
-  workingDays: readonly number[],
+  calendar: CalendarInput,
 ): DateChange[] {
   const graph = buildGraph(tasks, dependencies);
   const order = topologicalOrder(graph);
@@ -361,7 +373,8 @@ export function cascadeSchedule(
     if (!dates.startDate || !dates.dueDate) continue;
 
     const constraints = [id, ...ancestorsOf(id)].flatMap((target) => incoming.get(target) ?? []);
-    const duration = workdayDuration({ ...task, ...dates }, workingDays);
+    const taskCalendar = calendarFor(task, calendar);
+    const duration = workdayDuration({ ...task, ...dates }, calendar);
     let required: IsoDate | null = null;
     for (const dep of constraints) {
       const pred = current.get(dep.predecessorId);
@@ -370,12 +383,12 @@ export function cascadeSchedule(
         dep,
         { startDate: pred.startDate, dueDate: pred.dueDate },
         { isMilestone: task.isMilestone, duration },
-        workingDays,
+        taskCalendar,
       );
       required = maxIsoDate(required, earliest);
     }
     if (required && required > dates.startDate) {
-      const placed = placeAt(required, duration, task.isMilestone, workingDays);
+      const placed = placeAt(required, duration, task.isMilestone, taskCalendar);
       current.set(id, placed);
       changes.set(id, { id, ...placed });
     }
@@ -401,11 +414,13 @@ export interface CriticalPathResult {
  * Caminho crítico sobre o cronograma planejado. As datas atuais valem como início mais
  * cedo; a passada para trás parte do fim do projeto e calcula o término mais tarde de
  * cada tarefa. Folga zero (ou negativa, quando há dependência violada) é crítica.
+ * A folga é medida em dias úteis do calendário do workspace, inclusive para tarefas
+ * liberadas para fins de semana e feriados (aproximação documentada no doc 08).
  */
 export function computeCriticalPath(
   tasks: readonly SchedulableTask[],
   dependencies: readonly SchedulableDependency[],
-  workingDays: readonly number[],
+  calendar: CalendarInput,
 ): CriticalPathResult {
   const children = childrenByParent(tasks);
   const leaves = tasks.filter(
@@ -419,15 +434,15 @@ export function computeCriticalPath(
   };
   if (leaves.length === 0) return empty;
 
-  const projectStart = nextWorkday(minIsoDate(...leaves.map((t) => t.startDate))!, workingDays);
+  const projectStart = nextWorkday(minIsoDate(...leaves.map((t) => t.startDate))!, calendar);
   const projectEnd = maxIsoDate(...leaves.map((t) => t.dueDate))!;
 
   // Índice de dia útil relativo ao início do projeto.
   const indexOf = (date: IsoDate, edge: 'start' | 'finish') => {
     const adjusted =
-      edge === 'start' ? nextWorkday(date, workingDays) : previousWorkday(date, workingDays);
-    if (adjusted < projectStart) return -workdaysBetween(adjusted, projectStart, workingDays) + 1;
-    return workdaysBetween(projectStart, adjusted, workingDays) - (isWorkday(adjusted, workingDays) ? 1 : 0);
+      edge === 'start' ? nextWorkday(date, calendar) : previousWorkday(date, calendar);
+    if (adjusted < projectStart) return -workdaysBetween(adjusted, projectStart, calendar) + 1;
+    return workdaysBetween(projectStart, adjusted, calendar) - (isWorkday(adjusted, calendar) ? 1 : 0);
   };
 
   interface Node {

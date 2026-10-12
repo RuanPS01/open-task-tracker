@@ -59,6 +59,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.holidayTag {
+  margin-left: 6px;
+  color: var(--warning);
+  font-weight: 600;
+}
+
 .scroll {
   flex: 1;
   min-height: 0;

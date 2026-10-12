@@ -172,6 +172,22 @@ const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    version: 2,
+    name: 'feriados e tarefas em dias não úteis',
+    sql: `
+      ALTER TABLE tasks ADD COLUMN allow_non_working_days INTEGER NOT NULL DEFAULT 0;
+
+      CREATE TABLE holidays (
+        id INTEGER PRIMARY KEY,
+        workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+        date TEXT NOT NULL,
+        name TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE (workspace_id, date)
+      );
+    `,
+  },
 ];
 
 export function runMigrations(db: Db): void {

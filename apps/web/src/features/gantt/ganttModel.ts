@@ -3,12 +3,13 @@
 import {
   addDays,
   diffDays,
+  isWorkday,
   isoToUtcMs,
   maxIsoDate,
   minIsoDate,
   startOfWeekIso,
   utcMsToIso,
-  weekday,
+  type CalendarInput,
   type DependencyType,
   type Id,
   type IsoDate,
@@ -119,12 +120,12 @@ export function buildHeader(range: GanttRange, zoom: Zoom, labels: HeaderLabels,
   };
 }
 
-/** Dias de fim de semana (não úteis) visíveis, para sombrear colunas. */
-export function nonWorkingDays(range: GanttRange, workingDays: readonly number[]): IsoDate[] {
+/** Dias não úteis visíveis (fins de semana e feriados), para sombrear colunas. */
+export function nonWorkingDays(range: GanttRange, calendar: CalendarInput): IsoDate[] {
   const result: IsoDate[] = [];
   for (let i = 0; i < range.days; i += 1) {
     const day = addDays(range.start, i);
-    if (!workingDays.includes(weekday(day))) result.push(day);
+    if (!isWorkday(day, calendar)) result.push(day);
   }
   return result;
 }
