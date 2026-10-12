@@ -1,0 +1,65 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 999px;
+  color: var(--sidebar-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--warning-subtle);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.banner > svg {
+  flex-shrink: 0;
+  color: var(--warning);
+}
+
+.banner > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.dismiss {
+  padding: 4px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dismiss:hover {
+  background: var(--bg-hover);
+}
+
+.note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 16px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.note > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}

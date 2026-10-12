@@ -1,0 +1,43 @@
+.dot {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.name {
+  color: color-mix(in srgb, var(--project-color) 70%, var(--text));
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.muted {
+  color: var(--text-secondary);
+}
+
+.task {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.client {
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.client::before {
+  content: '\2022';
+  margin-right: 6px;
+}

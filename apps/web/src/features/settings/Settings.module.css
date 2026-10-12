@@ -1,0 +1,165 @@
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 24px 48px;
+}
+
+.section {
+  max-width: 640px;
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.sectionTitle {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 14px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.day {
+  min-width: 52px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.dayOn {
+  border-color: var(--accent-subtle-border);
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+}
+
+.switchRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.switchRow p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.switchLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.notice {
+  max-width: 640px;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.sectionHint {
+  margin: -8px 0 16px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.importRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.yearSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.yearSwitch strong {
+  min-width: 44px;
+  text-align: center;
+}
+
+.holidayList {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  max-height: 320px;
+  overflow: auto;
+}
+
+.holidayList li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+  padding: 0 6px 0 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+
+.holidayList li:last-child {
+  border-bottom: 0;
+}
+
+.holidayDate {
+  width: 120px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.holidayName {
+  flex: 1;
+  font-weight: 600;
+}
+
+.empty {
+  color: var(--text-muted);
+}
+
+.addHoliday {
+  display: flex;
+  gap: 8px;
+}
+
+.dateButton {
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  font-size: 13px;
+  white-space: nowrap;
+}

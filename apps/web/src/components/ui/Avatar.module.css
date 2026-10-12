@@ -1,0 +1,31 @@
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--avatar-color, var(--brand-plum)) 30%, var(--bg-app));
+  color: color-mix(in srgb, var(--avatar-color, var(--brand-plum)) 45%, var(--text));
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  user-select: none;
+}
+
+.stack {
+  display: inline-flex;
+  align-items: center;
+}
+
+.stacked {
+  box-shadow: 0 0 0 2px var(--bg-app);
+}
+
+.stacked + .stacked {
+  margin-left: -6px;
+}
+
+.more {
+  background: var(--bg-active);
+  color: var(--text-secondary);
+  font-size: 10px;
+}

@@ -1,0 +1,12 @@
+.page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 32px 16px;
+  background: var(--bg-app);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}

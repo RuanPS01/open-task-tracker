@@ -1,0 +1,113 @@
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  min-height: 100%;
+  align-items: start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-subtle);
+  transition: border-color 0.12s;
+}
+
+.over {
+  border-color: var(--accent);
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.count {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 8px 10px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-app);
+  cursor: grab;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+}
+
+.dragging {
+  opacity: 0.4;
+}
+
+.cardProject {
+  font-size: 12px;
+}
+
+.cardName {
+  font-weight: 600;
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+}
+
+.cardDate {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.overdue {
+  color: var(--danger);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.add:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}

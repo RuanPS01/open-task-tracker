@@ -1,0 +1,206 @@
+.calendar {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  padding-right: 8px;
+}
+
+.gutterHead {
+  width: 64px;
+  flex-shrink: 0;
+}
+
+.dayHead {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 12px;
+}
+
+.dayNumber {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 4px;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.today {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+}
+
+.dayMeta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.dayName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dayTotal {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.holidayTag {
+  margin-left: 6px;
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.grid {
+  position: relative;
+  display: flex;
+}
+
+.gutter {
+  position: relative;
+  width: 64px;
+  flex-shrink: 0;
+}
+
+.hourLabel {
+  position: absolute;
+  right: 10px;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.columns {
+  flex: 1;
+  display: flex;
+}
+
+.column {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  border-left: 1px solid var(--border);
+  background-image: linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.entry {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  padding: 3px 6px 3px 8px;
+  border-radius: 4px;
+  border-left: 3px solid var(--entry-color);
+  background: color-mix(in srgb, var(--entry-color) 28%, var(--bg-app));
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.25;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.entry:hover {
+  background: color-mix(in srgb, var(--entry-color) 38%, var(--bg-app));
+}
+
+.running {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 6px,
+    color-mix(in srgb, var(--entry-color) 18%, transparent) 6px 12px
+  );
+  cursor: pointer;
+}
+
+.ghosted {
+  opacity: 0.35;
+}
+
+.preview {
+  z-index: 3;
+  pointer-events: none;
+  box-shadow: var(--shadow-popover);
+}
+
+.creating {
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 30%, var(--bg-app));
+}
+
+.entryTitle {
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entryProject {
+  color: color-mix(in srgb, var(--entry-color) 55%, var(--text));
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entryTime {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.resize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 7px;
+  cursor: ns-resize;
+}
+
+.nowLine {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--now-line);
+  pointer-events: none;
+}
+
+.nowDot {
+  position: absolute;
+  left: -6px;
+  top: -5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--now-line);
+}

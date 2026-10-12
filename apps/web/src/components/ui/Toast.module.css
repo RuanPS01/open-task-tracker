@@ -1,0 +1,63 @@
+.region {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 10px 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--text);
+  color: var(--bg-app);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-popover);
+  pointer-events: auto;
+  animation: rise 0.16s ease-out;
+}
+
+.success svg:first-child {
+  color: var(--success);
+}
+
+.error svg:first-child {
+  color: var(--danger);
+}
+
+.message {
+  flex: 1;
+}
+
+.action {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.close {
+  display: inline-flex;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.6;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

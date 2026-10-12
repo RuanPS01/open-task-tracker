@@ -1,0 +1,513 @@
+.scroller {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+}
+
+.inner {
+  position: relative;
+  min-height: 100%;
+}
+
+/* Cabeçalho -------------------------------------------------------------- */
+
+.headerRow {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border);
+}
+
+.gridHeader {
+  position: sticky;
+  left: 0;
+  z-index: 7;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 8px;
+  background: var(--bg-app);
+  border-right: 1px solid var(--border);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.timelineHeader {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tier {
+  position: relative;
+  height: 26px;
+}
+
+.tier + .tier {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.tierCell {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  border-left: 1px solid var(--border-subtle);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.tierBottom {
+  justify-content: center;
+  padding: 0;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.tierHoliday {
+  color: var(--warning);
+  font-weight: 700;
+}
+
+.tierToday {
+  color: var(--accent-text);
+  font-weight: 700;
+  background: var(--accent-subtle);
+}
+
+/* Grade ------------------------------------------------------------------ */
+
+.bodyRow {
+  display: flex;
+}
+
+.grid {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  flex-shrink: 0;
+  background: var(--bg-app);
+  border-right: 1px solid var(--border);
+}
+
+.gridRow,
+.gridHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px 64px 66px 52px 44px;
+  column-gap: 4px;
+}
+
+.gridRow.compact,
+.gridHeader.compact {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.gridRow {
+  height: 36px;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gridRow:hover {
+  background: var(--bg-hover);
+}
+
+.summaryRow {
+  font-weight: 650;
+}
+
+.colName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-left: 8px;
+}
+
+.colDate,
+.colDuration,
+.colProgress {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.colProgress {
+  text-align: right;
+  padding-right: 10px;
+}
+
+.colPeople {
+  display: flex;
+}
+
+.toggle {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.toggle:hover {
+  background: var(--bg-active);
+  color: var(--text);
+}
+
+.toggleSpacer {
+  width: 6px;
+  height: 6px;
+  margin: 0 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.wbs {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.taskName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.done {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.quickAdd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding-left: 14px;
+  color: var(--text-muted);
+}
+
+.quickAdd input {
+  flex: 1;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+}
+
+.quickAdd input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Linha do tempo ------------------------------------------------------- */
+
+.timeline {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.weekend {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--bg-weekend);
+  pointer-events: none;
+}
+
+.holiday {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--bg-weekend) 0 6px,
+    color-mix(in srgb, var(--warning) 12%, var(--bg-weekend)) 6px 12px
+  );
+  pointer-events: none;
+}
+
+.lane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 36px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.laneEmpty {
+  cursor: copy;
+}
+
+.laneEmpty:hover::after {
+  content: attr(data-hint);
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-faint);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--now-line);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.links {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.link {
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.linkHit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 10;
+}
+
+.linkPath {
+  fill: none;
+  stroke: var(--gantt-dependency);
+  stroke-width: 1.5;
+}
+
+.link:hover .linkPath {
+  stroke: var(--danger);
+  stroke-width: 2;
+}
+
+.linkCritical {
+  stroke: var(--gantt-critical);
+  stroke-width: 2;
+}
+
+.linkDraft {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+
+/* Barras ----------------------------------------------------------------- */
+
+.bar {
+  position: absolute;
+  z-index: 3;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--bar-color);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.bar:hover {
+  box-shadow: 0 0 0 2px var(--bg-app), 0 0 0 3px var(--bar-color);
+}
+
+.barDone {
+  opacity: 0.55;
+}
+
+.barProgress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 5px 0 0 5px;
+  background: var(--bar-color);
+  filter: brightness(0.72);
+  pointer-events: none;
+}
+
+.barLabel {
+  position: absolute;
+  inset: 0 8px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--on-color);
+  font-size: 11.5px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.outsideLabel,
+.milestoneLabel,
+.summaryLabel {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 10px);
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  cursor: ew-resize;
+}
+
+.resizeStart {
+  left: -2px;
+}
+
+.resizeEnd {
+  right: -2px;
+}
+
+.handle {
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--bg-app);
+  opacity: 0;
+  cursor: crosshair;
+  transition: opacity 0.1s;
+}
+
+.bar:hover .handle,
+.milestone:hover .handle {
+  opacity: 1;
+}
+
+.critical {
+  box-shadow: 0 0 0 2px var(--gantt-critical);
+}
+
+.critical:hover {
+  box-shadow: 0 0 0 2px var(--gantt-critical);
+}
+
+.target {
+  box-shadow: 0 0 0 3px var(--accent);
+}
+
+.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+.summary {
+  position: absolute;
+  z-index: 3;
+  height: 8px;
+  background: var(--gantt-summary);
+  cursor: pointer;
+}
+
+.summary::before,
+.summary::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  border-top: 6px solid var(--gantt-summary);
+}
+
+.summary::before {
+  left: 0;
+  border-right: 6px solid transparent;
+}
+
+.summary::after {
+  right: 0;
+  border-left: 6px solid transparent;
+}
+
+.summaryProgress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+  opacity: 0.8;
+}
+
+.summaryLabel {
+  left: calc(100% + 12px);
+  font-weight: 650;
+  color: var(--text);
+}
+
+.milestone {
+  position: absolute;
+  z-index: 3;
+  width: 16px;
+  height: 16px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.diamond {
+  position: absolute;
+  inset: 2px;
+  background: var(--accent);
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.milestone.critical .diamond {
+  background: var(--gantt-critical);
+}
+
+.milestone.critical {
+  box-shadow: none;
+}
+
+.dragTip {
+  position: absolute;
+  z-index: 8;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--bg-app);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}

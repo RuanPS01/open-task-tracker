@@ -1,0 +1,10 @@
+.popover {
+  z-index: var(--z-popover);
+  min-width: 200px;
+  overflow: auto;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-popover);
+  padding: 6px;
+  outline: none;
+}
