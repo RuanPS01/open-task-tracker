@@ -99,9 +99,12 @@ export const ptBR = {
     INVALID_CREDENTIALS: 'E-mail ou senha incorretos.',
     WEAK_PASSWORD: 'Senha fraca. Use pelo menos 8 caracteres.',
     TOO_MANY_REQUESTS: 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.',
-    AUTH_DISABLED: 'O login por e-mail e senha não está ativado neste projeto do Firebase.',
+    AUTH_DISABLED:
+      'O login por e-mail e senha não está ativado neste projeto do Firebase. No console do Firebase, abra Authentication, clique em Começar e ative E-mail/senha.',
     INVITE_NOT_FOUND: 'Convite não encontrado ou já usado. Peça um novo link.',
     EMAIL_CHANGE_UNSUPPORTED: 'A troca de e-mail não está disponível no modo Firebase.',
+    FIRESTORE_MISSING:
+      'O projeto do Firebase ainda não tem o banco do Firestore. No console do Firebase, abra Firestore Database, crie o banco e recarregue a página.',
     FIRESTORE_INDEX: 'Falta um índice no Firestore. Publique o arquivo firestore.indexes.json.',
     QUOTA: 'O limite de uso do Firebase foi atingido. Tente mais tarde.',
     DEMO_LOCAL_ONLY: 'A conta de demonstração existe só no modo local.',
@@ -109,6 +112,11 @@ export const ptBR = {
     INTERNAL: 'Algo deu errado. Tente novamente.',
     NETWORK: 'Sem conexão. Verifique a internet e tente de novo.',
     UNKNOWN: 'Não foi possível concluir a ação.',
+  },
+  boot: {
+    connecting: 'Carregando...',
+    failedTitle: 'Não foi possível abrir o Open Task Tracker',
+    reload: 'Recarregar',
   },
   nav: {
     timer: 'Cronômetro',
@@ -621,6 +629,8 @@ ${c.example}
     notConfigured: 'Firebase não configurado: os dados ficam só neste navegador (lowdb).',
     unreachable: 'Sem conexão com o Firebase. Usando o modo local: o que você fizer agora fica só neste navegador.',
     forcedLocal: 'Modo local escolhido na configuração: os dados ficam só neste navegador.',
+    firestoreMissing: (project: string) =>
+      `O projeto "${project}" do Firebase ainda não tem o banco do Firestore (ou a API do Firestore está desativada). No console do Firebase, abra Firestore Database, crie o banco e recarregue a página. Até lá, o modo local está em uso: o que você fizer fica só neste navegador.`,
     dismiss: 'Entendi',
   },
   members: {

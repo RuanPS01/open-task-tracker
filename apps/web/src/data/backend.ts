@@ -22,6 +22,11 @@ function firebaseConfig() {
   };
 }
 
+/** Projeto do Firebase configurado (para os avisos de configuração incompleta). */
+export function firebaseProjectId(): string {
+  return import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '';
+}
+
 const PREFERRED: readonly PreferredMode[] = ['auto', 'firebase', 'local'];
 
 /** Emuladores do Firebase em desenvolvimento: VITE_FIREBASE_EMULATOR_HOST=127.0.0.1 */

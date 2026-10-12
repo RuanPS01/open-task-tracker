@@ -132,9 +132,10 @@ Pages e, se houver conta de serviço, publica as regras e os índices do Firesto
 Passo a passo para ligar:
 
 1. **Firebase.** No [console](https://console.firebase.google.com), crie o projeto,
-   ative **Authentication** com o provedor **E-mail/senha**, crie o banco do **Cloud
-   Firestore** (modo de produção) e registre um **app da Web** para obter a
-   configuração (`apiKey`, `authDomain`, `projectId`, `appId`...).
+   abra **Authentication**, clique em **Começar** e ative o provedor **E-mail/senha**,
+   crie o banco do **Cloud Firestore** em **Firestore Database** (modo de produção) e
+   registre um **app da Web** para obter a configuração (`apiKey`, `authDomain`,
+   `projectId`, `appId`...).
 2. **Domínio autorizado.** Em Authentication, Configurações, Domínios autorizados,
    acrescente `seu-usuario.github.io` (ou o domínio próprio).
 3. **Secrets do repositório** (Settings, Secrets and variables, Actions, aba Secrets):
@@ -159,6 +160,18 @@ Passo a passo para ligar:
    e crie o índice composto de `timeEntries` (`userId` crescente, `start` crescente).
 
 Sem os secrets do Firebase, o site é publicado assim mesmo e funciona no modo local.
+
+### Quando o site publicado não usa o Firebase
+
+| Sintoma | Causa | O que fazer |
+|---|---|---|
+| Aviso no login: o projeto "..." ainda não tem o banco do Firestore | Banco não criado (ou API do Firestore desativada) | Console do Firebase, Firestore Database, Criar banco de dados; depois recarregue a página |
+| Erro ao entrar ou criar conta: login por e-mail e senha não ativado | Authentication nunca iniciado ou provedor desligado | Authentication, Começar, Método de login, E-mail/senha |
+| Aviso "Sem conexão com o Firebase" | Rede, bloqueio do navegador ou configuração errada nos secrets | Confira os secrets `FIREBASE_*` e o console do navegador; rode o workflow de novo depois de corrigir |
+| Tudo funciona sem login pela API, ou o console mostra regras com `request.time <` | Banco criado em modo de teste e `firestore.rules` nunca publicado | Publique as regras (passo 6 ou secret `FIREBASE_SERVICE_ACCOUNT`). As regras de teste deixam o banco aberto a qualquer pessoa e expiram em 30 dias, quando tudo passa a ser recusado |
+
+O resumo da execução do workflow mostra um aviso quando falta `FIREBASE_SERVICE_ACCOUNT`
+(as regras não foram publicadas por ele).
 
 ### CI de pull requests
 

@@ -81,9 +81,11 @@ export function authError(error: unknown): AppError {
       return new AppError('TOO_MANY_REQUESTS', message);
     case 'auth/network-request-failed':
       return new AppError('NETWORK', message);
-    // Login por e-mail e senha não foi ativado no console do Firebase.
+    // Login por e-mail e senha não foi ativado no console do Firebase, ou o Authentication
+    // nunca foi iniciado no projeto (configuration-not-found).
     case 'auth/operation-not-allowed':
     case 'auth/admin-restricted-operation':
+    case 'auth/configuration-not-found':
       return new AppError('AUTH_DISABLED', message);
     default:
       return new AppError('UNKNOWN', message);
@@ -213,6 +215,8 @@ export interface FirebaseConnectOptions {
   /** Tempo máximo para o Firestore responder antes de cair no modo local. */
   timeoutMs?: number;
   emulator?: { host: string; firestorePort: number; authPort: number };
+  /** Desiste da conexão (por exemplo, quando a checagem rápida já achou o motivo). */
+  signal?: AbortSignal;
 }
 
 export interface FirebaseConnection {
@@ -239,7 +243,7 @@ export async function connectFirebase(
       connectFirestoreEmulator(db, host, firestorePort);
       connectAuthEmulator(auth, `http://${host}:${authPort}`, { disableWarnings: true });
     }
-    await probe(db, options.timeoutMs ?? 8000);
+    await probe(db, options.timeoutMs ?? 8000, options.signal);
     await auth.authStateReady();
     return { store: new FirestoreStore(db), auth: new FirebaseAuthGateway(auth), dispose: () => deleteApp(app) };
   } catch (error) {
@@ -248,10 +252,14 @@ export async function connectFirebase(
   }
 }
 
-async function probe(db: Firestore, timeoutMs: number): Promise<void> {
+async function probe(db: Firestore, timeoutMs: number, signal?: AbortSignal): Promise<void> {
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let stop: (() => void) | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new AppError('NETWORK', `Firestore sem resposta em ${timeoutMs} ms`)), timeoutMs);
+    stop = () => reject(new AppError('NETWORK', 'Conexão com o Firestore cancelada'));
+    if (signal?.aborted) stop();
+    signal?.addEventListener('abort', stop);
   });
   try {
     await Promise.race([getDocFromServer(doc(db, '_probe', 'ping')), timeout]);
@@ -260,5 +268,6 @@ async function probe(db: Firestore, timeoutMs: number): Promise<void> {
     throw error instanceof AppError ? error : firestoreError(error);
   } finally {
     clearTimeout(timer);
+    if (stop) signal?.removeEventListener('abort', stop);
   }
 }

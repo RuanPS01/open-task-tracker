@@ -15,9 +15,16 @@ flowchart TD
   B -- sim --> C{Firestore respondeu em até 8 s?}
   C -- sim --> F[Modo Firebase]
   C -- não --> Q[Modo local com faixa de alerta]
+  C -- "em 1,5 s a API REST diz que não há banco" --> M[Modo local com aviso para criar o banco]
   L --> S[Selo Modo local na barra lateral e nota no login]
   Q --> S
+  M --> S
 ```
+
+Enquanto `connect()` decide, a tela mostra "Carregando..." (`BootScreen`). Quando o
+Firebase estava configurado e não foi usado, a nota do login vira um aviso em destaque
+com o motivo (sem resposta, ou banco do Firestore não criado no projeto) e o detalhe
+técnico do Firebase no `title`.
 
 ```mermaid
 sequenceDiagram

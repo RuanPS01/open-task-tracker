@@ -285,7 +285,8 @@ são traduzidos em `packages/data/src/firebase/index.ts`.
 | `DEPENDENCY_SELF`, `DEPENDENCY_HIERARCHY`, `DEPENDENCY_DUPLICATE`, `DEPENDENCY_CYCLE` | Dependência recusada |
 | `LAST_ADMIN`, `REMOVE_SELF`, `ALREADY_MEMBER`, `WRONG_PASSWORD` | Membros e senha |
 | `INVITE_NOT_FOUND` | Convite inexistente, revogado ou já usado |
-| `WEAK_PASSWORD`, `TOO_MANY_REQUESTS`, `AUTH_DISABLED` | Firebase Auth (senha fraca, muitas tentativas, e-mail e senha desligado no console) |
+| `WEAK_PASSWORD`, `TOO_MANY_REQUESTS`, `AUTH_DISABLED` | Firebase Auth (senha fraca, muitas tentativas, e-mail e senha desligado no console ou Authentication nunca iniciado no projeto) |
+| `FIRESTORE_MISSING` | Abertura: o projeto do Firebase não tem o banco do Firestore ou a API está desativada (com `VITE_DATA_MODE=auto` vira o motivo `firestore-missing` do modo local) |
 | `EMAIL_CHANGE_UNSUPPORTED`, `DEMO_LOCAL_ONLY` | Recurso só do modo local |
 | `IMPORT_INVALID` | `tasks.importJson` com erros no arquivo (`details` traz a lista de problemas) |
 | `NETWORK`, `QUOTA`, `FIRESTORE_INDEX` | Sem conexão, limite do Firebase, índice composto não publicado |

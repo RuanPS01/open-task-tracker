@@ -65,6 +65,7 @@ open-task-tracker/
       store/                 types.ts (DocStore, Batch), schema.ts (caminhos e documentos), local.ts (lowdb)
       auth/                  types.ts (AuthGateway), local.ts (contas locais com PBKDF2)
       firebase/index.ts      FirestoreStore, FirebaseAuthGateway, connectFirebase (carregado sob demanda)
+      firebase/health.ts     checagem rápida do Firestore pela API REST (banco criado ou não)
       services/              regras de negócio por recurso (sessão, workspaces, membros e convites,
                              cadastros, projetos, tarefas, apontamentos, relatórios, demonstração)
     test/                    suites.ts (as mesmas suítes nos dois modos), rules.ts (regras do Firestore)
@@ -83,10 +84,11 @@ open-task-tracker/
 ## 1.3 Boot da web
 
 1. `index.html` aplica o último tema salvo (`ott.theme`) antes de carregar o React.
-2. `main.tsx` chama `connectBackend()` (`apps/web/src/data/backend.ts`), que lê as
-   variáveis `VITE_*` e chama `connect()` de `@ott/data` (seção 1.4). Só depois disso
-   o React é montado; se o modo foi forçado para Firebase e a conexão falhou, aparece
-   uma mensagem de erro no lugar do app.
+2. `main.tsx` desenha na hora o `BootScreen` (`app/BootScreen.tsx`: logotipo e
+   "Carregando...") e chama `connectBackend()` (`apps/web/src/data/backend.ts`), que lê
+   as variáveis `VITE_*` e chama `connect()` de `@ott/data` (seção 1.4). Só depois disso
+   o app é montado no lugar; se o modo foi forçado para Firebase e a conexão falhou,
+   aparece o `BootError` com o motivo traduzido (`errors.<CODE>`) e o botão Recarregar.
 3. `App` cria o `QueryClient` (mutações com erro viram aviso, salvo `meta.silent`), o
    roteador (com `basename` igual ao `BASE_URL` do Vite) e o `DataSync`, que invalida a
    sessão quando o login muda (outra aba, expiração no Firebase) e, no modo local, relê
@@ -109,6 +111,7 @@ open-task-tracker/
 | `VITE_DATA_MODE=local` | local | selo "Modo local" (escolha da configuração) |
 | Configuração do Firebase incompleta ou ausente | local | selo "Modo local" e nota no login |
 | Firebase configurado e o Firestore respondeu em até 8 s | Firebase | nenhum |
+| Firebase configurado, mas o projeto não tem o banco do Firestore (ou a API está desativada) | local (em cerca de 1,5 s) | aviso em destaque no login, faixa no topo e selo, dizendo para criar o banco no console |
 | Firebase configurado, mas sem resposta, projeto inexistente ou erro de rede | local | faixa de alerta no topo, selo e nota no login |
 | `VITE_DATA_MODE=firebase` e o Firebase falhou | nenhum | mensagem de erro no lugar do app |
 
@@ -116,6 +119,14 @@ A sonda (`connectFirebase`) lê um documento qualquer direto do servidor. Qualqu
 resposta serve, inclusive "sem permissão" (ninguém logado ainda); só falha de rede,
 demora ou configuração inválida fazem cair no modo local. O SDK do Firebase é
 carregado por import dinâmico: no modo local ele nem é baixado.
+
+Projeto sem banco do Firestore é um caso à parte: o SDK só avisa no console e tenta de
+novo para sempre, então a sonda ficaria presa até os 8 s sem dizer o motivo. Se o SDK
+falhar ou não conectar em 1,5 s, `connect()` consulta a API REST do Firestore
+(`firebase/health.ts`, uma leitura sem login de `_probe/ping`): banco inexistente ou API
+desativada viram `FIRESTORE_MISSING` e o motivo `firestore-missing` na hora; qualquer
+outra resposta deixa a decisão com o SDK. No caminho normal o SDK conecta antes e a
+consulta nem acontece.
 
 A queda para o modo local é por sessão de navegador: os dados criados nela ficam só
 naquele navegador e não sobem para o Firebase quando a conexão volta. Por isso a faixa

@@ -85,7 +85,8 @@ Estilos compartilhados dos seletores: `Picker.module.css` (`trigger`, `dashed`,
 |---|---|---|
 | `StackedColumns`, `HorizontalBars`, `Donut`, `StackedMeter`, `StatTile`, `Legend`, `niceStep` | `components/charts/Charts.tsx` | Gráficos SVG dos Relatórios e da visão geral do projeto |
 | `AppShell` | `layout/AppShell.tsx` | Moldura interna, faixa de aviso do modo local, atalhos, título da aba com cronômetro |
-| `DataModeBadge`, `FallbackBanner`, `DataModeNote` | `components/DataModeNotice.tsx` | Selo "Modo local" na barra lateral, faixa de alerta quando o Firebase não respondeu, nota na tela de login |
+| `DataModeBadge`, `FallbackBanner`, `DataModeNote` | `components/DataModeNotice.tsx` | Selo "Modo local" na barra lateral, faixa de alerta quando o Firebase não respondeu ou falta criar o banco, nota na tela de login (em destaque nesses dois casos) |
+| `BootScreen`, `BootError` | `app/BootScreen.tsx` | Abertura antes da camada de dados: "Carregando..." e o erro quando o Firebase é obrigatório e falhou |
 | `Sidebar` | `layout/Sidebar.tsx` | Barra lateral: workspace, busca, cronômetro rodando, seções, usuário, tema |
 | `PageHeader`, `PageBody` | `layout/PageHeader.tsx` | Cabeçalho de página |
 | `LogoMark` | `layout/Logo.tsx` | Logotipo |

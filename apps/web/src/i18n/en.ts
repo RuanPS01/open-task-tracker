@@ -77,9 +77,12 @@ export const en: Messages = {
     INVALID_CREDENTIALS: 'Wrong email or password.',
     WEAK_PASSWORD: 'Weak password. Use at least 8 characters.',
     TOO_MANY_REQUESTS: 'Too many attempts. Wait a few minutes and try again.',
-    AUTH_DISABLED: 'Email and password sign-in is not enabled in this Firebase project.',
+    AUTH_DISABLED:
+      'Email and password sign-in is not enabled in this Firebase project. In the Firebase console, open Authentication, click Get started and enable Email/Password.',
     INVITE_NOT_FOUND: 'Invite not found or already used. Ask for a new link.',
     EMAIL_CHANGE_UNSUPPORTED: 'Changing the email is not available in Firebase mode.',
+    FIRESTORE_MISSING:
+      'The Firebase project has no Firestore database yet. In the Firebase console, open Firestore Database, create the database and reload the page.',
     FIRESTORE_INDEX: 'A Firestore index is missing. Deploy firestore.indexes.json.',
     QUOTA: 'The Firebase usage limit was reached. Try again later.',
     DEMO_LOCAL_ONLY: 'The demo account only exists in local mode.',
@@ -87,6 +90,11 @@ export const en: Messages = {
     INTERNAL: 'Something went wrong. Please try again.',
     NETWORK: 'No connection. Check your internet and try again.',
     UNKNOWN: 'The action could not be completed.',
+  },
+  boot: {
+    connecting: 'Loading...',
+    failedTitle: 'Open Task Tracker could not start',
+    reload: 'Reload',
   },
   nav: {
     timer: 'Timer',
@@ -599,6 +607,8 @@ ${c.example}
     notConfigured: 'Firebase is not configured: data stays in this browser only (lowdb).',
     unreachable: 'Cannot reach Firebase. Using local mode: what you do now stays in this browser only.',
     forcedLocal: 'Local mode chosen in the configuration: data stays in this browser only.',
+    firestoreMissing: (project: string) =>
+      `The Firebase project "${project}" has no Firestore database yet (or the Firestore API is disabled). In the Firebase console, open Firestore Database, create the database and reload the page. Until then local mode is in use: what you do stays in this browser only.`,
     dismiss: 'Got it',
   },
   members: {

@@ -74,7 +74,7 @@ jobs:
     steps:
       - name: Conta de serviço ausente
         if: env.FIREBASE_SERVICE_ACCOUNT == ''
-        run: echo "::notice::Secret FIREBASE_SERVICE_ACCOUNT ausente. Publique firestore.rules e firestore.indexes.json pelo console ou pela CLI."
+        run: echo "::warning::Secret FIREBASE_SERVICE_ACCOUNT ausente, regras do Firestore não publicadas. Publique firestore.rules e firestore.indexes.json pelo console ou pela CLI (docs/02-tecnologias.md, seção 2.6); sem elas o banco fica com as regras de quando foi criado."
       - uses: actions/checkout@v5
         if: env.FIREBASE_SERVICE_ACCOUNT != ''
       - name: Publicar regras e índices

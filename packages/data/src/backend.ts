@@ -16,8 +16,12 @@ import * as timeEntries from './services/timeEntries';
 import * as workspaces from './services/workspaces';
 import type { DataMode, DocStore } from './store/types';
 
-/** Por que o modo local está em uso, quando não foi escolha explícita. */
-export type FallbackReason = 'not-configured' | 'unreachable' | 'forced-local';
+/**
+ * Por que o modo local está em uso, quando não foi escolha explícita. `firestore-missing`:
+ * o Firebase está configurado, mas o projeto não tem o banco do Firestore criado (ou a
+ * API do Firestore está desativada).
+ */
+export type FallbackReason = 'not-configured' | 'unreachable' | 'firestore-missing' | 'forced-local';
 
 export interface BackendOptions {
   store: DocStore;
