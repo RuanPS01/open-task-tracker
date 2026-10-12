@@ -1,0 +1,158 @@
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 16px 40px;
+}
+
+.notice {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  height: 40px;
+  padding: 0 10px;
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.table td {
+  height: 52px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.table tbody tr:hover td {
+  background: var(--bg-hover);
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.you {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.muted {
+  color: var(--text-secondary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-full);
+  background: var(--bg-active);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badgeAdmin {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+}
+
+.badgeInactive {
+  background: var(--danger-subtle);
+  color: var(--danger);
+}
+
+.actions {
+  width: 44px;
+  text-align: right;
+}
+
+.inactive td {
+  opacity: 0.6;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 12px;
+}
+
+.password {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+
+.password code {
+  flex: 1;
+}
+
+.createRow {
+  display: flex;
+  gap: 8px;
+  max-width: 520px;
+  margin: 16px 0 8px;
+}
+
+.search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 240px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.search input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.renameInput {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  font-size: 13px;
+}

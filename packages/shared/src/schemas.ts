@@ -147,11 +147,7 @@ const taskFields = {
   description: z.string().max(10_000).optional(),
   notes: z.string().max(50_000).optional(),
   status: z.enum(TASK_STATUSES).optional(),
-  priority: z
-    .number()
-    .int()
-    .refine((value) => (PRIORITIES as readonly number[]).includes(value))
-    .optional(),
+  priority: z.literal(PRIORITIES).optional(),
   startDate: isoDateSchema.nullable().optional(),
   dueDate: isoDateSchema.nullable().optional(),
   estimateSeconds: secondsSchema.nullable().optional(),

@@ -11,6 +11,7 @@ import {
   type SchedulableTask,
   type Task,
   type TaskDependency,
+  type TaskStatus,
   type UpdateDependencyInput,
   type UpdateTaskInput,
   type Workspace,
@@ -66,10 +67,31 @@ export function applyScheduling(db: Db, workspace: Workspace): number[] {
   }
 
   const byId = new Map(tasks.map((task) => [task.id, task]));
+  const rows = new Map(listScheduleRows(db, workspace.id).map((row) => [row.id, row]));
+  const childStatuses = new Map<number, TaskStatus[]>();
+  for (const row of rows.values()) {
+    if (row.parent_id === null) continue;
+    const list = childStatuses.get(row.parent_id) ?? [];
+    list.push(row.status);
+    childStatuses.set(row.parent_id, list);
+  }
   for (const [id, summary] of rollupSummaries(tasks)) {
     const current = byId.get(id);
     if (!current) continue;
     const changes: Partial<TaskRecord> = {};
+    // Status da mãe também sai das filhas: todas concluídas, concluída; alguma
+    // começada, em andamento; nenhuma, a fazer.
+    const statuses = childStatuses.get(id) ?? [];
+    const derived: TaskStatus = statuses.every((status) => status === 'done')
+      ? 'done'
+      : statuses.some((status) => status !== 'todo')
+        ? 'in_progress'
+        : 'todo';
+    const currentStatus = rows.get(id)?.status;
+    if (statuses.length > 0 && derived !== currentStatus) {
+      changes.status = derived;
+      changes.completedAt = derived === 'done' ? nowIso() : null;
+    }
     if (summary.startDate && summary.dueDate) {
       if (summary.startDate !== current.startDate) changes.startDate = summary.startDate;
       if (summary.dueDate !== current.dueDate) changes.dueDate = summary.dueDate;
@@ -217,6 +239,7 @@ export function updateTask(db: Db, workspace: Workspace, id: number, input: Upda
     if (input.tagIds) setTaskTags(db, id, input.tagIds);
 
     const touchesSchedule =
+      changes.status !== undefined ||
       changes.startDate !== undefined ||
       changes.dueDate !== undefined ||
       changes.parentId !== undefined ||

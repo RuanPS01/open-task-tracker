@@ -1,0 +1,204 @@
+/*
+ * Tokens de cor, tipografia e espaçamento. Nenhum componente usa cor literal:
+ * sempre var(--token). Tabela completa e regras em docs/03-identidade-visual.md.
+ * Valores do tema escuro foram medidos nas telas do Toggl Track.
+ */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg-app: #1c1a1d;
+  --bg-elevated: #242126;
+  --bg-hover: #29262b;
+  --bg-active: #322e34;
+  --bg-input: #1c1a1d;
+  --bg-muted: #141315;
+  --bg-weekend: #141315;
+  --bg-overlay: rgba(0, 0, 0, 0.55);
+
+  --sidebar-bg: #000000;
+  --sidebar-hover: #17141a;
+  --sidebar-active: #361e34;
+  --sidebar-text: #f3eef4;
+  --sidebar-text-muted: #a8a0ab;
+  --sidebar-section: #8c8490;
+  --sidebar-border: #1b181c;
+
+  --border: #373538;
+  --border-subtle: #29272a;
+  --border-strong: #4c484f;
+
+  --text: #f6f3f6;
+  --text-secondary: #c9c3ca;
+  --text-muted: #918a93;
+  --text-faint: #6b656e;
+
+  --accent: #c281b9;
+  --accent-hover: #d095c8;
+  --accent-text: #e3a3d9;
+  --accent-contrast: #1d0c1f;
+  --accent-subtle: #361e34;
+  --accent-subtle-border: #5b3156;
+
+  --brand-yellow: #ffde91;
+  --brand-plum: #6b5973;
+  --brand-pink-light: #e5abdb;
+
+  --danger: #f27474;
+  --danger-subtle: #3b1d20;
+  --success: #52c28d;
+  --success-subtle: #16301f;
+  --warning: #f2b14c;
+  --warning-subtle: #3a2c14;
+  --info: #6aa9f2;
+
+  --priority-urgent: #f27474;
+  --priority-high: #f2b14c;
+  --priority-medium: #e3a3d9;
+  --priority-low: #8fb3d9;
+
+  --status-todo: #9aa3ab;
+  --status-progress: #6aa9f2;
+  --status-done: #52c28d;
+
+  --gantt-critical: #ff6b6b;
+  --gantt-summary: #d8d2da;
+  --gantt-dependency: #8a838c;
+  --now-line: #c281b9;
+
+  --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border);
+  --shadow-panel: -12px 0 32px rgba(0, 0, 0, 0.45);
+  --focus-ring: 0 0 0 2px rgba(194, 129, 185, 0.55);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg-app: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-hover: #f7f2f7;
+  --bg-active: #efe5ef;
+  --bg-input: #ffffff;
+  --bg-muted: #faf7fa;
+  --bg-weekend: #f8f4f8;
+  --bg-overlay: rgba(44, 19, 56, 0.35);
+
+  --sidebar-bg: #2c1338;
+  --sidebar-hover: #3a1f47;
+  --sidebar-active: #55305f;
+  --sidebar-text: #fbf7fc;
+  --sidebar-text-muted: #cbbad1;
+  --sidebar-section: #a993b1;
+  --sidebar-border: #3a1f47;
+
+  --border: #e5dde6;
+  --border-subtle: #f0eaf0;
+  --border-strong: #cfc3d1;
+
+  --text: #2c1338;
+  --text-secondary: #564a5c;
+  --text-muted: #85798a;
+  --text-faint: #ada3b1;
+
+  --accent: #e57cd8;
+  --accent-hover: #d968cb;
+  --accent-text: #a4399a;
+  --accent-contrast: #2c1338;
+  --accent-subtle: #fbe8f8;
+  --accent-subtle-border: #f2c3ec;
+
+  --danger: #d33a3a;
+  --danger-subtle: #fdecec;
+  --success: #1e9c61;
+  --success-subtle: #e6f6ee;
+  --warning: #c27a00;
+  --warning-subtle: #fff4e0;
+  --info: #2f78c4;
+
+  --priority-urgent: #d33a3a;
+  --priority-high: #d98a00;
+  --priority-medium: #b44fa8;
+  --priority-low: #4f7fb0;
+
+  --status-todo: #8a8f96;
+  --status-progress: #2f78c4;
+  --status-done: #1e9c61;
+
+  --gantt-critical: #d33a3a;
+  --gantt-summary: #3d2a47;
+  --gantt-dependency: #9b8fa0;
+  --now-line: #e57cd8;
+
+  --shadow-popover: 0 12px 32px rgba(44, 19, 56, 0.16), 0 0 0 1px var(--border);
+  --shadow-panel: -12px 0 32px rgba(44, 19, 56, 0.14);
+  --focus-ring: 0 0 0 2px rgba(229, 124, 216, 0.45);
+}
+
+:root {
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 28px;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --sidebar-width: 212px;
+  --sidebar-rail: 44px;
+  --header-height: 52px;
+  --toolbar-height: 44px;
+  --panel-width: 440px;
+
+  --z-sticky: 5;
+  --z-panel: 40;
+  --z-overlay: 50;
+  --z-popover: 60;
+  --z-toast: 70;
+}
+
+:root,
+:root[data-theme='dark'] {
+  --danger-contrast: #1f0b0c;
+  --on-color: #ffffff;
+}
+
+:root[data-theme='light'] {
+  --danger-contrast: #ffffff;
+  --on-color: #ffffff;
+}
+
+/*
+ * Cores de gráfico, validadas com o validador de paleta (daltonismo, contraste e
+ * faixa de luminosidade) nos dois temas. Ver docs/03-identidade-visual.md.
+ */
+:root,
+:root[data-theme='dark'] {
+  --chart-billable: #d55181;
+  --chart-nonbillable: #3987e5;
+  --chart-single: #d55181;
+  --chart-other: #6f6a72;
+  --chart-grid: #2c2a2e;
+}
+
+:root[data-theme='light'] {
+  --chart-billable: #c2468f;
+  --chart-nonbillable: #2a78d6;
+  --chart-single: #c2468f;
+  --chart-other: #9b949e;
+  --chart-grid: #efeaef;
+}

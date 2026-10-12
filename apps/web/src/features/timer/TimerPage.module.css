@@ -1,0 +1,28 @@
+.page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.scroll {
+  flex: 1;
+  overflow: auto;
+}
+
+.total {
+  margin-left: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.total strong {
+  color: var(--text);
+}

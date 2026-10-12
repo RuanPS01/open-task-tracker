@@ -111,11 +111,12 @@ export interface ScheduleRow {
   due_date: string | null;
   is_milestone: number;
   progress: number;
+  status: TaskStatus;
 }
 
 export function listScheduleRows(db: Db, workspaceId: number): ScheduleRow[] {
   return db.all<ScheduleRow>(
-    'SELECT id, parent_id, start_date, due_date, is_milestone, progress FROM tasks WHERE workspace_id = ?',
+    'SELECT id, parent_id, start_date, due_date, is_milestone, progress, status FROM tasks WHERE workspace_id = ?',
     workspaceId,
   );
 }

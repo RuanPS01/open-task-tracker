@@ -67,6 +67,21 @@ describe('tarefas', () => {
     expect(summary.progress).toBe(60);
   });
 
+  it('status da mãe vem das filhas', async () => {
+    const parent = await createTask({ name: 'Fase' });
+    const a = await createTask({ name: 'A', parentId: parent.id });
+    const b = await createTask({ name: 'B', parentId: parent.id });
+    expect((await getTask(parent.id)).status).toBe('todo');
+    await api.patch(`/tasks/${a.id}`, { status: 'in_progress' });
+    expect((await getTask(parent.id)).status).toBe('in_progress');
+    await api.patch(`/tasks/${a.id}`, { status: 'done' });
+    await api.patch(`/tasks/${b.id}`, { status: 'done' });
+    const done = await getTask(parent.id);
+    expect(done.status).toBe('done');
+    expect(done.completedAt).not.toBeNull();
+    expect(done.progress).toBe(100);
+  });
+
   it('impede que uma tarefa vire filha de uma descendente', async () => {
     const parent = await createTask({ name: 'Mãe' });
     const child = await createTask({ name: 'Filha', parentId: parent.id });
