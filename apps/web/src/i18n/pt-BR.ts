@@ -3,6 +3,31 @@
 // Regras: sem travessão e sem caractere de seta (ver docs/00-regras-para-ia.md).
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
+/** Dados do workspace que vão no prompt para IA da importação de tarefas. */
+export interface ImportPromptContext {
+  today: string;
+  todayWeekday: string;
+  workingDays: string;
+  holidays: string[];
+  autoSchedule: boolean;
+  projects: string[];
+  currentProject: string | null;
+  members: string[];
+  tags: string[];
+  existingTasks: string[];
+  example: string;
+}
+
+/** Datas do exemplo de importação, calculadas a partir de hoje e dos dias úteis. */
+export interface ImportExampleDates {
+  start: string;
+  second: string;
+  approval: string;
+}
+
+type IssueParams = Record<string, string | number>;
+const list = (items: string[], empty: string) => (items.length > 0 ? items.join('; ') : empty);
+
 export const ptBR = {
   common: {
     save: 'Salvar',
@@ -80,6 +105,7 @@ export const ptBR = {
     FIRESTORE_INDEX: 'Falta um índice no Firestore. Publique o arquivo firestore.indexes.json.',
     QUOTA: 'O limite de uso do Firebase foi atingido. Tente mais tarde.',
     DEMO_LOCAL_ONLY: 'A conta de demonstração existe só no modo local.',
+    IMPORT_INVALID: 'O arquivo de importação tem erros. Revise e tente de novo.',
     INTERNAL: 'Algo deu errado. Tente novamente.',
     NETWORK: 'Sem conexão. Verifique a internet e tente de novo.',
     UNKNOWN: 'Não foi possível concluir a ação.',
@@ -325,6 +351,150 @@ export const ptBR = {
     selectDates: 'Escolher datas',
     selectProject: 'Escolher projeto',
     linkedTimer: 'Cronômetro rodando nesta tarefa',
+  },
+  taskImport: {
+    button: 'Importar JSON',
+    title: 'Importar tarefas por JSON',
+    reviewTitle: 'Revisar importação',
+    intro: 'Cole o JSON das tarefas ou carregue um arquivo. Nada é gravado antes da revisão.',
+    intoProject: (name: string) => `Tarefas sem projeto no arquivo entram em ${name}.`,
+    noDefaultProject: 'Tarefas sem projeto no arquivo ficam sem projeto.',
+    placeholder: 'Cole aqui o JSON. O formato está no prompt para IA e no exemplo.',
+    loadFile: 'Carregar arquivo',
+    insertExample: 'Inserir exemplo',
+    copyPrompt: 'Copiar prompt para IA',
+    promptCopied: 'Prompt copiado. Cole na IA de sua preferência e descreva o que quer planejar.',
+    copyFailed: 'Não foi possível copiar. Tente de novo.',
+    promptHint:
+      'O prompt ensina o formato do arquivo e leva os projetos, membros, tags, dias úteis e feriados deste workspace. A IA devolve o JSON pronto para colar aqui.',
+    review: 'Revisar',
+    back: 'Voltar',
+    confirm: (n: number) => plural(n, 'Importar 1 tarefa', `Importar ${n} tarefas`),
+    imported: (n: number) => plural(n, '1 tarefa importada.', `${n} tarefas importadas.`),
+    summaryTasks: (total: number, subtasks: number) =>
+      `${plural(total, '1 tarefa', `${total} tarefas`)}${subtasks > 0 ? ` (${plural(subtasks, '1 subtarefa', `${subtasks} subtarefas`)})` : ''}`,
+    summaryDependencies: (n: number) => plural(n, '1 dependência', `${n} dependências`),
+    summaryNewTags: (names: string) => `Tags novas: ${names}`,
+    errors: (n: number) => plural(n, '1 erro impede a importação', `${n} erros impedem a importação`),
+    warnings: (n: number) => plural(n, '1 aviso', `${n} avisos`),
+    taskLabel: (key: string, name: string) => `Tarefa ${key} (${name})`,
+    rescheduled: 'Datas ajustadas pela cascata ou pelas subtarefas',
+    columns: {
+      task: 'Tarefa',
+      project: 'Projeto',
+      dates: 'Datas',
+      estimate: 'Estimativa',
+      assignees: 'Responsáveis',
+      priority: 'Prioridade',
+      dependsOn: 'Depende de',
+    },
+    perDay: 'por dia',
+    issues: {
+      INVALID_JSON: (p: IssueParams) => `O texto não é um JSON válido (${p.message}).`,
+      SCHEMA_REQUIRED: (p: IssueParams) => `Campo obrigatório ausente: ${p.path}.`,
+      SCHEMA_TYPE: (p: IssueParams) => `Tipo de valor errado em ${p.path}.`,
+      SCHEMA_RANGE: (p: IssueParams) => `Valor fora do limite em ${p.path}.`,
+      SCHEMA_VALUE: (p: IssueParams) => `Valor não aceito em ${p.path}.`,
+      SCHEMA_DATE: (p: IssueParams) => `Data inválida em ${p.path} (use AAAA-MM-DD).`,
+      SCHEMA_OTHER: (p: IssueParams) => `Campo inválido em ${p.path}.`,
+      EMPTY: () => 'O arquivo não tem nenhuma tarefa.',
+      TOO_MANY: (p: IssueParams) => `O arquivo passa do limite de ${p.max} tarefas.`,
+      DUPLICATE_REF: (p: IssueParams) => `A ref "${p.ref}" aparece mais de uma vez.`,
+      UNKNOWN_PROJECT: (p: IssueParams) => `O projeto "${p.name}" não existe neste workspace.`,
+      SUBTASK_PROJECT_IGNORED: (p: IssueParams) => `Subtarefa fica no projeto da mãe: "${p.name}" foi ignorado.`,
+      UNKNOWN_ASSIGNEE: (p: IssueParams) => `"${p.name}" não é membro do workspace e foi ignorado.`,
+      INVALID_DATES: (p: IssueParams) => `O início (${p.start}) é depois da entrega (${p.due}).`,
+      DURATION_WITHOUT_START: () => '"durationDays" sem "startDate" foi ignorado.',
+      DUE_OVERRIDES_DURATION: () => '"dueDate" e "durationDays" juntos: vale o "dueDate".',
+      UNKNOWN_DEPENDENCY: (p: IssueParams) => `"${p.name}" em "dependsOn" não é uma ref do arquivo nem uma tarefa existente.`,
+      AMBIGUOUS_DEPENDENCY: (p: IssueParams) => `Há mais de uma tarefa chamada "${p.name}": use uma ref.`,
+      DEPENDENCY_SELF: () => 'A tarefa depende dela mesma.',
+      DEPENDENCY_HIERARCHY: (p: IssueParams) => `Tarefa-mãe e subtarefa não podem ser ligadas ("${p.name}").`,
+      DEPENDENCY_CYCLE: (p: IssueParams) => `A dependência de "${p.name}" cria um ciclo.`,
+      DEPENDENCY_DUPLICATE: (p: IssueParams) => `Dependência de "${p.name}" repetida: vale uma vez.`,
+    },
+    example: (d: ImportExampleDates) => `{
+  "version": 1,
+  "tasks": [
+    {
+      "ref": "planejamento",
+      "name": "Planejamento",
+      "subtasks": [
+        {
+          "ref": "levantamento",
+          "name": "Levantamento de requisitos",
+          "description": "Entrevistas com o cliente e lista de funcionalidades.",
+          "startDate": "${d.start}",
+          "durationDays": 3,
+          "estimateHours": 12,
+          "priority": "high",
+          "tags": ["Reunião"]
+        },
+        {
+          "ref": "escopo",
+          "name": "Documento de escopo",
+          "startDate": "${d.second}",
+          "durationDays": 2,
+          "estimateHours": 8,
+          "dependsOn": ["levantamento"]
+        }
+      ]
+    },
+    {
+      "ref": "aprovacao",
+      "name": "Aprovação do escopo",
+      "milestone": true,
+      "startDate": "${d.approval}",
+      "dependsOn": [{ "task": "escopo", "type": "FS", "lagDays": 1 }]
+    }
+  ]
+}`,
+    aiPrompt: (c: ImportPromptContext) => `Você vai montar um arquivo JSON para importar tarefas no Open Task Tracker, um sistema de tarefas com cronograma em Gantt e controle de horas. Primeiro faça as perguntas que precisar sobre o que eu quero planejar; quando tiver o suficiente, responda só com o JSON.
+
+# Contexto do workspace
+- Hoje: ${c.today} (${c.todayWeekday}).
+- Dias úteis: ${c.workingDays}. Datas de início e entrega devem cair em dias úteis, a não ser que a tarefa tenha "allowNonWorkingDays": true.
+- Feriados (não são dias úteis): ${list(c.holidays, 'nenhum cadastrado')}.
+- Agendamento automático: ${c.autoSchedule ? 'ligado. Depois da importação a plataforma empurra cada tarefa para depois das predecessoras.' : 'desligado. As datas ficam exatamente como estiverem no JSON.'}
+- Projetos existentes: ${list(c.projects, 'nenhum')}.
+- ${c.currentProject ? `Tarefas sem "project" entram no projeto "${c.currentProject}".` : 'Tarefas sem "project" ficam sem projeto.'}
+- Membros (use o e-mail ou o nome em "assignees"): ${list(c.members, 'nenhum')}.
+- Tags existentes: ${list(c.tags, 'nenhuma')}. Tags que não existem são criadas na importação.
+- Tarefas que já existem no projeto e podem aparecer em "dependsOn" pelo nome exato: ${list(c.existingTasks, 'nenhuma')}.
+
+# Formato do arquivo
+Um objeto com "version": 1, "project" (opcional, nome de um projeto existente, vale para todas as tarefas) e "tasks" (lista de tarefas). Cada tarefa aceita:
+- "ref": texto curto e único no arquivo, usado para ligar dependências (por exemplo "design").
+- "name": nome da tarefa, até 200 caracteres. Único campo obrigatório.
+- "description": descrição curta. "notes": anotações longas.
+- "project": nome de um projeto existente. Só nas tarefas de primeiro nível: subtarefas ficam no projeto da mãe.
+- "status": "todo" (padrão), "in_progress" ou "done".
+- "priority": "none", "low", "medium", "high" ou "urgent" (ou um número de 0 a 4).
+- "startDate" e "dueDate": datas no formato AAAA-MM-DD. Só o início vira tarefa de um dia.
+- "durationDays": duração em dias úteis contada a partir de "startDate", no lugar de "dueDate".
+- "estimateHours": estimativa em horas, pode ter decimais. "estimateMode": "total" (padrão) ou "per_day" (horas por dia de trabalho).
+- "progress": percentual concluído, de 0 a 100.
+- "milestone": true para marco (entrega pontual, de um dia).
+- "allowNonWorkingDays": true quando a tarefa pode acontecer em fins de semana e feriados.
+- "billable": true quando as horas são faturáveis.
+- "assignees": lista de e-mails ou nomes de membros.
+- "tags": lista de nomes de tags.
+- "dependsOn": tarefas que precisam vir antes. Cada item é a "ref" de outra tarefa do arquivo (ou o nome exato de uma tarefa que já existe no projeto), ou um objeto { "task": "ref", "type": "FS", "lagDays": 0 }. Tipos: "FS" término para início (padrão), "SS" início para início, "FF" término para término, "SF" início para término. "lagDays" é o atraso em dias úteis e pode ser negativo.
+- "subtasks": lista de subtarefas no mesmo formato. A tarefa-mãe vira um grupo no Gantt e as datas, o progresso e o status dela são calculados pelas filhas.
+
+# Regras
+1. Ao entregar o arquivo, responda apenas com JSON válido: sem comentários, sem vírgula sobrando, sem texto antes ou depois.
+2. Planeje a partir de hoje e respeite os dias úteis e os feriados.
+3. Não crie ciclos de dependência e não ligue uma tarefa à própria mãe ou subtarefa.
+4. Quando souber só a duração, use "startDate" com "durationDays".
+5. Use somente os projetos e membros listados acima. Projeto desconhecido impede a importação; membro desconhecido é ignorado.
+6. Limite de 500 tarefas por arquivo, contando as subtarefas.
+
+# Exemplo
+${c.example}
+
+# O que eu quero planejar
+(Descreva aqui o projeto, as entregas, os prazos e quem faz o quê.)`,
   },
   gantt: {
     title: 'Cronograma',

@@ -39,7 +39,7 @@ import {
 import { Batch, where } from '../store/types';
 import { loadWorkspace, nowIso, type Ctx, type WorkspaceAccess } from './context';
 
-const toSchedulable = (task: TaskDoc): SchedulableTask => ({
+export const toSchedulable = (task: TaskDoc): SchedulableTask => ({
   id: task.id,
   parentId: task.parentId,
   startDate: task.startDate,
@@ -56,7 +56,7 @@ export async function listTaskDocs(ctx: Ctx, workspaceId: Id): Promise<TaskDoc[]
   return (await ctx.store.list<TaskDoc>(paths.tasks(workspaceId))).sort(byPosition);
 }
 
-async function listDependencyDocs(ctx: Ctx, workspaceId: Id): Promise<DependencyDoc[]> {
+export async function listDependencyDocs(ctx: Ctx, workspaceId: Id): Promise<DependencyDoc[]> {
   const deps = await ctx.store.list<DependencyDoc>(paths.dependencies(workspaceId));
   return deps.sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
 }
@@ -124,7 +124,7 @@ const sameValue = (a: unknown, b: unknown) =>
   Array.isArray(a) || Array.isArray(b) ? JSON.stringify(a) === JSON.stringify(b) : a === b;
 
 /** Grava no lote as tarefas novas e os campos que mudaram. Devolve as tarefas alteradas. */
-function writeChanges(
+export function writeChanges(
   batch: Batch,
   workspaceId: Id,
   original: ReadonlyMap<Id, TaskDoc>,
@@ -152,7 +152,7 @@ function writeChanges(
   return changed;
 }
 
-const cloneTasks = (tasks: readonly TaskDoc[]) => new Map(tasks.map((task) => [task.id, structuredClone(task)]));
+export const cloneTasks = (tasks: readonly TaskDoc[]) => new Map(tasks.map((task) => [task.id, structuredClone(task)]));
 
 interface Snapshot {
   access: WorkspaceAccess;

@@ -87,3 +87,8 @@
     display: none;
   }
 }
+
+.emptyActions {
+  display: flex;
+  gap: 8px;
+}

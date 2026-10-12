@@ -150,3 +150,34 @@ export function useDeleteDependency() {
     onSettled: () => client.invalidateQueries({ queryKey: keys.dependencies(wid) }),
   });
 }
+
+// --- Importação por JSON -------------------------------------------------------
+
+export interface TaskImportRequest {
+  text: string;
+  /** Projeto da tela de onde se importa (Gantt ou tarefas do projeto). */
+  defaultProjectId: Id | null;
+}
+
+/** Revisão da importação: não grava nada. Erros de rede aparecem no próprio diálogo. */
+export function usePreviewTaskImport() {
+  const wid = useWorkspaceId();
+  return useMutation({
+    mutationFn: ({ text, defaultProjectId }: TaskImportRequest) =>
+      backend().tasks.previewImport(wid, text, { defaultProjectId }),
+    meta: { silent: true },
+  });
+}
+
+export function useImportTasks() {
+  const client = useQueryClient();
+  const wid = useWorkspaceId();
+  return useMutation({
+    mutationFn: ({ text, defaultProjectId }: TaskImportRequest) => backend().tasks.importJson(wid, text, { defaultProjectId }),
+    onSuccess: () => {
+      invalidateTaskData(client, wid);
+      void client.invalidateQueries({ queryKey: keys.dependencies(wid) });
+      void client.invalidateQueries({ queryKey: keys.tags(wid) });
+    },
+  });
+}

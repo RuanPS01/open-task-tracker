@@ -16,6 +16,7 @@ import { useT } from '../../i18n';
 import { useFormat } from '../../lib/format';
 import { useWorkCalendar } from '../../lib/calendar';
 import { useStoredState } from '../../lib/hooks';
+import { TaskImportButton } from '../tasks/TaskImportDialog';
 import { useTaskPanel } from '../tasks/TaskPanelContext';
 import { GanttChart } from './GanttChart';
 import type { Zoom } from './ganttModel';
@@ -107,6 +108,7 @@ export function ProjectGantt({ project }: { project: Project }) {
           onClick={() => setCollapsed(collapsed.size > 0 ? new Set() : new Set(parentIds))}
         />
         <IconButton icon={<Columns3 />} label={t.gantt.columns} active={!compactGrid} onClick={() => setCompactGrid(!compactGrid)} />
+        <TaskImportButton projectId={project.id} size="sm" />
         <Button size="sm" icon={<Diamond />} onClick={() => addTask(true)}>
           {t.gantt.addMilestone}
         </Button>
@@ -120,9 +122,12 @@ export function ProjectGantt({ project }: { project: Project }) {
           title={t.gantt.emptyTitle}
           text={t.gantt.emptyText}
           action={
-            <Button variant="primary" icon={<Plus />} onClick={() => addTask(false)}>
-              {t.tasks.createTask}
-            </Button>
+            <div className={styles.emptyActions}>
+              <TaskImportButton projectId={project.id} />
+              <Button variant="primary" icon={<Plus />} onClick={() => addTask(false)}>
+                {t.tasks.createTask}
+              </Button>
+            </div>
           }
         />
       ) : (

@@ -20,6 +20,7 @@ import { useWorkCalendar } from '../../lib/calendar';
 import { useFormat } from '../../lib/format';
 import { useStoredState } from '../../lib/hooks';
 import { ProjectGantt } from '../gantt/ProjectGantt';
+import { TaskImportButton } from '../tasks/TaskImportDialog';
 import { useTaskPanel } from '../tasks/TaskPanelContext';
 import { GroupSortControls, TaskFiltersButton, TaskListView, useTaskRowContext } from '../tasks/TasksPage';
 import { TaskBoard } from '../tasks/TaskBoard';
@@ -116,6 +117,7 @@ function ProjectTasks({ project }: { project: Project }) {
             { value: 'board', label: '', icon: <SquareKanban />, title: t.tasks.board },
           ]}
         />
+        <TaskImportButton projectId={project.id} size="sm" />
         <Button size="sm" variant="primary" icon={<Plus />} onClick={() => panel.openNew({ projectId: project.id })}>
           {t.tasks.add}
         </Button>

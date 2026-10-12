@@ -10,6 +10,7 @@ import * as members from './services/members';
 import * as projects from './services/projects';
 import * as reports from './services/reports';
 import * as session from './services/session';
+import * as taskImport from './services/taskImport';
 import * as tasks from './services/tasks';
 import * as timeEntries from './services/timeEntries';
 import * as workspaces from './services/workspaces';
@@ -117,6 +118,9 @@ export function createBackend(options: BackendOptions) {
       update: fn(tasks.updateTask),
       schedule: fn(tasks.scheduleTasks),
       remove: fn(tasks.removeTask),
+      /** Revisão da importação por JSON (não grava nada). */
+      previewImport: fn(taskImport.previewTaskImport),
+      importJson: fn(taskImport.importTasks),
     },
     dependencies: {
       list: fn(tasks.listDependencies),

@@ -150,12 +150,79 @@ Toda entrada passa pelo esquema zod de `@ott/shared`.
 | `projects.list`, `create`, `update` (inclui `pinned` e `archived`), `remove` (admin) | Projetos |
 | `tasks.list`, `create`, `update`, `remove` | Tarefas (o workspace inteiro numa leitura) |
 | `tasks.schedule` | `{ updates: [{ id, startDate, dueDate }] }` do Gantt; devolve `{ tasks }` com tudo que mudou, inclusive pela cascata |
+| `tasks.previewImport(workspaceId, text, { defaultProjectId })` | Lê o JSON de importação e devolve `TaskImportPreview` sem gravar nada (seção abaixo) |
+| `tasks.importJson(workspaceId, text, { defaultProjectId })` | Refaz a mesma análise e grava tudo num lote; devolve `{ created, tasks }` ou `IMPORT_INVALID` |
 | `dependencies.list`, `create`, `update`, `remove` | Dependências |
 | `timeEntries.list(workspaceId, from, to)` | Apontamentos da própria pessoa que tocam o intervalo |
 | `timeEntries.create` | Apontamento manual (`start` e `stop` obrigatórios) |
 | `timeEntries.start` | Inicia cronômetro (para o anterior, em qualquer workspace) |
 | `timeEntries.update`, `stop`, `remove` | Só os próprios apontamentos |
 | `reports.summary`, `detailed`, `csv` | Relatórios (seção 6.7) |
+
+### Importação de tarefas por JSON (`services/taskImport.ts`)
+
+Qualquer membro importa (as mesmas permissões de criar tarefa, dependência e tag). O
+esquema do arquivo é `taskImportFileSchema` em `packages/shared/src/schemas.ts`; o
+prompt para IA da tela (`taskImport.aiPrompt` nos dicionários) explica o mesmo formato
+e precisa mudar junto com ele.
+
+```json
+{
+  "version": 1,
+  "project": "Site institucional",
+  "tasks": [
+    {
+      "ref": "levantamento",
+      "name": "Levantamento de requisitos",
+      "startDate": "2026-10-13",
+      "durationDays": 3,
+      "estimateHours": 12,
+      "assignees": ["ana@exemplo.com"],
+      "tags": ["Reunião"],
+      "subtasks": [{ "name": "Entrevistas" }]
+    },
+    { "name": "Aprovação", "milestone": true, "dependsOn": [{ "task": "levantamento", "type": "FS", "lagDays": 1 }] }
+  ]
+}
+```
+
+- **Campos da tarefa**: `ref`, `name` (único obrigatório), `description`, `notes`,
+  `project`, `status`, `priority` (0 a 4 ou `none`, `low`, `medium`, `high`, `urgent`),
+  `startDate`, `dueDate`, `durationDays` (dias úteis a partir do início, pelo calendário
+  da tarefa), `estimateHours`, `estimateMode`, `progress`, `milestone`,
+  `allowNonWorkingDays`, `billable`, `assignees`, `tags`, `dependsOn`, `subtasks`
+  (mesmo formato, recursivo). `null` vale como ausente. Uma lista solta no lugar do
+  objeto também é aceita. Limite de `IMPORT_MAX_TASKS` (500) tarefas contando subtarefas.
+- **Projeto**: subtarefa fica no projeto da mãe; tarefa de primeiro nível usa o
+  `project` dela, senão o do arquivo, senão o `defaultProjectId` (o projeto da tela).
+- **Nomes**: projeto, membro (e-mail ou nome) e tag são comparados sem diferenciar
+  maiúsculas nem acentos. Tag que não existe é criada no mesmo lote.
+- **Dependências**: cada item de `dependsOn` é a `ref` de outra tarefa do arquivo ou o
+  nome de uma tarefa já existente no mesmo projeto; passam pelo `validateDependency` do
+  pacote shared sobre as tarefas existentes mais as novas.
+- **Cronograma**: depois de montar tudo, `applyScheduling` roda sobre o workspace
+  inteiro (cascata, se ligada, e resumo das mães). Tarefas existentes empurradas pela
+  cascata são gravadas no mesmo lote.
+
+`TaskImportPreview` traz `rows` (uma por tarefa, em ordem de árvore, com `key` como
+`1`, `1.1`, `parentKey`, `depth`, as datas finais e `rescheduled` quando as datas do
+arquivo mudaram), `issues`, `newTags`, `dependencyCount` e `canImport` (nenhum erro).
+Cada problema tem `level` (`error` impede a importação, `warning` só avisa), `code`,
+`path` (por exemplo `tasks[0].subtasks[1].dueDate`), `taskKey` e `params`; a web traduz
+por `taskImport.issues.<CODE>`. Erros vêm antes dos avisos e, em cada nível, na ordem
+das tarefas.
+
+| Código | Nível | Quando |
+|---|---|---|
+| `INVALID_JSON`, `EMPTY`, `TOO_MANY` | erro | Texto não é JSON, lista vazia, mais de 500 tarefas |
+| `SCHEMA_REQUIRED`, `SCHEMA_TYPE`, `SCHEMA_RANGE`, `SCHEMA_VALUE`, `SCHEMA_DATE`, `SCHEMA_OTHER` | erro | Campo fora do esquema (com `path`) |
+| `UNKNOWN_PROJECT`, `DUPLICATE_REF`, `INVALID_DATES` | erro | Projeto inexistente, `ref` repetida, início depois da entrega |
+| `UNKNOWN_DEPENDENCY`, `AMBIGUOUS_DEPENDENCY` | erro | Item de `dependsOn` não encontrado, ou nome de tarefa existente repetido no projeto |
+| `DEPENDENCY_SELF`, `DEPENDENCY_HIERARCHY`, `DEPENDENCY_CYCLE` | erro | Ligação recusada (a ligação invertida de outra do arquivo conta como ciclo) |
+| `UNKNOWN_ASSIGNEE` | aviso | Responsável que não é membro do workspace: ignorado |
+| `SUBTASK_PROJECT_IGNORED` | aviso | `project` numa subtarefa: vale o da mãe |
+| `DUE_OVERRIDES_DURATION`, `DURATION_WITHOUT_START` | aviso | `durationDays` ignorado (já tem `dueDate`, ou não tem `startDate`) |
+| `DEPENDENCY_DUPLICATE` | aviso | A mesma ligação repetida: entra uma vez |
 
 ### Índices
 
@@ -220,6 +287,7 @@ são traduzidos em `packages/data/src/firebase/index.ts`.
 | `INVITE_NOT_FOUND` | Convite inexistente, revogado ou já usado |
 | `WEAK_PASSWORD`, `TOO_MANY_REQUESTS`, `AUTH_DISABLED` | Firebase Auth (senha fraca, muitas tentativas, e-mail e senha desligado no console) |
 | `EMAIL_CHANGE_UNSUPPORTED`, `DEMO_LOCAL_ONLY` | Recurso só do modo local |
+| `IMPORT_INVALID` | `tasks.importJson` com erros no arquivo (`details` traz a lista de problemas) |
 | `NETWORK`, `QUOTA`, `FIRESTORE_INDEX` | Sem conexão, limite do Firebase, índice composto não publicado |
 | `UNKNOWN`, `INTERNAL` | Falha inesperada |
 

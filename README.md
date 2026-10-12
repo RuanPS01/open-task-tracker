@@ -23,6 +23,11 @@ ou não responder, no próprio navegador com o **lowdb**. Publicação pronta pa
   grupos, dependências (término para início, início para início, término para término,
   início para término, com atraso), criação de dependência por arraste, cascata
   automática, caminho crítico e zoom por dias, semanas e meses.
+- **Importação de tarefas por JSON**: cole ou carregue um arquivo com várias tarefas
+  (subtarefas, datas, duração em dias úteis, estimativas, responsáveis, tags e
+  dependências), revise tudo num modal antes de gravar e use o botão "Copiar prompt para
+  IA" para pedir o JSON pronto a qualquer assistente, já com os projetos, membros, tags e
+  feriados do workspace.
 - **Fins de semana e feriados**: dias úteis configuráveis, feriados por workspace
   (cadastro manual e importação dos feriados nacionais do Brasil) e opção por tarefa para
   trabalhar em dias não úteis.

@@ -41,6 +41,7 @@ import { useT, type Messages } from '../../i18n';
 import { PageHeader } from '../../layout/PageHeader';
 import { useStoredState } from '../../lib/hooks';
 import { TaskBoard } from './TaskBoard';
+import { TaskImportButton } from './TaskImportDialog';
 import { useTaskPanel } from './TaskPanelContext';
 import { TaskRow, type TaskRowContext } from './TaskRow';
 import { applyFilters, groupTasks, sortTasks, type GroupBy, type SortBy, type TaskFilters } from './taskGrouping';
@@ -330,9 +331,12 @@ export function TasksPage() {
         title={t.tasks.title}
         subtitle={view === 'list' ? t.tasks.list : t.tasks.board}
         actions={
-          <Button variant="primary" icon={<Plus />} onClick={() => panel.openNew(assigneeId ? { assigneeIds: [assigneeId] } : {})}>
-            {t.tasks.add}
-          </Button>
+          <>
+            <TaskImportButton />
+            <Button variant="primary" icon={<Plus />} onClick={() => panel.openNew(assigneeId ? { assigneeIds: [assigneeId] } : {})}>
+              {t.tasks.add}
+            </Button>
+          </>
         }
       />
       <Toolbar>

@@ -141,6 +141,43 @@ meia-noite.
   Esta semana, Próxima semana, Mais adiante, Sem data. No Quadro, arrastar o cartão para
   outra coluna muda o status.
 
+### Importar tarefas por JSON
+
+Botão **"Importar JSON"** no Gantt (barra de ferramentas e estado vazio), na aba Tarefas
+do projeto e no cabeçalho da tela de Tarefas. Aberto dentro de um projeto, ele é o
+projeto padrão das tarefas sem `project` no arquivo; na tela de Tarefas não há padrão.
+
+```mermaid
+sequenceDiagram
+  participant P as Pessoa
+  participant W as TaskImportDialog
+  participant D as Camada de dados
+  P->>W: copia o prompt para IA (formato, regras e dados do workspace)
+  P->>W: cola o JSON gerado, carrega um arquivo .json ou insere o exemplo
+  W->>D: tasks.previewImport (nada é gravado)
+  D-->>W: linhas, erros, avisos, tags novas, dependências
+  W->>P: modal de revisão
+  P->>W: Importar N tarefas
+  W->>D: tasks.importJson (refaz a análise e grava num lote)
+  D-->>W: tarefas criadas
+```
+
+- O **prompt para IA** leva hoje e o dia da semana, os dias úteis, os feriados do
+  próximo ano, se o agendamento automático está ligado, os projetos ativos, o projeto
+  padrão, os membros ativos (nome e e-mail), as tags e os nomes das tarefas que já
+  existem no projeto (até 150), além do formato completo e de um exemplo com datas a
+  partir do próximo dia útil. Pede que a IA pergunte o que faltar e responda só com o JSON.
+- **Revisar** com texto que nem chega a virar tarefas (JSON quebrado, campo fora do
+  formato) mostra os erros embaixo do editor. Com tarefas, abre a revisão: resumo
+  (tarefas, subtarefas, dependências, tags novas), erros que impedem a importação,
+  avisos, e uma tabela em árvore com projeto, datas finais (com marca quando a cascata
+  ou as subtarefas mudaram as datas do arquivo), estimativa, responsáveis, prioridade e
+  dependências. Linhas com erro ficam destacadas e o botão de importar fica desabilitado.
+- **Voltar** mantém o texto para corrigir. Ao importar, o Gantt e as listas atualizam e
+  um aviso mostra quantas tarefas entraram.
+- Formato do arquivo, regras de resolução de nomes e códigos dos problemas: documento
+  06, seção 6.5.
+
 ## 7.6 Gantt e dependências
 
 ```mermaid

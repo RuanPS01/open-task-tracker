@@ -95,6 +95,7 @@ Estilos compartilhados dos seletores: `Picker.module.css` (`trigger`, `dashed`,
 | `useSession`, `useWorkspace`, `useWorkspaceId`, `useCurrentUser`, `usePreferences`, `useIsAdmin` | `app/session.tsx` | Dados da sessão dentro das rotas internas |
 | `useT`, `useLocale`, `I18nProvider` | `i18n/index.tsx` | Textos traduzidos |
 | `useTaskPanel` | `features/tasks/TaskPanelContext.tsx` | Abrir o painel de tarefa de qualquer tela (`openTask`, `openNew`) |
+| `TaskImportButton`, `TaskImportDialog` | `features/tasks/TaskImportDialog.tsx` | Importar várias tarefas por JSON: botão "Importar JSON", prompt para IA, revisão e confirmação. Recebe o projeto padrão (`projectId`) e fica no Gantt, na aba Tarefas do projeto e na tela de Tarefas |
 
 Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backend()`
 (`data/backend.ts`), a camada de dados conectada na abertura:
@@ -105,7 +106,7 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 | `session.ts` | `useSessionQuery`, `useLogin`, `useSignup`, `useStartDemo`, `useLogout`, `useUpdateProfile`, `useChangePassword`, `useSwitchWorkspace` |
 | `workspace.ts` | `useUpdateWorkspace`, `useCreateWorkspace`, membros, convites (`useInvites`, `useCreateInvite`, `useRevokeInvite`, `useInvite`, `useAcceptInvite`), clientes, tags e feriados (`useHolidays`, `useCreateHoliday`, `useImportHolidays`, `useDeleteHoliday`) |
 | `projects.ts` | `useProjects`, `useProjectMap`, `useCreateProject`, `useUpdateProject`, `useDeleteProject` |
-| `tasks.ts` | `useTasks`, `useDependencies`, `useCreateTask`, `useUpdateTask`, `useScheduleTasks`, `useDeleteTask`, dependências |
+| `tasks.ts` | `useTasks`, `useDependencies`, `useCreateTask`, `useUpdateTask`, `useScheduleTasks`, `useDeleteTask`, dependências, `usePreviewTaskImport` (revisão sem gravar) e `useImportTasks` |
 | `timeEntries.ts` | `useRunningTimer`, `useTimeEntries`, `useStartTimer`, `useStopTimer`, criar, editar e excluir apontamento |
 | `reports.ts` | `useSummaryReport`, `useDetailedReport`, `useDownloadCsv` (gera o CSV no navegador e baixa) |
 
@@ -114,7 +115,7 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 | Tela | Componentes principais |
 |---|---|
 | Cronômetro | `TimerBar` (barra do topo, modo manual, sugestões), `CalendarView` (+ `calendarLayout.ts`), `ListView`, `TimesheetView`, `EntryEditor` |
-| Tarefas | `TasksPage` (exporta `TaskListView`, `TaskFiltersButton`, `GroupSortControls`, `useTaskRowContext`), `TaskRow`, `TaskBoard`, `taskGrouping.ts`, `TaskPanel`, `TaskFields`, `SubtaskSection`, `DependencySection`, `AllocationSection` |
+| Tarefas | `TasksPage` (exporta `TaskListView`, `TaskFiltersButton`, `GroupSortControls`, `useTaskRowContext`), `TaskRow`, `TaskBoard`, `taskGrouping.ts`, `TaskPanel`, `TaskFields`, `SubtaskSection`, `DependencySection`, `AllocationSection`, `TaskImportDialog` (+ `taskImportModel.ts`: contexto do prompt para IA e datas do exemplo) |
 | Projetos | `ProjectsPage` (exporta `TimeStatus`), `ProjectDialog`, `ProjectPage` (visão geral e aba Tarefas) |
 | Gantt | `ProjectGantt` (barra de ferramentas), `GanttChart`, `ganttModel.ts` |
 | Linha do tempo | `TimelinePage`, `timelineModel.ts` |

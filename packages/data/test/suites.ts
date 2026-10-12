@@ -496,6 +496,129 @@ export function registerSuites(makeEnv: () => Promise<TestEnv>): void {
     });
   });
 
+  describe('importação de tarefas por JSON', () => {
+    const json = (value: unknown) => JSON.stringify(value);
+
+    it('a revisão monta a árvore, resolve nomes e aplica a cascata sem gravar nada', async () => {
+      const bruno = await join('Bruno');
+      const site = await api().projects.create(wid(), { name: 'Site', color: '#0b83d9' });
+      await api().tags.create(wid(), 'Design');
+      await api().tasks.create(wid(), { name: 'Aprovação', projectId: site.id, startDate: '2026-10-19' });
+      const before = (await api().tasks.list(wid())).length;
+
+      const preview = await api().tasks.previewImport(
+        wid(),
+        json({
+          project: 'site',
+          tasks: [
+            {
+              ref: 'fase',
+              name: 'Fase 1',
+              subtasks: [
+                {
+                  ref: 'a',
+                  name: 'A',
+                  startDate: '2026-10-12',
+                  durationDays: 3,
+                  assignees: [bruno.account.email.toUpperCase()],
+                  tags: ['design', 'Nova tag'],
+                  priority: 'high',
+                  estimateHours: 6,
+                },
+                { ref: 'b', name: 'B', startDate: '2026-10-13', dueDate: '2026-10-14', dependsOn: ['a'], dueDate2: 'ignorado' },
+              ],
+            },
+            { name: 'Entrega', milestone: true, startDate: '2026-10-15', dependsOn: [{ task: 'aprovacao', lagDays: 1 }] },
+          ],
+        }),
+      );
+      expect(preview.issues).toEqual([]);
+      expect(preview.canImport).toBe(true);
+      expect(preview.rows.map((row) => [row.key, row.depth, row.name])).toEqual([
+        ['1', 0, 'Fase 1'],
+        ['1.1', 1, 'A'],
+        ['1.2', 1, 'B'],
+        ['2', 0, 'Entrega'],
+      ]);
+      const [fase, a, b, entrega] = preview.rows;
+      expect(a).toMatchObject({
+        projectId: site.id,
+        startDate: '2026-10-12',
+        dueDate: '2026-10-14',
+        priority: 3,
+        estimateSeconds: 6 * 3600,
+        assigneeIds: [bruno.uid],
+        tagNames: ['Design', 'Nova tag'],
+      });
+      // B depende de A (até 14): a cascata empurra para 15 e 16.
+      expect(b).toMatchObject({ startDate: '2026-10-15', dueDate: '2026-10-16', rescheduled: true });
+      expect(b!.dependencies).toEqual([{ name: 'A', type: 'FS', lagDays: 0 }]);
+      // A mãe sem datas no arquivo só recebe o resumo das subtarefas: não conta como ajuste.
+      expect(fase).toMatchObject({ startDate: '2026-10-12', dueDate: '2026-10-16', rescheduled: false });
+      expect(a!.rescheduled).toBe(false);
+      expect(entrega!.isMilestone).toBe(true);
+      // Marco depois da Aprovação (19) com 1 dia útil de atraso: dia 20.
+      expect(entrega).toMatchObject({ startDate: '2026-10-20', dueDate: '2026-10-20', rescheduled: true });
+      expect(preview.newTags).toEqual(['Nova tag']);
+      expect(preview.dependencyCount).toBe(2);
+      expect(await api().tasks.list(wid())).toHaveLength(before);
+    });
+
+    it('importa tudo de uma vez: tarefas, subtarefas, dependências e tags novas', async () => {
+      const site = await api().projects.create(wid(), { name: 'Site', color: '#0b83d9' });
+      const result = await api().tasks.importJson(
+        wid(),
+        json([
+          { ref: 'x', name: 'X', startDate: '2026-10-12', durationDays: 2, tags: ['QA'], subtasks: [{ name: 'X.1', status: 'done' }] },
+          { name: 'Y', startDate: '2026-10-12', dependsOn: ['x'], estimateHours: 4, estimateMode: 'per_day' },
+        ]),
+        { defaultProjectId: site.id },
+      );
+      expect(result.created).toBe(3);
+      const tasks = await api().tasks.list(wid());
+      const x = tasks.find((task) => task.name === 'X')!;
+      const child = tasks.find((task) => task.name === 'X.1')!;
+      const y = tasks.find((task) => task.name === 'Y')!;
+      expect(child).toMatchObject({ parentId: x.id, projectId: site.id, status: 'done', progress: 100 });
+      expect(y).toMatchObject({ projectId: site.id, startDate: '2026-10-14', estimateMode: 'per_day', estimateSeconds: 4 * 3600 });
+      expect(await api().dependencies.list(wid())).toEqual([
+        expect.objectContaining({ predecessorId: x.id, successorId: y.id, type: 'FS', lagDays: 0 }),
+      ]);
+      expect((await api().tags.list(wid())).map((tag) => tag.name)).toEqual(['QA']);
+    });
+
+    it('erros no arquivo impedem a importação e nada é gravado', async () => {
+      const invalid = await api().tasks.previewImport(wid(), '{ "tasks": [');
+      expect(invalid.issues[0]).toMatchObject({ level: 'error', code: 'INVALID_JSON' });
+
+      const schema = await api().tasks.previewImport(wid(), json({ tasks: [{ name: 'A', startDate: '12/10/2026' }] }));
+      expect(schema.issues[0]).toMatchObject({ code: 'SCHEMA_DATE', path: 'tasks[0].startDate' });
+
+      const text = json({
+        tasks: [
+          { ref: 'a', name: 'A', project: 'Inexistente' },
+          { ref: 'a', name: 'B', startDate: '2026-10-20', dueDate: '2026-10-10' },
+          { ref: 'c', name: 'C', dependsOn: ['d', 'fantasma'], assignees: ['ninguem@exemplo.com'] },
+          { ref: 'd', name: 'D', dependsOn: ['c'] },
+        ],
+      });
+      const preview = await api().tasks.previewImport(wid(), text);
+      expect(preview.canImport).toBe(false);
+      const codes = preview.issues.map((issue) => `${issue.level}:${issue.code}:${issue.taskKey}`);
+      // Erros antes dos avisos e, dentro de cada nível, na ordem das tarefas do arquivo.
+      expect(codes).toEqual([
+        'error:UNKNOWN_PROJECT:1',
+        'error:INVALID_DATES:2',
+        'error:DUPLICATE_REF:2',
+        'error:UNKNOWN_DEPENDENCY:3',
+        'error:DEPENDENCY_CYCLE:4',
+        'warning:UNKNOWN_ASSIGNEE:3',
+      ]);
+      await expectCode(api().tasks.importJson(wid(), text), 'IMPORT_INVALID');
+      expect(await api().tasks.list(wid())).toEqual([]);
+    });
+  });
+
   describe('demonstração', () => {
     it('cria um workspace de exemplo coerente', async () => {
       const demo = await api().workspaces.create('Estúdio Aurora', { demo: true });

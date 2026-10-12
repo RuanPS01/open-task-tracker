@@ -255,3 +255,58 @@ export const reportQuerySchema = z.object({
 });
 export type ReportQueryInput = z.input<typeof reportQuerySchema>;
 export type ReportQuery = z.output<typeof reportQuerySchema>;
+
+// --- Importação de tarefas por JSON ------------------------------------------
+// Formato pensado para ser escrito à mão ou por uma IA (o prompt de exemplo fica nos
+// dicionários da web). Campos com nomes em inglês, iguais aos da entidade Task quando
+// existem; projeto, responsáveis, tags e dependências vão por nome, não por id.
+// Detalhes em docs/06-dados-e-armazenamento.md, seção "Importação de tarefas".
+
+export const IMPORT_MAX_TASKS = 500;
+
+const importText = (max: number) => z.string().trim().min(1).max(max);
+
+const importDependencySchema = z.union([
+  importText(200),
+  z.object({
+    task: importText(200),
+    type: z.enum(DEPENDENCY_TYPES).nullish(),
+    lagDays: z.number().int().min(-365).max(365).nullish(),
+  }),
+]);
+export type ImportDependencyInput = z.infer<typeof importDependencySchema>;
+
+// Campo nulo vale como ausente: IAs costumam escrever "dueDate": null.
+export const importTaskSchema = z.object({
+  ref: importText(100).nullish(),
+  name: nameSchema,
+  description: z.string().max(10_000).nullish(),
+  notes: z.string().max(50_000).nullish(),
+  project: importText(200).nullish(),
+  status: z.enum(TASK_STATUSES).nullish(),
+  priority: z.union([z.literal(PRIORITIES), z.enum(['none', 'low', 'medium', 'high', 'urgent'])]).nullish(),
+  startDate: isoDateSchema.nullish(),
+  dueDate: isoDateSchema.nullish(),
+  durationDays: z.number().int().min(1).max(3650).nullish(),
+  estimateHours: z.number().min(0).max(99_999).nullish(),
+  estimateMode: z.enum(ESTIMATE_MODES).nullish(),
+  progress: z.number().int().min(0).max(100).nullish(),
+  milestone: z.boolean().nullish(),
+  allowNonWorkingDays: z.boolean().nullish(),
+  billable: z.boolean().nullish(),
+  assignees: z.array(importText(200)).max(50).nullish(),
+  tags: z.array(importText(60)).max(50).nullish(),
+  dependsOn: z.array(importDependencySchema).max(100).nullish(),
+  get subtasks() {
+    return z.array(importTaskSchema).max(IMPORT_MAX_TASKS).nullish();
+  },
+});
+export type ImportTaskInput = z.infer<typeof importTaskSchema>;
+
+/** Arquivo inteiro. Uma lista solta de tarefas também é aceita (vira `{ tasks }`). */
+export const taskImportFileSchema = z.object({
+  version: z.literal(1).nullish(),
+  project: importText(200).nullish(),
+  tasks: z.array(importTaskSchema).max(IMPORT_MAX_TASKS),
+});
+export type TaskImportFile = z.infer<typeof taskImportFileSchema>;

@@ -47,6 +47,7 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 | Saved views da Timeline | | `[planejado]` |
 | Gantt de projeto (Toggl Plan) com dependências | Cronograma com FS, SS, FF, SF, atraso, cascata e caminho crítico | `[implementado]` |
 | Calendário de trabalho e feriados | Dias úteis, feriados e importação nacional; tarefa liberada para fins de semana e feriados | `[implementado]` |
+| Importação de tarefas (CSV) | Importação de várias tarefas por JSON, com prompt para IA e revisão antes de gravar | `[implementado]` |
 | Members (convite por e-mail), Clients, Tags | Membros com convite por link, Clientes, Tags | `[implementado]` |
 | Workspaces e troca de workspace | Igual | `[implementado]` |
 | Approvals (aprovação de horas) | | `[planejado]` |
@@ -110,6 +111,7 @@ afetados.
 | Relatórios e CSV | `[implementado]` |
 | Feriados e tarefas em fins de semana e feriados | `[implementado]` |
 | Firebase (Auth e Firestore) com queda para o modo local (lowdb) e publicação no GitHub Pages | `[implementado]` |
+| Importação de tarefas por JSON (Gantt, aba Tarefas do projeto e tela de Tarefas), com prompt para IA e revisão | `[implementado]` |
 | Sincronizar com o Firebase o que foi feito no modo local durante uma queda | `[planejado]` |
 | Registro de auditoria (o Firebase Auth já limita tentativas de login) | `[planejado]` |
 | Convite de membro por e-mail (hoje é por link) | `[planejado]` |

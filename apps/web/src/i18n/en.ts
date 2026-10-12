@@ -1,7 +1,10 @@
 // Interface text in English. Must mirror every key of pt-BR.ts (the compiler checks it).
-import type { Messages } from './pt-BR';
+import type { ImportExampleDates, ImportPromptContext, Messages } from './pt-BR';
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
+type IssueParams = Record<string, string | number>;
+const list = (items: string[], empty: string) => (items.length > 0 ? items.join('; ') : empty);
 
 export const en: Messages = {
   common: {
@@ -80,6 +83,7 @@ export const en: Messages = {
     FIRESTORE_INDEX: 'A Firestore index is missing. Deploy firestore.indexes.json.',
     QUOTA: 'The Firebase usage limit was reached. Try again later.',
     DEMO_LOCAL_ONLY: 'The demo account only exists in local mode.',
+    IMPORT_INVALID: 'The import file has errors. Review it and try again.',
     INTERNAL: 'Something went wrong. Please try again.',
     NETWORK: 'No connection. Check your internet and try again.',
     UNKNOWN: 'The action could not be completed.',
@@ -325,6 +329,150 @@ export const en: Messages = {
     selectDates: 'Pick dates',
     selectProject: 'Pick project',
     linkedTimer: 'Timer running on this task',
+  },
+  taskImport: {
+    button: 'Import JSON',
+    title: 'Import tasks from JSON',
+    reviewTitle: 'Review import',
+    intro: 'Paste the tasks JSON or load a file. Nothing is saved before the review.',
+    intoProject: (name: string) => `Tasks without a project in the file go to ${name}.`,
+    noDefaultProject: 'Tasks without a project in the file stay without a project.',
+    placeholder: 'Paste the JSON here. The format is in the AI prompt and in the example.',
+    loadFile: 'Load file',
+    insertExample: 'Insert example',
+    copyPrompt: 'Copy AI prompt',
+    promptCopied: 'Prompt copied. Paste it into your AI of choice and describe what you want to plan.',
+    copyFailed: 'Could not copy. Please try again.',
+    promptHint:
+      'The prompt teaches the file format and carries the projects, members, tags, working days and holidays of this workspace. The AI returns JSON ready to paste here.',
+    review: 'Review',
+    back: 'Back',
+    confirm: (n: number) => plural(n, 'Import 1 task', `Import ${n} tasks`),
+    imported: (n: number) => plural(n, '1 task imported.', `${n} tasks imported.`),
+    summaryTasks: (total: number, subtasks: number) =>
+      `${plural(total, '1 task', `${total} tasks`)}${subtasks > 0 ? ` (${plural(subtasks, '1 subtask', `${subtasks} subtasks`)})` : ''}`,
+    summaryDependencies: (n: number) => plural(n, '1 dependency', `${n} dependencies`),
+    summaryNewTags: (names: string) => `New tags: ${names}`,
+    errors: (n: number) => plural(n, '1 error blocks the import', `${n} errors block the import`),
+    warnings: (n: number) => plural(n, '1 warning', `${n} warnings`),
+    taskLabel: (key: string, name: string) => `Task ${key} (${name})`,
+    rescheduled: 'Dates adjusted by the cascade or by the subtasks',
+    columns: {
+      task: 'Task',
+      project: 'Project',
+      dates: 'Dates',
+      estimate: 'Estimate',
+      assignees: 'Assignees',
+      priority: 'Priority',
+      dependsOn: 'Depends on',
+    },
+    perDay: 'per day',
+    issues: {
+      INVALID_JSON: (p: IssueParams) => `The text is not valid JSON (${p.message}).`,
+      SCHEMA_REQUIRED: (p: IssueParams) => `Missing required field: ${p.path}.`,
+      SCHEMA_TYPE: (p: IssueParams) => `Wrong value type at ${p.path}.`,
+      SCHEMA_RANGE: (p: IssueParams) => `Value out of range at ${p.path}.`,
+      SCHEMA_VALUE: (p: IssueParams) => `Value not accepted at ${p.path}.`,
+      SCHEMA_DATE: (p: IssueParams) => `Invalid date at ${p.path} (use YYYY-MM-DD).`,
+      SCHEMA_OTHER: (p: IssueParams) => `Invalid field at ${p.path}.`,
+      EMPTY: () => 'The file has no tasks.',
+      TOO_MANY: (p: IssueParams) => `The file goes over the limit of ${p.max} tasks.`,
+      DUPLICATE_REF: (p: IssueParams) => `The ref "${p.ref}" appears more than once.`,
+      UNKNOWN_PROJECT: (p: IssueParams) => `The project "${p.name}" does not exist in this workspace.`,
+      SUBTASK_PROJECT_IGNORED: (p: IssueParams) => `A subtask stays in its parent project: "${p.name}" was ignored.`,
+      UNKNOWN_ASSIGNEE: (p: IssueParams) => `"${p.name}" is not a workspace member and was ignored.`,
+      INVALID_DATES: (p: IssueParams) => `The start (${p.start}) is after the due date (${p.due}).`,
+      DURATION_WITHOUT_START: () => '"durationDays" without "startDate" was ignored.',
+      DUE_OVERRIDES_DURATION: () => '"dueDate" and "durationDays" together: "dueDate" wins.',
+      UNKNOWN_DEPENDENCY: (p: IssueParams) => `"${p.name}" in "dependsOn" is neither a ref in the file nor an existing task.`,
+      AMBIGUOUS_DEPENDENCY: (p: IssueParams) => `There is more than one task named "${p.name}": use a ref.`,
+      DEPENDENCY_SELF: () => 'The task depends on itself.',
+      DEPENDENCY_HIERARCHY: (p: IssueParams) => `A parent task and its subtask cannot be linked ("${p.name}").`,
+      DEPENDENCY_CYCLE: (p: IssueParams) => `The dependency on "${p.name}" creates a cycle.`,
+      DEPENDENCY_DUPLICATE: (p: IssueParams) => `Dependency on "${p.name}" repeated: counted once.`,
+    },
+    example: (d: ImportExampleDates) => `{
+  "version": 1,
+  "tasks": [
+    {
+      "ref": "planning",
+      "name": "Planning",
+      "subtasks": [
+        {
+          "ref": "requirements",
+          "name": "Requirements gathering",
+          "description": "Client interviews and feature list.",
+          "startDate": "${d.start}",
+          "durationDays": 3,
+          "estimateHours": 12,
+          "priority": "high",
+          "tags": ["Meeting"]
+        },
+        {
+          "ref": "scope",
+          "name": "Scope document",
+          "startDate": "${d.second}",
+          "durationDays": 2,
+          "estimateHours": 8,
+          "dependsOn": ["requirements"]
+        }
+      ]
+    },
+    {
+      "ref": "approval",
+      "name": "Scope approval",
+      "milestone": true,
+      "startDate": "${d.approval}",
+      "dependsOn": [{ "task": "scope", "type": "FS", "lagDays": 1 }]
+    }
+  ]
+}`,
+    aiPrompt: (c: ImportPromptContext) => `You will build a JSON file to import tasks into Open Task Tracker, a task system with a Gantt schedule and time tracking. First ask any questions you need about what I want to plan; once you have enough, answer only with the JSON.
+
+# Workspace context
+- Today: ${c.today} (${c.todayWeekday}).
+- Working days: ${c.workingDays}. Start and due dates must fall on working days, unless the task has "allowNonWorkingDays": true.
+- Holidays (not working days): ${list(c.holidays, 'none registered')}.
+- Auto scheduling: ${c.autoSchedule ? 'on. After the import the platform pushes each task after its predecessors.' : 'off. Dates stay exactly as written in the JSON.'}
+- Existing projects: ${list(c.projects, 'none')}.
+- ${c.currentProject ? `Tasks without "project" go to the "${c.currentProject}" project.` : 'Tasks without "project" stay without a project.'}
+- Members (use the email or the name in "assignees"): ${list(c.members, 'none')}.
+- Existing tags: ${list(c.tags, 'none')}. Tags that do not exist are created during the import.
+- Tasks that already exist in the project and may appear in "dependsOn" by exact name: ${list(c.existingTasks, 'none')}.
+
+# File format
+An object with "version": 1, "project" (optional, name of an existing project, applies to every task) and "tasks" (list of tasks). Each task accepts:
+- "ref": short text, unique in the file, used to link dependencies (for example "design").
+- "name": task name, up to 200 characters. The only required field.
+- "description": short description. "notes": long notes.
+- "project": name of an existing project. Only on top level tasks: subtasks stay in their parent project.
+- "status": "todo" (default), "in_progress" or "done".
+- "priority": "none", "low", "medium", "high" or "urgent" (or a number from 0 to 4).
+- "startDate" and "dueDate": dates as YYYY-MM-DD. A start alone makes a one day task.
+- "durationDays": duration in working days counted from "startDate", instead of "dueDate".
+- "estimateHours": estimate in hours, decimals allowed. "estimateMode": "total" (default) or "per_day" (hours per working day).
+- "progress": percent done, from 0 to 100.
+- "milestone": true for a milestone (a one day delivery).
+- "allowNonWorkingDays": true when the task may happen on weekends and holidays.
+- "billable": true when the hours are billable.
+- "assignees": list of member emails or names.
+- "tags": list of tag names.
+- "dependsOn": tasks that must come first. Each item is the "ref" of another task in the file (or the exact name of a task that already exists in the project), or an object { "task": "ref", "type": "FS", "lagDays": 0 }. Types: "FS" finish to start (default), "SS" start to start, "FF" finish to finish, "SF" start to finish. "lagDays" is the delay in working days and may be negative.
+- "subtasks": list of subtasks in the same format. The parent becomes a group in the Gantt and its dates, progress and status come from the children.
+
+# Rules
+1. When you deliver the file, answer only with valid JSON: no comments, no trailing commas, no text before or after.
+2. Plan from today on and respect working days and holidays.
+3. Do not create dependency cycles and do not link a task to its own parent or subtask.
+4. When you only know the duration, use "startDate" with "durationDays".
+5. Use only the projects and members listed above. An unknown project blocks the import; an unknown member is ignored.
+6. Limit of 500 tasks per file, subtasks included.
+
+# Example
+${c.example}
+
+# What I want to plan
+(Describe the project, deliveries, deadlines and who does what.)`,
   },
   gantt: {
     title: 'Schedule',
