@@ -169,6 +169,12 @@
   --z-overlay: 50;
   --z-popover: 60;
   --z-toast: 70;
+
+  /* Logotipo do Google no botão de login: cores da marca, iguais nos dois temas. */
+  --brand-google-blue: #4285f4;
+  --brand-google-green: #34a853;
+  --brand-google-yellow: #fbbc05;
+  --brand-google-red: #ea4335;
 }
 
 :root,

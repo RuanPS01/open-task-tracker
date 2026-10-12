@@ -68,6 +68,37 @@ export function registerSuites(makeEnv: () => Promise<TestEnv>): void {
       await api().session.login({ email: ana.account.email, password: 'nova-senha-1' });
     });
 
+    it('entra pelo Google (só no modo Firebase) e cria a conta na primeira vez', async () => {
+      if (env.mode === 'local') {
+        expect(api().canUseGoogle).toBe(false);
+        await expectCode(api().session.loginWithGoogle(), 'GOOGLE_UNAVAILABLE');
+        return;
+      }
+      expect(api().hasPassword()).toBe(true);
+      await api().session.logout();
+      const email = `gabi-${Date.now()}@gmail.com`;
+      env.nextGoogle({ name: 'Gabi Google', email: email.toUpperCase() });
+      const first = await api().session.loginWithGoogle({ locale: 'en', timezone: 'America/Recife' });
+      expect(first.user).toMatchObject({ name: 'Gabi Google', email });
+      expect(first.user.preferences).toMatchObject({ locale: 'en', timezone: 'America/Recife' });
+      expect(first.workspaces).toEqual([expect.objectContaining({ name: "Gabi Google's workspace", role: 'admin' })]);
+      expect(api().hasPassword()).toBe(false);
+
+      // Na volta, a mesma conta e nenhum workspace novo.
+      await api().session.logout();
+      const again = await api().session.loginWithGoogle();
+      expect(again.user.id).toBe(first.user.id);
+      expect(again.workspaces).toHaveLength(1);
+
+      // E entra num workspace por convite como qualquer pessoa.
+      await env.loginAs(ana);
+      const invite = await api().members.createInvite(wid(), { role: 'member', weeklyCapacityHours: 30 });
+      await api().session.logout();
+      await api().session.loginWithGoogle();
+      await api().members.acceptInvite(wid(), invite.id);
+      expect((await api().session.get())!.workspaces).toHaveLength(2);
+    });
+
     it('cria outro workspace e troca o atual', async () => {
       const second = await api().workspaces.create('Pessoal');
       let session = (await api().session.get())!;

@@ -78,7 +78,12 @@ export const en: Messages = {
     WEAK_PASSWORD: 'Weak password. Use at least 8 characters.',
     TOO_MANY_REQUESTS: 'Too many attempts. Wait a few minutes and try again.',
     AUTH_DISABLED:
-      'Email and password sign-in is not enabled in this Firebase project. In the Firebase console, open Authentication, click Get started and enable Email/Password.',
+      'This sign-in method is not enabled in the Firebase project. In the Firebase console, open Authentication, Sign-in method, and enable Email/Password or Google.',
+    AUTH_DOMAIN_UNAUTHORIZED:
+      'This address is not authorized for sign-in in Firebase. In the console, open Authentication, Settings, Authorized domains, and add the site domain.',
+    ACCOUNT_EXISTS_OTHER_METHOD: 'An account with this email already exists. Sign in with email and password.',
+    GOOGLE_UNAVAILABLE: 'Google sign-in only works with Firebase configured.',
+    GOOGLE_CANCELLED: 'Google sign-in cancelled.',
     INVITE_NOT_FOUND: 'Invite not found or already used. Ask for a new link.',
     EMAIL_CHANGE_UNSUPPORTED: 'Changing the email is not available in Firebase mode.',
     FIRESTORE_MISSING:
@@ -144,6 +149,7 @@ export const en: Messages = {
     demoButton: 'Explore with sample data',
     demoHint: 'Logs in as demo@exemplo.com (password demo1234) with a ready sample workspace.',
     or: 'or',
+    google: 'Continue with Google',
   },
   timer: {
     placeholder: 'What are you working on?',
@@ -684,6 +690,7 @@ ${c.example}
     newPassword: 'New password',
     changePassword: 'Change password',
     passwordChanged: 'Password changed.',
+    passwordGoogle: 'You sign in with Google. Your password and account security live in your Google account.',
     preferences: 'Preferences',
     theme: 'Theme',
     language: 'Language',

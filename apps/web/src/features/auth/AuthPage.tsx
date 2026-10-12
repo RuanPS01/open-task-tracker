@@ -3,13 +3,14 @@ import { useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { DataModeNote } from '../../components/DataModeNotice';
 import { backend } from '../../data/backend';
-import { useLogin, useSignup, useStartDemo } from '../../data/session';
+import { useGoogleLogin, useLogin, useSignup, useStartDemo } from '../../data/session';
 import { Button } from '../../components/ui/Button';
 import { Illustration } from '../../components/ui/EmptyState';
 import { Field, Input } from '../../components/ui/Field';
 import { useLocale, useT } from '../../i18n';
 import { useErrorMessage } from '../../lib/format';
 import { LogoMark } from '../../layout/Logo';
+import { GoogleButton } from './GoogleButton';
 import styles from './AuthPage.module.css';
 
 export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
@@ -20,6 +21,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const login = useLogin();
   const signup = useSignup();
   const demo = useStartDemo();
+  const google = useGoogleLogin();
   const isLocal = backend().mode === 'local';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -27,6 +29,20 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const [workspaceName, setWorkspaceName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const pending = login.isPending || signup.isPending;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const enterWithGoogle = () => {
+    setError(null);
+    google.mutate(
+      { locale, timezone },
+      {
+        onError: (err) => {
+          // Janela fechada pela própria pessoa: nada a avisar.
+          if ((err as { code?: string }).code !== 'GOOGLE_CANCELLED') setError(errorMessage(err));
+        },
+      },
+    );
+  };
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -42,7 +58,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           password,
           workspaceName: workspaceName.trim() || undefined,
           locale,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timezone,
         },
         { onError },
       );
@@ -65,6 +81,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         <form className={styles.card} onSubmit={submit} noValidate>
           <h1 className={styles.title}>{mode === 'login' ? t.auth.loginTitle : t.auth.signupTitle}</h1>
           <p className={styles.subtitle}>{mode === 'login' ? t.auth.loginSubtitle : t.auth.signupSubtitle}</p>
+          {backend().canUseGoogle && <GoogleButton loading={google.isPending} onClick={enterWithGoogle} />}
           {mode === 'signup' && (
             <Field label={t.auth.name}>
               {(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required autoFocus />}

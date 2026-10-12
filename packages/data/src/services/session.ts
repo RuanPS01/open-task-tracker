@@ -1,11 +1,13 @@
 // Sessão e perfil: cadastro, login, preferências e workspace atual.
 import {
   changePasswordSchema,
+  googleLoginSchema,
   loginSchema,
   signupSchema,
   switchWorkspaceSchema,
   updateProfileSchema,
   type ChangePasswordInput,
+  type GoogleLoginInput,
   type Id,
   type LoginInput,
   type SessionResponse,
@@ -21,16 +23,34 @@ import { toTimeEntry } from './timeEntries';
 import { newUserDoc, toUser } from './users';
 import { addWorkspaceOps, listWorkspacesFor } from './workspaces';
 
-/** Sessão atual ou null quando ninguém entrou. */
-export async function getSession(ctx: Ctx): Promise<SessionResponse | null> {
+type NewAccountPreferences = Pick<GoogleLoginInput, 'locale' | 'timezone'>;
+
+/** Perfil e workspace padrão de quem acabou de criar a conta (cadastro ou Google). */
+function addAccountOps(batch: Batch, ctx: Ctx, user: UserDoc, locale: string | undefined, workspaceName?: string): void {
+  const name = workspaceName ?? (locale === 'en' ? `${user.name}'s workspace` : `Workspace de ${user.name}`);
+  batch.set(paths.users, user.id, user);
+  addWorkspaceOps(batch, { id: ctx.store.newId(), name, owner: user, now: user.createdAt });
+}
+
+/**
+ * Sessão atual ou null quando ninguém entrou. Conta de login sem perfil (primeira
+ * entrada pelo Google, ou cadastro que caiu no meio) ganha o perfil e o workspace padrão.
+ */
+export async function getSession(ctx: Ctx, newAccount: NewAccountPreferences = {}): Promise<SessionResponse | null> {
   const uid = ctx.auth.currentUid();
   if (!uid) return null;
   let user = await ctx.store.get<UserDoc>(paths.users, uid);
   if (!user) {
-    // Conta criada sem perfil (o cadastro caiu no meio): recria o perfil mínimo.
-    const email = ctx.auth.currentEmail() ?? '';
-    user = newUserDoc(uid, { name: email.split('@')[0] || email, email }, nowIso(ctx));
-    await ctx.store.commit(new Batch().set(paths.users, uid, user).ops);
+    const email = (ctx.auth.currentEmail() ?? '').toLowerCase();
+    const name = ctx.auth.currentName()?.trim().slice(0, 80) || email.split('@')[0] || email;
+    const preferences = {
+      ...(newAccount.locale ? { locale: newAccount.locale } : {}),
+      ...(newAccount.timezone ? { timezone: newAccount.timezone } : {}),
+    };
+    user = newUserDoc(uid, { name, email, preferences }, nowIso(ctx));
+    const batch = new Batch();
+    addAccountOps(batch, ctx, user, newAccount.locale);
+    await ctx.store.commit(batch.ops);
   }
   const workspaces = await listWorkspacesFor(ctx, uid);
   const currentId = user.currentWorkspaceId;
@@ -45,8 +65,8 @@ export async function getSession(ctx: Ctx): Promise<SessionResponse | null> {
   return { user: toUser(user), workspaces };
 }
 
-async function requireSession(ctx: Ctx): Promise<SessionResponse> {
-  const session = await getSession(ctx);
+async function requireSession(ctx: Ctx, newAccount?: NewAccountPreferences): Promise<SessionResponse> {
+  const session = await getSession(ctx, newAccount);
   if (!session) throw new AppError('UNAUTHORIZED', 'Sessão inválida');
   return session;
 }
@@ -67,12 +87,17 @@ export async function signup(ctx: Ctx, raw: SignupInput): Promise<SessionRespons
     },
     now,
   );
-  const workspaceName =
-    input.workspaceName ?? (input.locale === 'en' ? `${input.name}'s workspace` : `Workspace de ${input.name}`);
-  const batch = new Batch().set(paths.users, uid, user);
-  addWorkspaceOps(batch, { id: ctx.store.newId(), name: workspaceName, owner: user, now });
+  const batch = new Batch();
+  addAccountOps(batch, ctx, user, input.locale, input.workspaceName);
   await ctx.store.commit(batch.ops);
   return requireSession(ctx);
+}
+
+/** Entra pelo Google; na primeira vez cria o perfil (nome do Google) e o workspace padrão. */
+export async function loginWithGoogle(ctx: Ctx, raw: GoogleLoginInput = {}): Promise<SessionResponse> {
+  const input = parse(googleLoginSchema, raw);
+  await ctx.auth.signInWithGoogle();
+  return requireSession(ctx, input);
 }
 
 export async function login(ctx: Ctx, raw: LoginInput): Promise<SessionResponse> {

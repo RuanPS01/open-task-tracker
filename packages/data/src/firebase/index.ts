@@ -7,12 +7,16 @@ import {
   createUserWithEmailAndPassword,
   EmailAuthProvider,
   getAuth,
+  GoogleAuthProvider,
   onAuthStateChanged,
   reauthenticateWithCredential,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
   signOut,
   updatePassword,
   type Auth,
+  type UserCredential,
 } from 'firebase/auth';
 import {
   arrayRemove,
@@ -81,6 +85,17 @@ export function authError(error: unknown): AppError {
       return new AppError('TOO_MANY_REQUESTS', message);
     case 'auth/network-request-failed':
       return new AppError('NETWORK', message);
+    // Janela do Google fechada ou trocada por outra: não é erro para mostrar.
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+    case 'auth/user-cancelled':
+      return new AppError('GOOGLE_CANCELLED', message);
+    // O domínio do site não está em Authentication, Configurações, Domínios autorizados.
+    case 'auth/unauthorized-domain':
+      return new AppError('AUTH_DOMAIN_UNAUTHORIZED', message);
+    // Mesmo e-mail já cadastrado com senha (o Firebase guarda uma conta por e-mail).
+    case 'auth/account-exists-with-different-credential':
+      return new AppError('ACCOUNT_EXISTS_OTHER_METHOD', message);
     // Login por e-mail e senha não foi ativado no console do Firebase, ou o Authentication
     // nunca foi iniciado no projeto (configuration-not-found).
     case 'auth/operation-not-allowed':
@@ -150,11 +165,37 @@ export class FirestoreStore implements DocStore {
   }
 }
 
+/** Como abrir o login do Google (os testes trocam por uma credencial do emulador). */
+export type GoogleSignIn = (auth: Auth) => Promise<UserCredential>;
+
+/**
+ * Janela do Google (pop-up). Onde não há janela (pop-up bloqueado, app instalado em
+ * alguns celulares), segue por redirecionamento: a página sai e, na volta, o SDK
+ * conclui a entrada sozinho na abertura (authStateReady).
+ */
+const popupOrRedirect: GoogleSignIn = async (auth) => {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  try {
+    return await signInWithPopup(auth, provider);
+  } catch (error) {
+    const code = codeOf(error);
+    if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+      return signInWithRedirect(auth, provider);
+    }
+    throw error;
+  }
+};
+
 export class FirebaseAuthGateway implements AuthGateway {
   // Trocar e-mail no Firebase exige confirmação pelo próprio e-mail (fora do escopo).
   readonly canChangeEmail = false;
+  readonly canUseGoogle = true;
 
-  constructor(private readonly auth: Auth) {}
+  constructor(
+    private readonly auth: Auth,
+    private readonly googleSignIn: GoogleSignIn = popupOrRedirect,
+  ) {}
 
   currentUid(): string | null {
     return this.auth.currentUser?.uid ?? null;
@@ -162,6 +203,22 @@ export class FirebaseAuthGateway implements AuthGateway {
 
   currentEmail(): string | null {
     return this.auth.currentUser?.email ?? null;
+  }
+
+  currentName(): string | null {
+    return this.auth.currentUser?.displayName ?? null;
+  }
+
+  hasPassword(): boolean {
+    return this.auth.currentUser?.providerData.some((info) => info.providerId === 'password') ?? false;
+  }
+
+  async signInWithGoogle(): Promise<string> {
+    try {
+      return (await this.googleSignIn(this.auth)).user.uid;
+    } catch (error) {
+      throw authError(error);
+    }
   }
 
   async signUp(email: string, password: string): Promise<string> {
@@ -217,6 +274,8 @@ export interface FirebaseConnectOptions {
   emulator?: { host: string; firestorePort: number; authPort: number };
   /** Desiste da conexão (por exemplo, quando a checagem rápida já achou o motivo). */
   signal?: AbortSignal;
+  /** Login do Google (padrão: pop-up com redirecionamento de reserva). */
+  googleSignIn?: GoogleSignIn;
 }
 
 export interface FirebaseConnection {
@@ -245,7 +304,11 @@ export async function connectFirebase(
     }
     await probe(db, options.timeoutMs ?? 8000, options.signal);
     await auth.authStateReady();
-    return { store: new FirestoreStore(db), auth: new FirebaseAuthGateway(auth), dispose: () => deleteApp(app) };
+    return {
+      store: new FirestoreStore(db),
+      auth: new FirebaseAuthGateway(auth, options.googleSignIn),
+      dispose: () => deleteApp(app),
+    };
   } catch (error) {
     await deleteApp(app).catch(() => undefined);
     throw error;

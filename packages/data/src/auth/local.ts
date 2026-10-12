@@ -2,7 +2,7 @@
 // PBKDF2 (Web Crypto). Quem tem acesso ao navegador tem acesso aos dados de qualquer
 // forma: a senha aqui separa pessoas que dividem o computador, não protege segredo.
 import type { LowSync } from 'lowdb';
-import { AppError, conflict } from '../errors';
+import { AppError, badRequest, conflict } from '../errors';
 import { randomId } from '../store/types';
 import type { LocalAccount, LocalData } from '../store/local';
 import type { AuthGateway } from './types';
@@ -35,6 +35,7 @@ const invalidCredentials = () => new AppError('INVALID_CREDENTIALS', 'E-mail ou 
 
 export class LocalAuth implements AuthGateway {
   readonly canChangeEmail = true;
+  readonly canUseGoogle = false;
   private readonly listeners = new Set<(uid: string | null) => void>();
 
   constructor(private readonly db: LowSync<LocalData>) {}
@@ -59,6 +60,18 @@ export class LocalAuth implements AuthGateway {
   currentEmail(): string | null {
     const uid = this.currentUid();
     return uid ? (this.accountByUid(uid)?.email ?? null) : null;
+  }
+
+  currentName(): string | null {
+    return null;
+  }
+
+  hasPassword(): boolean {
+    return true;
+  }
+
+  async signInWithGoogle(): Promise<string> {
+    throw badRequest('GOOGLE_UNAVAILABLE', 'Login com Google só no modo Firebase');
   }
 
   async signUp(email: string, password: string): Promise<string> {

@@ -46,6 +46,9 @@ export function createBackend(options: BackendOptions) {
     fallbackReason: options.fallbackReason ?? null,
     fallbackDetail: options.fallbackDetail ?? null,
     canChangeEmail: options.auth.canChangeEmail,
+    canUseGoogle: options.auth.canUseGoogle,
+    /** A conta logada tem senha (quem entrou só pelo Google não tem). */
+    hasPassword: () => options.auth.hasPassword(),
     onAuthChange: (listener: (uid: string | null) => void) => options.auth.onChange(listener),
     reload: () => options.reload?.(),
 
@@ -53,6 +56,8 @@ export function createBackend(options: BackendOptions) {
       get: fn(session.getSession),
       signup: fn(session.signup),
       login: fn(session.login),
+      /** Só no modo Firebase (no local: GOOGLE_UNAVAILABLE). */
+      loginWithGoogle: fn(session.loginWithGoogle),
       logout: fn(session.logout),
       updateProfile: fn(session.updateProfile),
       changePassword: fn(session.changePassword),

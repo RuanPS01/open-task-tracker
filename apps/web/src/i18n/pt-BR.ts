@@ -100,7 +100,12 @@ export const ptBR = {
     WEAK_PASSWORD: 'Senha fraca. Use pelo menos 8 caracteres.',
     TOO_MANY_REQUESTS: 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.',
     AUTH_DISABLED:
-      'O login por e-mail e senha não está ativado neste projeto do Firebase. No console do Firebase, abra Authentication, clique em Começar e ative E-mail/senha.',
+      'Este jeito de entrar não está ativado no projeto do Firebase. No console do Firebase, abra Authentication, Método de login, e ative E-mail/senha ou Google.',
+    AUTH_DOMAIN_UNAUTHORIZED:
+      'Este endereço não está autorizado para login no Firebase. No console, abra Authentication, Configurações, Domínios autorizados, e acrescente o domínio do site.',
+    ACCOUNT_EXISTS_OTHER_METHOD: 'Já existe uma conta com este e-mail. Entre com e-mail e senha.',
+    GOOGLE_UNAVAILABLE: 'O login com Google só funciona com o Firebase configurado.',
+    GOOGLE_CANCELLED: 'Login com Google cancelado.',
     INVITE_NOT_FOUND: 'Convite não encontrado ou já usado. Peça um novo link.',
     EMAIL_CHANGE_UNSUPPORTED: 'A troca de e-mail não está disponível no modo Firebase.',
     FIRESTORE_MISSING:
@@ -166,6 +171,7 @@ export const ptBR = {
     demoButton: 'Explorar com dados de exemplo',
     demoHint: 'Entra com a conta demo@exemplo.com (senha demo1234) e um workspace de exemplo pronto.',
     or: 'ou',
+    google: 'Continuar com Google',
   },
   timer: {
     placeholder: 'No que você está trabalhando?',
@@ -706,6 +712,7 @@ ${c.example}
     newPassword: 'Nova senha',
     changePassword: 'Trocar senha',
     passwordChanged: 'Senha alterada.',
+    passwordGoogle: 'Você entra pelo Google. A senha e a segurança da conta ficam na sua conta Google.',
     preferences: 'Preferências',
     theme: 'Tema',
     language: 'Idioma',
