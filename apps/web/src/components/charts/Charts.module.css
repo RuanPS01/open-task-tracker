@@ -225,6 +225,7 @@
 .donutTable td:nth-child(3),
 .donutTable td:nth-child(4) {
   text-align: right;
+  white-space: nowrap;
 }
 
 .donutName {
