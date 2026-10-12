@@ -1,5 +1,5 @@
-// Valores fixos do domínio, compartilhados por API e web.
-// Mudou algum valor aqui? Atualize docs/06-dados-e-api.md.
+// Valores fixos do domínio, compartilhados pela camada de dados e pela web.
+// Mudou algum valor aqui? Atualize docs/06-dados-e-armazenamento.md.
 
 export const TASK_STATUSES = ['todo', 'in_progress', 'done'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
@@ -59,6 +59,12 @@ export const PROJECT_COLORS = [
   '#566614',
   '#525266',
 ] as const;
+
+/**
+ * Id reservado para "nenhum": filtro "sem projeto" nos relatórios, raia "sem
+ * responsável" na capacidade. Ids gerados têm 20 caracteres e nunca colidem com ele.
+ */
+export const NO_ID = 'none';
 
 export const DEFAULT_WORKING_DAYS = [1, 2, 3, 4, 5] as const;
 export const DEFAULT_WEEKLY_CAPACITY_HOURS = 40;

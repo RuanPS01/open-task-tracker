@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useSessionQuery } from '../api/session';
+import { useSessionQuery } from '../data/session';
 import { LoadingBlock } from '../components/ui/EmptyState';
 import { NoWorkspace } from '../features/settings/NoWorkspace';
 import { AppShell } from '../layout/AppShell';
@@ -24,6 +24,15 @@ export function AuthGate() {
       </AppShell>
     </SessionProvider>
   );
+}
+
+/** Exige login, mas não um workspace (página de convite, que é como a pessoa entra num). */
+export function RequireLogin() {
+  const { data: session, isLoading } = useSessionQuery();
+  const location = useLocation();
+  if (isLoading) return <LoadingBlock />;
+  if (!session) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  return <Outlet />;
 }
 
 export function PublicOnly() {

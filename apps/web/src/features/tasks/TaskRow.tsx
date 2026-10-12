@@ -1,8 +1,8 @@
-import { toIsoDate, type Member, type Project, type Task } from '@ott/shared';
+import { toIsoDate, type Id, type Member, type Project, type Task } from '@ott/shared';
 import clsx from 'clsx';
 import { Diamond, GitBranch, Play, Square } from 'lucide-react';
-import { useRunningTimer, useStartTimer, useStopTimer } from '../../api/timeEntries';
-import { useUpdateTask } from '../../api/tasks';
+import { useRunningTimer, useStartTimer, useStopTimer } from '../../data/timeEntries';
+import { useUpdateTask } from '../../data/tasks';
 import { PriorityIcon, StatusIcon } from '../../components/pickers/TaskIcons';
 import { AvatarStack } from '../../components/ui/Avatar';
 import { IconButton } from '../../components/ui/Button';
@@ -12,10 +12,10 @@ import { useFormat } from '../../lib/format';
 import styles from './TasksPage.module.css';
 
 export interface TaskRowContext {
-  projects: Map<number, Project>;
-  members: Map<number, Member>;
-  parents: Map<number, Task>;
-  childCount: Map<number, { done: number; total: number }>;
+  projects: Map<Id, Project>;
+  members: Map<Id, Member>;
+  parents: Map<Id, Task>;
+  childCount: Map<Id, { done: number; total: number }>;
 }
 
 /** Linha de tarefa da Lista (e do projeto): concluir, nome, projeto, datas, tempo, prioridade, pessoas. */

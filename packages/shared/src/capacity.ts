@@ -1,6 +1,6 @@
 // Carga planejada por pessoa e por dia, usada na Linha do tempo (capacidade da equipe).
 // Regra detalhada em docs/08-planejamento-gantt-e-algoritmos.md, seção "Capacidade".
-import type { EstimateMode, TaskStatus } from './constants';
+import { NO_ID, type EstimateMode, type TaskStatus } from './constants';
 import type { Id, IsoDate } from './entities';
 import { eachDay, isWorkday, maxIsoDate, minIsoDate, workdaysBetween, type CalendarInput } from './dates';
 import { calendarFor } from './scheduling';
@@ -18,7 +18,7 @@ export interface AllocatableTask {
 }
 
 /** Chave usada para tarefas sem responsável. */
-export const UNASSIGNED = 0;
+export const UNASSIGNED = NO_ID;
 
 export interface AllocationResult {
   /** Segundos planejados por pessoa (ou UNASSIGNED) e por dia. */

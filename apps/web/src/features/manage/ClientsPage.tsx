@@ -1,8 +1,8 @@
-import type { Client } from '@ott/shared';
+import type { Client, Id } from '@ott/shared';
 import clsx from 'clsx';
 import { Archive, ArchiveRestore, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { useClients, useCreateClient, useDeleteClient, useUpdateClient } from '../../api/workspace';
+import { useClients, useCreateClient, useDeleteClient, useUpdateClient } from '../../data/workspace';
 import { Button, IconButton } from '../../components/ui/Button';
 import { useConfirm } from '../../components/ui/Confirm';
 import { EmptyState, LoadingBlock } from '../../components/ui/EmptyState';
@@ -22,7 +22,7 @@ export function ClientsPage() {
   const remove = useDeleteClient();
   const [name, setName] = useState('');
   const [search, setSearch] = useState('');
-  const [renaming, setRenaming] = useState<number | null>(null);
+  const [renaming, setRenaming] = useState<Id | null>(null);
 
   const submit = () => {
     if (!name.trim()) return;

@@ -1,7 +1,7 @@
 import { CURRENCIES, type Currency } from '@ott/shared';
 import clsx from 'clsx';
 import { useState } from 'react';
-import { useUpdateWorkspace } from '../../api/workspace';
+import { useUpdateWorkspace } from '../../data/workspace';
 import { useIsAdmin, useWorkspace } from '../../app/session';
 import { Button } from '../../components/ui/Button';
 import { Field, Input, Select, Switch } from '../../components/ui/Field';

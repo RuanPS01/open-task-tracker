@@ -2,10 +2,10 @@
 import { formatClock, fromIsoDate, toIsoDate, type Id, type TimeEntry } from '@ott/shared';
 import { CircleDollarSign, Copy, Folder, Hash, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { useProjectMap } from '../../api/projects';
-import { useTasks } from '../../api/tasks';
-import { useCreateTimeEntry, useDeleteTimeEntry, useUpdateTimeEntry } from '../../api/timeEntries';
-import { useTags } from '../../api/workspace';
+import { useProjectMap } from '../../data/projects';
+import { useTasks } from '../../data/tasks';
+import { useCreateTimeEntry, useDeleteTimeEntry, useUpdateTimeEntry } from '../../data/timeEntries';
+import { useTags } from '../../data/workspace';
 import { ProjectTaskPicker } from '../../components/pickers/ProjectTaskPicker';
 import pickerStyles from '../../components/pickers/Picker.module.css';
 import { TagPicker } from '../../components/pickers/TagPicker';

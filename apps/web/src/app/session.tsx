@@ -1,6 +1,6 @@
 // Sessão já carregada (usuário, workspace atual e lista de workspaces).
 // Só existe dentro do AuthGate, então os componentes podem assumir login feito.
-import type { User, UserPreferences, Workspace } from '@ott/shared';
+import type { Id, User, UserPreferences, Workspace } from '@ott/shared';
 import { createContext, useContext, type ReactNode } from 'react';
 
 export interface SessionValue {
@@ -22,7 +22,7 @@ export function useSession(): SessionValue {
 }
 
 export const useWorkspace = (): Workspace => useSession().workspace;
-export const useWorkspaceId = (): number => useSession().workspace.id;
+export const useWorkspaceId = (): Id => useSession().workspace.id;
 export const useCurrentUser = (): User => useSession().user;
 export const usePreferences = (): UserPreferences => useSession().user.preferences;
 export const useIsAdmin = (): boolean => useSession().workspace.role === 'admin';

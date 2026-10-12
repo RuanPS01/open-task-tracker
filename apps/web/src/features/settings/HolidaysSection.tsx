@@ -3,7 +3,7 @@
 import { toIsoDate, type IsoDate } from '@ott/shared';
 import { CalendarPlus, Download, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { useCreateHoliday, useDeleteHoliday, useHolidays, useImportHolidays } from '../../api/workspace';
+import { useCreateHoliday, useDeleteHoliday, useHolidays, useImportHolidays } from '../../data/workspace';
 import { Button, IconButton } from '../../components/ui/Button';
 import { Calendar } from '../../components/ui/Calendar';
 import { Checkbox, Input } from '../../components/ui/Field';

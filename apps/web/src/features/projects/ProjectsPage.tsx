@@ -1,12 +1,12 @@
 // Tela Projetos: tabela com período, status de tempo (registrado x estimado),
 // faturamento e equipe, como a lista de projetos do Toggl Track.
-import type { Member, Project } from '@ott/shared';
+import { NO_ID, type Id, type Member, type Project } from '@ott/shared';
 import clsx from 'clsx';
 import { Archive, ArchiveRestore, Building2, MoreHorizontal, Pencil, Pin, Plus, Search, Star, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDeleteProject, useProjects, useUpdateProject } from '../../api/projects';
-import { useClients, useMembers } from '../../api/workspace';
+import { useDeleteProject, useProjects, useUpdateProject } from '../../data/projects';
+import { useClients, useMembers } from '../../data/workspace';
 import { useIsAdmin } from '../../app/session';
 import { AvatarStack } from '../../components/ui/Avatar';
 import { Button, IconButton } from '../../components/ui/Button';
@@ -59,7 +59,7 @@ export function ProjectsPage() {
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
   const [status, setStatus] = useStoredState<StatusFilter>('ott.projectsStatus', 'active');
-  const [clientFilter, setClientFilter] = useState<number | 'all' | 0>('all');
+  const [clientFilter, setClientFilter] = useState<Id | 'all'>('all');
   const [search, setSearch] = useState('');
   const [dialog, setDialog] = useState<{ project?: Project } | null>(null);
 
@@ -68,7 +68,7 @@ export function ProjectsPage() {
 
   const visible = projects
     .filter((project) => (status === 'all' ? true : status === 'archived' ? project.archived : !project.archived))
-    .filter((project) => clientFilter === 'all' || (project.clientId ?? 0) === clientFilter)
+    .filter((project) => clientFilter === 'all' || (project.clientId ?? NO_ID) === clientFilter)
     .filter((project) => project.name.toLowerCase().includes(search.trim().toLowerCase()))
     .sort((a, b) => Number(b.pinned) - Number(a.pinned) || a.name.localeCompare(b.name));
 
@@ -78,7 +78,7 @@ export function ProjectsPage() {
   };
 
   const clientLabel =
-    clientFilter === 'all' ? t.common.all : clientFilter === 0 ? t.projects.noClient : (clientName.get(clientFilter) ?? '');
+    clientFilter === 'all' ? t.common.all : clientFilter === NO_ID ? t.projects.noClient : (clientName.get(clientFilter) ?? '');
 
   return (
     <>
@@ -106,7 +106,7 @@ export function ProjectsPage() {
           )}
           items={[
             { key: 'all', label: t.common.all, checked: clientFilter === 'all', onSelect: () => setClientFilter('all') },
-            { key: 'none', label: t.projects.noClient, checked: clientFilter === 0, onSelect: () => setClientFilter(0) },
+            { key: 'none', label: t.projects.noClient, checked: clientFilter === NO_ID, onSelect: () => setClientFilter(NO_ID) },
             'separator',
             ...clients.map((client) => ({
               key: `c${client.id}`,

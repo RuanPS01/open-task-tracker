@@ -2,8 +2,8 @@
 import { ChartGantt, Clock, FileText, Folder, ListChecks, Settings, Tag, Users } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProjects } from '../../api/projects';
-import { useTasks } from '../../api/tasks';
+import { useProjects } from '../../data/projects';
+import { useTasks } from '../../data/tasks';
 import { StatusIcon } from '../../components/pickers/TaskIcons';
 import { Modal } from '../../components/ui/Modal';
 import { ColorDot } from '../../components/ui/ProjectLabel';

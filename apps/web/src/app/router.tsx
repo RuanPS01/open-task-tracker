@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AuthPage } from '../features/auth/AuthPage';
+import { InvitePage } from '../features/auth/InvitePage';
 import { ClientsPage } from '../features/manage/ClientsPage';
 import { MembersPage } from '../features/manage/MembersPage';
 import { TagsPage } from '../features/manage/TagsPage';
@@ -11,8 +12,11 @@ import { WorkspaceSettingsPage } from '../features/settings/WorkspaceSettingsPag
 import { TasksPage } from '../features/tasks/TasksPage';
 import { TimelinePage } from '../features/timeline/TimelinePage';
 import { TimerPage } from '../features/timer/TimerPage';
-import { AuthGate, PublicOnly } from './AuthGate';
+import { AuthGate, PublicOnly, RequireLogin } from './AuthGate';
 import { RootLayout } from './RootLayout';
+
+// No GitHub Pages o app fica num subcaminho (/nome-do-repositorio/): o Vite informa em BASE_URL.
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +28,10 @@ export const router = createBrowserRouter([
           { path: '/login', element: <AuthPage mode="login" /> },
           { path: '/signup', element: <AuthPage mode="signup" /> },
         ],
+      },
+      {
+        element: <RequireLogin />,
+        children: [{ path: '/invite/:workspaceId/:inviteId', element: <InvitePage /> }],
       },
       {
         element: <AuthGate />,
@@ -45,4 +53,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+], { basename });

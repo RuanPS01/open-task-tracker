@@ -2,6 +2,8 @@
 // projeto. Cada faixa mostra as tarefas agendadas e a carga diária; a coluna da
 // esquerda mostra horas livres (ou acima) no período de capacidade escolhido.
 import {
+  NO_ID,
+  UNASSIGNED,
   addDays,
   capacityInRange,
   computeAllocations,
@@ -11,7 +13,6 @@ import {
   isWorkday,
   startOfWeekIso,
   toIsoDate,
-  UNASSIGNED,
   weekday,
   type Id,
   type IsoDate,
@@ -21,9 +22,9 @@ import clsx from 'clsx';
 import { CalendarRange, ChevronLeft, ChevronRight, Crosshair, ListTree, Minus, Plus, UserPlus } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProjectMap } from '../../api/projects';
-import { useScheduleTasks, useTasks } from '../../api/tasks';
-import { useMembers } from '../../api/workspace';
+import { useProjectMap } from '../../data/projects';
+import { useScheduleTasks, useTasks } from '../../data/tasks';
+import { useMembers } from '../../data/workspace';
 import { useIsAdmin, usePreferences, useWorkspace } from '../../app/session';
 import { Avatar } from '../../components/ui/Avatar';
 import { Button, IconButton } from '../../components/ui/Button';
@@ -131,9 +132,9 @@ export function TimelinePage() {
 
   const lanes: Lane[] = useMemo(() => {
     if (groupBy === 'projects') {
-      const byProject = new Map<number, Task[]>();
+      const byProject = new Map<Id, Task[]>();
       for (const task of shown) {
-        const key = task.projectId ?? 0;
+        const key = task.projectId ?? NO_ID;
         byProject.set(key, [...(byProject.get(key) ?? []), task]);
       }
       return [...byProject.entries()]

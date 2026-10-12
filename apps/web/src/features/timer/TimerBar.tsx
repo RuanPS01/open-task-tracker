@@ -5,16 +5,16 @@ import { formatClock, fromIsoDate, toIsoDate, type Id, type TimeEntry } from '@o
 import clsx from 'clsx';
 import { CircleDollarSign, Clock, Folder, Hash, ListPlus, Play, Plus, Square } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useProjectMap } from '../../api/projects';
-import { useTasks } from '../../api/tasks';
+import { useProjectMap } from '../../data/projects';
+import { useTasks } from '../../data/tasks';
 import {
   useCreateTimeEntry,
   useRunningTimer,
   useStartTimer,
   useStopTimer,
   useUpdateTimeEntry,
-} from '../../api/timeEntries';
-import { useTags } from '../../api/workspace';
+} from '../../data/timeEntries';
+import { useTags } from '../../data/workspace';
 import { ProjectTaskPicker } from '../../components/pickers/ProjectTaskPicker';
 import { TagPicker } from '../../components/pickers/TagPicker';
 import { DurationInput, TimeInput } from '../../components/pickers/TimeInputs';

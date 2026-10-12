@@ -56,26 +56,26 @@ describe('cabeçalho', () => {
 
 describe('linhas da árvore', () => {
   const tasks = [
-    { id: 1, parentId: null, position: 2 },
-    { id: 2, parentId: null, position: 1 },
-    { id: 3, parentId: 1, position: 1 },
-    { id: 4, parentId: 3, position: 1 },
-    { id: 5, parentId: 99, position: 3 },
+    { id: '1', parentId: null, position: 2 },
+    { id: '2', parentId: null, position: 1 },
+    { id: '3', parentId: '1', position: 1 },
+    { id: '4', parentId: '3', position: 1 },
+    { id: '5', parentId: '99', position: 3 },
   ];
 
   it('ordena por posição, numera e marca quem tem filhos', () => {
     const rows = buildRows(tasks, new Set());
     expect(rows.map((row) => [row.task.id, row.depth, row.wbs, row.hasChildren])).toEqual([
-      [2, 0, '1', false],
-      [1, 0, '2', true],
-      [3, 1, '2.1', true],
-      [4, 2, '2.1.1', false],
-      [5, 0, '3', false],
+      ['2', 0, '1', false],
+      ['1', 0, '2', true],
+      ['3', 1, '2.1', true],
+      ['4', 2, '2.1.1', false],
+      ['5', 0, '3', false],
     ]);
   });
 
   it('esconde a subárvore de pais recolhidos', () => {
-    expect(buildRows(tasks, new Set([1])).map((row) => row.task.id)).toEqual([2, 1, 5]);
+    expect(buildRows(tasks, new Set(['1'])).map((row) => row.task.id)).toEqual(['2', '1', '5']);
   });
 });
 

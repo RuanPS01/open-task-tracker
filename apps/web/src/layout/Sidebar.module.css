@@ -222,6 +222,14 @@
   padding-top: 12px;
 }
 
+.dataMode {
+  padding: 8px 8px 0;
+}
+
+.dataMode:empty {
+  display: none;
+}
+
 .running {
   display: flex;
   align-items: center;

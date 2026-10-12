@@ -1,11 +1,19 @@
 // Membros do workspace: função, capacidade semanal (usada na Linha do tempo) e
-// valor/hora (usado nos relatórios). Só administradores alteram.
-import type { AddMemberResponse, Member, MemberRole } from '@ott/shared';
+// valor/hora (usado nos relatórios). Só administradores alteram. Gente nova entra
+// por link de convite (não há servidor para criar a conta de outra pessoa).
+import type { Invite, Member, MemberRole } from '@ott/shared';
 import clsx from 'clsx';
 import { Copy, MoreHorizontal, Pencil, Power, Trash2, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useAddMember, useMembers, useRemoveMember, useUpdateMember } from '../../api/workspace';
+import {
+  useCreateInvite,
+  useInvites,
+  useMembers,
+  useRemoveMember,
+  useRevokeInvite,
+  useUpdateMember,
+} from '../../data/workspace';
 import { useCurrentUser, useIsAdmin, useWorkspace } from '../../app/session';
 import { Avatar } from '../../components/ui/Avatar';
 import { Button, IconButton } from '../../components/ui/Button';
@@ -20,101 +28,32 @@ import { PageHeader } from '../../layout/PageHeader';
 import { useFormat } from '../../lib/format';
 import styles from './Manage.module.css';
 
-function MemberDialog({ member, onClose }: { member?: Member; onClose: () => void }) {
+interface MemberValues {
+  role: MemberRole;
+  weeklyCapacityHours: number;
+  hourlyRate: number | null;
+}
+
+/** Campos comuns da edição de membro e do convite: função, capacidade e valor/hora. */
+function MemberFields({ initial, onChange }: { initial?: Partial<MemberValues>; onChange: (values: MemberValues) => void }) {
   const t = useT();
   const workspace = useWorkspace();
-  const add = useAddMember();
-  const update = useUpdateMember();
-  const [name, setName] = useState(member?.name ?? '');
-  const [email, setEmail] = useState(member?.email ?? '');
-  const [role, setRole] = useState<MemberRole>(member?.role ?? 'member');
-  const [capacity, setCapacity] = useState(String(member?.weeklyCapacityHours ?? 40));
-  const [rate, setRate] = useState(member?.hourlyRate?.toString() ?? '');
-  const [created, setCreated] = useState<AddMemberResponse | null>(null);
+  const [role, setRole] = useState<MemberRole>(initial?.role ?? 'member');
+  const [capacity, setCapacity] = useState(String(initial?.weeklyCapacityHours ?? 40));
+  const [rate, setRate] = useState(initial?.hourlyRate?.toString() ?? '');
 
-  const submit = () => {
+  useEffect(() => {
     const weeklyCapacityHours = Number.parseFloat(capacity.replace(',', '.'));
     const hourlyRate = rate.trim() ? Number.parseFloat(rate.replace(',', '.')) : null;
-    const common = {
+    onChange({
       role,
       weeklyCapacityHours: Number.isFinite(weeklyCapacityHours) ? weeklyCapacityHours : 40,
       hourlyRate: hourlyRate !== null && Number.isFinite(hourlyRate) ? hourlyRate : null,
-    };
-    if (member) {
-      update.mutate({ userId: member.userId, ...common }, { onSuccess: onClose });
-    } else {
-      add.mutate(
-        { name: name.trim(), email: email.trim(), ...common },
-        {
-          onSuccess: (result) => {
-            if (result.temporaryPassword) setCreated(result);
-            else {
-              toast.success(t.members.addedExisting);
-              onClose();
-            }
-          },
-        },
-      );
-    }
-  };
-
-  if (created) {
-    return (
-      <Modal
-        open
-        onClose={onClose}
-        title={t.members.tempPasswordTitle}
-        width={440}
-        footer={
-          <Button variant="primary" onClick={onClose}>
-            {t.common.close}
-          </Button>
-        }
-      >
-        <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{t.members.tempPasswordText}</p>
-        <div className={styles.password}>
-          <span>{created.member.email}</span>
-        </div>
-        <div className={styles.password}>
-          <code>{created.temporaryPassword}</code>
-          <IconButton
-            icon={<Copy />}
-            label={t.common.copy}
-            size="sm"
-            onClick={() => {
-              void navigator.clipboard?.writeText(created.temporaryPassword ?? '');
-              toast.success(t.common.copied);
-            }}
-          />
-        </div>
-      </Modal>
-    );
-  }
+    });
+  }, [role, capacity, rate, onChange]);
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      persistent
-      title={member ? t.members.edit : t.members.add}
-      width={480}
-      footer={
-        <>
-          <Button variant="ghost" onClick={onClose}>
-            {t.common.cancel}
-          </Button>
-          <Button variant="primary" onClick={submit} loading={add.isPending || update.isPending} disabled={!member && (!name.trim() || !email.trim())}>
-            {member ? t.common.save : t.common.add}
-          </Button>
-        </>
-      }
-    >
-      {!member && (
-        <>
-          <Field label={t.members.name}>{(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} autoFocus />}</Field>
-          <Field label={t.members.email}>{(id) => <Input id={id} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />}</Field>
-        </>
-      )}
+    <>
       <Field label={t.members.role}>
         {(id) => (
           <Select id={id} value={role} onChange={(e) => setRole(e.target.value as MemberRole)}>
@@ -129,7 +68,183 @@ function MemberDialog({ member, onClose }: { member?: Member; onClose: () => voi
           {(id) => <Input id={id} inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} placeholder={workspace.defaultHourlyRate?.toString() ?? ''} />}
         </Field>
       </div>
+    </>
+  );
+}
+
+function MemberDialog({ member, onClose }: { member: Member; onClose: () => void }) {
+  const t = useT();
+  const update = useUpdateMember();
+  const [values, setValues] = useState<MemberValues | null>(null);
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      persistent
+      title={t.members.edit}
+      width={480}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            {t.common.cancel}
+          </Button>
+          <Button
+            variant="primary"
+            loading={update.isPending}
+            disabled={!values}
+            onClick={() => values && update.mutate({ userId: member.userId, ...values }, { onSuccess: onClose })}
+          >
+            {t.common.save}
+          </Button>
+        </>
+      }
+    >
+      <MemberFields initial={member} onChange={setValues} />
     </Modal>
+  );
+}
+
+/** Endereço completo do link de convite (respeita o subcaminho do GitHub Pages). */
+export const inviteLink = (invite: Invite) =>
+  `${window.location.origin}${import.meta.env.BASE_URL}invite/${invite.workspaceId}/${invite.id}`;
+
+function CopyLink({ invite }: { invite: Invite }) {
+  const t = useT();
+  const link = inviteLink(invite);
+  return (
+    <div className={styles.password}>
+      <code className={styles.link}>{link}</code>
+      <IconButton
+        icon={<Copy />}
+        label={t.members.copyLink}
+        size="sm"
+        onClick={() => {
+          void navigator.clipboard?.writeText(link);
+          toast.success(t.common.copied);
+        }}
+      />
+    </div>
+  );
+}
+
+function InviteDialog({ onClose }: { onClose: () => void }) {
+  const t = useT();
+  const create = useCreateInvite();
+  const [email, setEmail] = useState('');
+  const [values, setValues] = useState<MemberValues | null>(null);
+  const [created, setCreated] = useState<Invite | null>(null);
+
+  if (created) {
+    return (
+      <Modal
+        open
+        onClose={onClose}
+        title={t.members.inviteLinkTitle}
+        width={520}
+        footer={
+          <Button variant="primary" onClick={onClose}>
+            {t.common.close}
+          </Button>
+        }
+      >
+        <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{t.members.inviteLinkText}</p>
+        <CopyLink invite={created} />
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      persistent
+      title={t.members.inviteTitle}
+      width={480}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            {t.common.cancel}
+          </Button>
+          <Button
+            variant="primary"
+            loading={create.isPending}
+            disabled={!values}
+            onClick={() =>
+              values && create.mutate({ email: email.trim() || null, ...values }, { onSuccess: (invite) => setCreated(invite) })
+            }
+          >
+            {t.members.inviteCreate}
+          </Button>
+        </>
+      }
+    >
+      <Field label={t.members.inviteEmail} hint={t.members.inviteEmailHint}>
+        {(id) => <Input id={id} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />}
+      </Field>
+      <MemberFields onChange={setValues} />
+    </Modal>
+  );
+}
+
+function PendingInvites() {
+  const t = useT();
+  const format = useFormat();
+  const confirm = useConfirm();
+  const { data: invites = [] } = useInvites(true);
+  const revoke = useRevokeInvite();
+  if (invites.length === 0) return null;
+  const revokeInvite = async (invite: Invite) => {
+    const ok = await confirm({ title: t.members.revokeTitle, text: t.members.revokeText, confirmLabel: t.members.revoke, danger: true });
+    if (ok) revoke.mutate(invite.id);
+  };
+  return (
+    <>
+      <h2 className={styles.sectionTitle}>{t.members.pendingInvites}</h2>
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th>{t.members.email}</th>
+            <th>{t.members.role}</th>
+            <th>{t.members.capacityShort}</th>
+            <th>{t.members.createdAt}</th>
+            <th className={styles.actions} />
+          </tr>
+        </thead>
+        <tbody>
+          {invites.map((invite) => (
+            <tr key={invite.id}>
+              <td className={styles.muted}>{invite.email ?? t.members.noEmail}</td>
+              <td>
+                <span className={clsx(styles.badge, invite.role === 'admin' && styles.badgeAdmin)}>
+                  {invite.role === 'admin' ? t.members.admin : t.members.member}
+                </span>
+              </td>
+              <td className={styles.muted}>{t.members.hoursPerWeek(invite.weeklyCapacityHours)}</td>
+              <td className={styles.muted}>{format.fullDate(invite.createdAt)}</td>
+              <td className={styles.actions}>
+                <Menu
+                  placement="bottom-end"
+                  trigger={({ ref, getProps }) => <IconButton ref={ref} icon={<MoreHorizontal />} label={t.common.more} size="sm" {...getProps()} />}
+                  items={[
+                    {
+                      key: 'copy',
+                      label: t.members.copyLink,
+                      icon: <Copy />,
+                      onSelect: () => {
+                        void navigator.clipboard?.writeText(inviteLink(invite));
+                        toast.success(t.common.copied);
+                      },
+                    },
+                    'separator',
+                    { key: 'revoke', label: t.members.revoke, icon: <Trash2 />, danger: true, onSelect: () => void revokeInvite(invite) },
+                  ]}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
   );
 }
 
@@ -144,11 +259,12 @@ export function MembersPage() {
   const update = useUpdateMember();
   const remove = useRemoveMember();
   const [params, setParams] = useSearchParams();
-  const [dialog, setDialog] = useState<{ member?: Member } | null>(null);
+  const [editing, setEditing] = useState<Member | null>(null);
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     if (params.get('add') && isAdmin) {
-      setDialog({});
+      setInviting(true);
       setParams({}, { replace: true });
     }
   }, [params, isAdmin, setParams]);
@@ -165,7 +281,7 @@ export function MembersPage() {
         subtitle={String(members.length)}
         actions={
           isAdmin && (
-            <Button variant="primary" icon={<UserPlus />} onClick={() => setDialog({})}>
+            <Button variant="primary" icon={<UserPlus />} onClick={() => setInviting(true)}>
               {t.members.add}
             </Button>
           )
@@ -221,7 +337,7 @@ export function MembersPage() {
                         placement="bottom-end"
                         trigger={({ ref, getProps }) => <IconButton ref={ref} icon={<MoreHorizontal />} label={t.common.more} size="sm" {...getProps()} />}
                         items={[
-                          { key: 'edit', label: t.common.edit, icon: <Pencil />, onSelect: () => setDialog({ member }) },
+                          { key: 'edit', label: t.common.edit, icon: <Pencil />, onSelect: () => setEditing(member) },
                           {
                             key: 'active',
                             label: member.active ? t.members.deactivate : t.members.activate,
@@ -239,8 +355,10 @@ export function MembersPage() {
             </tbody>
           </table>
         )}
+        {isAdmin && <PendingInvites />}
       </div>
-      {dialog && <MemberDialog member={dialog.member} onClose={() => setDialog(null)} />}
+      {editing && <MemberDialog member={editing} onClose={() => setEditing(null)} />}
+      {inviting && <InviteDialog onClose={() => setInviting(false)} />}
     </>
   );
 }

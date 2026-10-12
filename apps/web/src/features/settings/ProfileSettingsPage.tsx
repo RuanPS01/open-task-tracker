@@ -1,6 +1,7 @@
 import { DURATION_FORMATS, LOCALES, THEMES, TIME_FORMATS, type DurationFormat, type Locale, type Theme, type TimeFormat } from '@ott/shared';
 import { useState } from 'react';
-import { useChangePassword, useUpdateProfile } from '../../api/session';
+import { backend } from '../../data/backend';
+import { useChangePassword, useUpdateProfile } from '../../data/session';
 import { useCurrentUser } from '../../app/session';
 import { Avatar } from '../../components/ui/Avatar';
 import { Button } from '../../components/ui/Button';
@@ -24,6 +25,7 @@ export function ProfileSettingsPage() {
   const changePassword = useChangePassword();
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
+  const canChangeEmail = backend().canChangeEmail;
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const prefs = user.preferences;
@@ -46,14 +48,23 @@ export function ProfileSettingsPage() {
           <h2 className={styles.sectionTitle}>{t.settings.account}</h2>
           <div className={styles.grid}>
             <Field label={t.settings.name}>{(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} />}</Field>
-            <Field label={t.settings.email}>{(id) => <Input id={id} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />}</Field>
+            <Field label={t.settings.email} hint={canChangeEmail ? undefined : t.settings.emailLocked}>
+              {(id) => (
+                <Input id={id} type="email" value={email} disabled={!canChangeEmail} onChange={(e) => setEmail(e.target.value)} />
+              )}
+            </Field>
           </div>
           <div className={styles.actions}>
             <Button
               variant="primary"
               disabled={!name.trim() || (name === user.name && email === user.email)}
               loading={updateProfile.isPending}
-              onClick={() => updateProfile.mutate({ name: name.trim(), email: email.trim() }, { onSuccess: () => toast.success(t.common.saved) })}
+              onClick={() =>
+                updateProfile.mutate(
+                  { name: name.trim(), ...(canChangeEmail ? { email: email.trim() } : {}) },
+                  { onSuccess: () => toast.success(t.common.saved) },
+                )
+              }
             >
               {t.common.save}
             </Button>

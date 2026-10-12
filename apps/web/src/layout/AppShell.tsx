@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatClock } from '@ott/shared';
-import { useRunningTimer, useStartTimer, useStopTimer } from '../api/timeEntries';
+import { FallbackBanner } from '../components/DataModeNotice';
+import { useRunningTimer, useStartTimer, useStopTimer } from '../data/timeEntries';
 import { QuickSearch } from '../features/search/QuickSearch';
 import { ShortcutsDialog } from '../features/search/ShortcutsDialog';
 import { TaskPanelProvider, useTaskPanel } from '../features/tasks/TaskPanelContext';
@@ -59,7 +60,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           onSearch={() => setSearchOpen(true)}
           onHelp={() => setHelpOpen(true)}
         />
-        <main className={styles.main}>{children}</main>
+        <main className={styles.main}>
+          <FallbackBanner />
+          {children}
+        </main>
       </div>
       <RunningTitle />
       <GlobalShortcuts onSearch={() => setSearchOpen(true)} onHelp={() => setHelpOpen(true)} />

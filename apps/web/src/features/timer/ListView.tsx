@@ -1,10 +1,10 @@
 // Visão Lista: apontamentos agrupados por dia, mais recente primeiro, com total diário,
 // botão "continuar" e menu de ações. Descrição e projeto editáveis na própria linha.
-import { formatClock, toIsoDate, type Project, type TimeEntry } from '@ott/shared';
+import { formatClock, toIsoDate, type Id, type Project, type TimeEntry } from '@ott/shared';
 import { CircleDollarSign, Copy, MoreVertical, Play, Tag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { useCreateTimeEntry, useDeleteTimeEntry, useStartTimer, useUpdateTimeEntry } from '../../api/timeEntries';
-import { useTags } from '../../api/workspace';
+import { useCreateTimeEntry, useDeleteTimeEntry, useStartTimer, useUpdateTimeEntry } from '../../data/timeEntries';
+import { useTags } from '../../data/workspace';
 import { ProjectTaskPicker } from '../../components/pickers/ProjectTaskPicker';
 import pickerStyles from '../../components/pickers/Picker.module.css';
 import { IconButton } from '../../components/ui/Button';
@@ -39,8 +39,8 @@ export function ListView({
   onOpen,
 }: {
   entries: TimeEntry[];
-  projects: Map<number, Project>;
-  tasksById: Map<number, string>;
+  projects: Map<Id, Project>;
+  tasksById: Map<Id, string>;
   onOpen: (entry: TimeEntry) => void;
 }) {
   const t = useT();

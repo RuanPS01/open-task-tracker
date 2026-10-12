@@ -1,10 +1,10 @@
-// Aba Cronograma do projeto: barra de ferramentas do Gantt e ligação com a API.
+// Aba Cronograma do projeto: barra de ferramentas do Gantt e ligação com a camada de dados.
 import { computeCriticalPath, type Id, type Project, type TaskDependency } from '@ott/shared';
 import { ChevronsDownUp, ChevronsUpDown, Columns3, Crosshair, Diamond, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useProjectMap } from '../../api/projects';
-import { useCreateDependency, useCreateTask, useDeleteDependency, useDependencies, useScheduleTasks, useTasks } from '../../api/tasks';
-import { useMembers, useUpdateWorkspace } from '../../api/workspace';
+import { useProjectMap } from '../../data/projects';
+import { useCreateDependency, useCreateTask, useDeleteDependency, useDependencies, useScheduleTasks, useTasks } from '../../data/tasks';
+import { useMembers, useUpdateWorkspace } from '../../data/workspace';
 import { useIsAdmin, usePreferences, useWorkspace } from '../../app/session';
 import { Button, IconButton } from '../../components/ui/Button';
 import { useConfirm } from '../../components/ui/Confirm';

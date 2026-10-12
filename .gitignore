@@ -6,9 +6,8 @@ coverage/
 .env
 .env.*
 !.env.example
-# Banco local criado pela API em desenvolvimento.
-data/
-*.sqlite
-*.sqlite-journal
-*.sqlite-wal
-*.sqlite-shm
+# Emuladores e deploy do Firebase.
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*

@@ -11,7 +11,7 @@ import {
 } from '@ott/shared';
 import { Plus, X } from 'lucide-react';
 import { useState } from 'react';
-import { useCreateDependency, useDeleteDependency, useDependencies, useUpdateDependency } from '../../api/tasks';
+import { useCreateDependency, useDeleteDependency, useDependencies, useUpdateDependency } from '../../data/tasks';
 import pickerStyles from '../../components/pickers/Picker.module.css';
 import { IconButton } from '../../components/ui/Button';
 import { Popover } from '../../components/ui/Popover';

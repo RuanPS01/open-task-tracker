@@ -1,7 +1,7 @@
 // Calendário de trabalho do workspace na web: dias úteis da semana mais feriados.
 import type { IsoDate, WorkCalendar } from '@ott/shared';
 import { useMemo } from 'react';
-import { useHolidays } from '../api/workspace';
+import { useHolidays } from '../data/workspace';
 import { useWorkspace } from '../app/session';
 
 export interface CalendarInfo {

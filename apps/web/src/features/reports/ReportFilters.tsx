@@ -1,7 +1,7 @@
 // Linha de filtros dos relatórios: período (com períodos prontos e calendário),
 // membros, projetos, clientes, tags, faturável e descrição. Os filtros valem para
 // todos os gráficos e tabelas da página.
-import type { IsoDate } from '@ott/shared';
+import type { Id, IsoDate } from '@ott/shared';
 import { toIsoDate } from '@ott/shared';
 import clsx from 'clsx';
 import { Building2, CalendarDays, Check, ChevronLeft, ChevronRight, CircleDollarSign, Folder, Hash, Users } from 'lucide-react';
@@ -99,7 +99,7 @@ export function DateRangeControl({ start, end, onChange }: { start: IsoDate; end
 }
 
 export interface FilterOption {
-  id: number;
+  id: Id;
   label: string;
   marker?: ReactNode;
 }
@@ -114,8 +114,8 @@ export function MultiFilter({
   icon: ReactNode;
   label: string;
   options: FilterOption[];
-  value: number[];
-  onChange: (value: number[]) => void;
+  value: Id[];
+  onChange: (value: Id[]) => void;
 }) {
   const t = useT();
   const [query, setQuery] = useState('');

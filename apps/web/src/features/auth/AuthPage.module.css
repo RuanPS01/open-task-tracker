@@ -82,8 +82,11 @@
 }
 
 .demo {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
   margin: 24px 0 0;
-  padding: 10px 12px;
+  padding: 12px;
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius-md);
   color: var(--text-muted);

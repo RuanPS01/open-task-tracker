@@ -1,9 +1,9 @@
 // Quadro (kanban) por status. Arrastar um cartão para outra coluna muda o status.
-import { TASK_STATUSES, toIsoDate, type Member, type Task, type TaskStatus } from '@ott/shared';
+import { TASK_STATUSES, toIsoDate, type Id, type Member, type Task, type TaskStatus } from '@ott/shared';
 import clsx from 'clsx';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { useUpdateTask } from '../../api/tasks';
+import { useUpdateTask } from '../../data/tasks';
 import { PriorityIcon, StatusIcon } from '../../components/pickers/TaskIcons';
 import { AvatarStack } from '../../components/ui/Avatar';
 import { ProjectLabel } from '../../components/ui/ProjectLabel';
@@ -13,12 +13,12 @@ import type { TaskRowContext } from './TaskRow';
 import { useTaskPanel } from './TaskPanelContext';
 import styles from './TaskBoard.module.css';
 
-export function TaskBoard({ tasks, context, defaults }: { tasks: Task[]; context: TaskRowContext; defaults?: { projectId?: number } }) {
+export function TaskBoard({ tasks, context, defaults }: { tasks: Task[]; context: TaskRowContext; defaults?: { projectId?: Id } }) {
   const t = useT();
   const format = useFormat();
   const panel = useTaskPanel();
   const update = useUpdateTask();
-  const [dragging, setDragging] = useState<number | null>(null);
+  const [dragging, setDragging] = useState<Id | null>(null);
   const [over, setOver] = useState<TaskStatus | null>(null);
   const today = toIsoDate(new Date());
 
@@ -38,7 +38,7 @@ export function TaskBoard({ tasks, context, defaults }: { tasks: Task[]; context
             onDrop={(event) => {
               event.preventDefault();
               setOver(null);
-              const id = Number(event.dataTransfer.getData('text/task-id'));
+              const id = event.dataTransfer.getData('text/task-id');
               const task = tasks.find((item) => item.id === id);
               if (task && task.status !== status) update.mutate({ id, status });
             }}

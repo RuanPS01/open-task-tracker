@@ -1,8 +1,9 @@
 // Relatórios (Toggl "Reports"): Resumo, Detalhado e Semanal sobre o mesmo recorte
-// de filtros. Os números vêm da API (relatórios calculados no servidor).
+// de filtros. Os números vêm da camada de dados (@ott/data, services/reports.ts).
 import {
   diffDays,
   eachDay,
+  NO_ID,
   toIsoDate,
   type Id,
   type IsoDate,
@@ -11,10 +12,11 @@ import {
 } from '@ott/shared';
 import { ChevronDown, ChevronRight, Download, FileText, LayoutGrid, PieChart, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useProjectMap } from '../../api/projects';
-import { useCsvUrl, useDetailedReport, useSummaryReport, type ReportParams } from '../../api/reports';
-import { useTasks } from '../../api/tasks';
-import { useClients, useMembers, useTags } from '../../api/workspace';
+import { useProjectMap } from '../../data/projects';
+import { useDetailedReport, useDownloadCsv, useSummaryReport, type ReportParams } from '../../data/reports';
+import { useTasks } from '../../data/tasks';
+import { useClients, useMembers, useTags } from '../../data/workspace';
+import { notifyError } from '../../app/notifier';
 import { usePreferences, useWorkspace } from '../../app/session';
 import { Donut, StackedColumns, StatTile } from '../../components/charts/Charts';
 import { Avatar } from '../../components/ui/Avatar';
@@ -57,10 +59,17 @@ export function ReportsPage() {
     projectIds,
     clientIds,
     tagIds,
-    ...(billable === 'all' ? {} : { billable }),
+    ...(billable === 'all' ? {} : { billable: billable === 'true' }),
     ...(description.trim() ? { description: description.trim() } : {}),
   };
-  const csvUrl = useCsvUrl(params);
+  const downloadCsv = useDownloadCsv();
+  const [exporting, setExporting] = useState(false);
+  const exportCsv = () => {
+    setExporting(true);
+    downloadCsv(params)
+      .catch(notifyError)
+      .finally(() => setExporting(false));
+  };
 
   return (
     <>
@@ -68,7 +77,7 @@ export function ReportsPage() {
         title={t.reports.title}
         subtitle={view === 'summary' ? t.reports.summary : view === 'detailed' ? t.reports.detailed : t.reports.weekly}
         actions={
-          <Button icon={<Download />} onClick={() => window.open(csvUrl, '_blank')}>
+          <Button icon={<Download />} onClick={exportCsv} loading={exporting}>
             {t.reports.export}
           </Button>
         }
@@ -103,7 +112,7 @@ export function ReportsPage() {
           value={projectIds}
           onChange={setProjectIds}
           options={[
-            { id: 0, label: t.reports.noProject },
+            { id: NO_ID, label: t.reports.noProject },
             ...[...projects.values()].map((project) => ({ id: project.id, label: project.name, marker: <ColorDot color={project.color} /> })),
           ]}
         />
@@ -112,7 +121,7 @@ export function ReportsPage() {
           label={t.reports.clients}
           value={clientIds}
           onChange={setClientIds}
-          options={[{ id: 0, label: t.reports.noClient }, ...clients.map((client) => ({ id: client.id, label: client.name }))]}
+          options={[{ id: NO_ID, label: t.reports.noClient }, ...clients.map((client) => ({ id: client.id, label: client.name }))]}
         />
         <MultiFilter
           icon={FILTER_ICONS.tags}
@@ -219,7 +228,7 @@ function SummaryContent({
           data={data.byProject.map((row) => {
             const project = row.projectId ? projects.get(row.projectId) : undefined;
             return {
-              key: String(row.projectId ?? 0),
+              key: row.projectId ?? NO_ID,
               label: project?.name ?? t.reports.noProject,
               value: row.seconds,
               color: project?.color ?? 'var(--chart-other)',
@@ -240,7 +249,7 @@ function SummaryContent({
           </thead>
           <tbody>
             {data.byProject.map((row) => {
-              const key = String(row.projectId ?? 0);
+              const key = row.projectId ?? NO_ID;
               const project = row.projectId ? projects.get(row.projectId) : undefined;
               const expanded = open.has(key);
               return (
@@ -449,7 +458,7 @@ function WeeklyView({ params }: { params: ReportParams }) {
 
   const grid = new Map<string, Map<string, number>>();
   for (const row of data.rows) {
-    const projectKey = String(row.projectId ?? 0);
+    const projectKey = row.projectId ?? NO_ID;
     const cells = grid.get(projectKey) ?? new Map<string, number>();
     const column = keyOf(row.date);
     cells.set(column, (cells.get(column) ?? 0) + row.seconds);
@@ -478,7 +487,7 @@ function WeeklyView({ params }: { params: ReportParams }) {
           </thead>
           <tbody>
             {rowKeys.map((key) => {
-              const project = key !== '0' ? projects.get(Number(key)) : undefined;
+              const project = key !== NO_ID ? projects.get(key) : undefined;
               const cells = grid.get(key)!;
               const total = [...cells.values()].reduce((a, b) => a + b, 0);
               return (

@@ -4,7 +4,7 @@
 // - arrastar a bolinha da ponta até outra barra cria dependência término-início;
 // - clicar numa seta remove a dependência (com confirmação);
 // - clicar numa linha sem datas agenda a tarefa no dia clicado.
-// Durante o arraste a cascata é simulada no navegador (mesma função da API), então
+// Durante o arraste a cascata é simulada na tela (mesma função da camada de dados), então
 // as sucessoras andam junto antes mesmo de gravar.
 import {
   addDays,
@@ -63,8 +63,8 @@ type Drag =
 export interface GanttChartProps {
   tasks: Task[];
   dependencies: TaskDependency[];
-  projects: Map<number, Project>;
-  members: Map<number, Member>;
+  projects: Map<Id, Project>;
+  members: Map<Id, Member>;
   zoom: Zoom;
   showCritical: boolean;
   autoSchedule: boolean;
@@ -221,7 +221,7 @@ export function GanttChart(props: GanttChartProps) {
       if (current.kind === 'link') {
         const rect = timelineRef.current?.getBoundingClientRect();
         const target = (document.elementFromPoint(event.clientX, event.clientY) as HTMLElement | null)?.closest<HTMLElement>('[data-task-id]');
-        const targetId = target ? Number(target.dataset.taskId) : null;
+        const targetId = target?.dataset.taskId ?? null;
         setDrag({
           ...current,
           x: rect ? event.clientX - rect.left : 0,

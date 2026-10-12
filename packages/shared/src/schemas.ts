@@ -1,5 +1,5 @@
-// Esquemas de entrada da API. A API valida todo corpo e consulta com eles, e a web
-// reaproveita os mesmos esquemas e tipos, então uma regra muda num lugar só.
+// Esquemas de entrada. A camada de dados (@ott/data) valida toda entrada com eles,
+// nos dois modos (Firebase e local), e a web reaproveita os mesmos tipos.
 import { z } from 'zod';
 import {
   CURRENCIES,
@@ -16,9 +16,7 @@ import {
 } from './constants';
 import { isIsoDate } from './dates';
 
-// Ids em corpo JSON chegam como número; parâmetros de URL usam idParamSchema (com coerção).
-export const idSchema = z.number().int().positive();
-export const idParamSchema = z.coerce.number().int().positive();
+export const idSchema = z.string().trim().min(1).max(128);
 export const isoDateSchema = z.string().refine(isIsoDate, { message: 'Data inválida (AAAA-MM-DD)' });
 export const isoDateTimeSchema = z.iso.datetime({ offset: true });
 const nameSchema = z.string().trim().min(1).max(200);
@@ -87,14 +85,13 @@ export const updateWorkspaceSchema = z.object({
 });
 export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>;
 
-export const addMemberSchema = z.object({
-  name: z.string().trim().min(1).max(80),
-  email: z.email().max(200).transform((value) => value.toLowerCase()),
+export const createInviteSchema = z.object({
+  email: z.email().max(200).transform((value) => value.toLowerCase()).nullable().optional(),
   role: z.enum(MEMBER_ROLES).default('member'),
   weeklyCapacityHours: z.number().min(0).max(168).optional(),
   hourlyRate: moneySchema.nullable().optional(),
 });
-export type AddMemberInput = z.input<typeof addMemberSchema>;
+export type CreateInviteInput = z.input<typeof createInviteSchema>;
 
 export const updateMemberSchema = z.object({
   role: z.enum(MEMBER_ROLES).optional(),
@@ -237,19 +234,12 @@ export type UpdateTimeEntryInput = z.infer<typeof updateTimeEntrySchema>;
 export const timeEntriesQuerySchema = z.object({
   from: isoDateTimeSchema,
   to: isoDateTimeSchema,
-  userId: idSchema.optional(),
 });
 
 // --- Relatórios ------------------------------------------------------------
 
-const idListSchema = z
-  .union([z.string(), z.array(z.string())])
-  .optional()
-  .transform((value) => {
-    if (value === undefined) return undefined;
-    const parts = (Array.isArray(value) ? value : value.split(',')).filter(Boolean);
-    return parts.map(Number).filter((n) => Number.isInteger(n) && n >= 0);
-  });
+// NO_ID na lista significa "sem projeto", "sem cliente", "sem tarefa" ou "sem tag".
+const idListSchema = z.array(idSchema).max(500).optional();
 
 export const reportQuerySchema = z.object({
   start: isoDateSchema,
@@ -260,7 +250,7 @@ export const reportQuerySchema = z.object({
   clientIds: idListSchema,
   tagIds: idListSchema,
   taskIds: idListSchema,
-  billable: z.enum(['true', 'false']).optional(),
+  billable: z.boolean().optional(),
   description: z.string().max(200).optional(),
 });
 export type ReportQueryInput = z.input<typeof reportQuerySchema>;

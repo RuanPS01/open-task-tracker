@@ -3,7 +3,7 @@
 // - arrastar um apontamento move (inclusive para outro dia);
 // - arrastar a borda de baixo muda o fim;
 // - clicar abre o editor.
-import { formatClock, toIsoDate, type Project, type TimeEntry } from '@ott/shared';
+import { formatClock, toIsoDate, type Id, type Project, type TimeEntry } from '@ott/shared';
 import clsx from 'clsx';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useT } from '../../i18n';
@@ -33,7 +33,7 @@ type DragState =
 export interface CalendarViewProps {
   days: Date[];
   entries: TimeEntry[];
-  projects: Map<number, Project>;
+  projects: Map<Id, Project>;
   totals: Map<string, number>;
   holidayNames?: Map<string, string>;
   onOpen: (entry: TimeEntry) => void;
@@ -65,7 +65,7 @@ export function CalendarView({ days, entries, projects, totals, holidayNames, on
     () =>
       days.map((day) => {
         const segments = [];
-        const lookup = new Map<number, TimeEntry>();
+        const lookup = new Map<Id, TimeEntry>();
         for (const entry of entries) {
           const end = entry.stop ? new Date(entry.stop) : now;
           const segment = segmentForDay(entry.id, new Date(entry.start), end, day);

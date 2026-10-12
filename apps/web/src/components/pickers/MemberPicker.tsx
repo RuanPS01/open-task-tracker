@@ -2,7 +2,7 @@ import type { Id } from '@ott/shared';
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
-import { useMembers } from '../../api/workspace';
+import { useMembers } from '../../data/workspace';
 import { useT } from '../../i18n';
 import { Avatar } from '../ui/Avatar';
 import { Popover, type PopoverTriggerProps } from '../ui/Popover';

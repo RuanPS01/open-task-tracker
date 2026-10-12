@@ -1,0 +1,181 @@
+rules_version = '2';
+
+// Regras de acesso do modo Firebase. A web roda as regras de negócio (cascata,
+// relatórios, contadores) no navegador; estas regras garantem o que não pode depender
+// do navegador: só membros veem e alteram dados do workspace, só administradores
+// mexem em membros, convites, feriados e configurações, e cada pessoa só altera os
+// próprios apontamentos. Explicação completa em docs/06-dados-e-armazenamento.md.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function workspacePath(wid) {
+      return /databases/$(database)/documents/workspaces/$(wid);
+    }
+
+    function memberPath(wid, memberId) {
+      return /databases/$(database)/documents/workspaces/$(wid)/members/$(memberId);
+    }
+
+    function invitePath(wid, inviteId) {
+      return /databases/$(database)/documents/workspaces/$(wid)/invites/$(inviteId);
+    }
+
+    // Leitura e exclusão olham o estado atual; criação e alteração olham o estado
+    // depois do lote (o workspace pode estar sendo criado no mesmo lote).
+    function isMember(wid) {
+      return signedIn() && uid() in get(workspacePath(wid)).data.memberIds;
+    }
+
+    function isAdmin(wid) {
+      return signedIn() && uid() in get(workspacePath(wid)).data.adminIds;
+    }
+
+    function isMemberAfter(wid) {
+      return signedIn() && uid() in getAfter(workspacePath(wid)).data.memberIds;
+    }
+
+    function isAdminAfter(wid) {
+      return signedIn() && uid() in getAfter(workspacePath(wid)).data.adminIds;
+    }
+
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    // Documento do workspace com o id e o workspace corretos.
+    function validDoc(wid, id) {
+      return request.resource.data.id == id && request.resource.data.workspaceId == wid;
+    }
+
+    // Pessoa entrando pelo link de convite: se acrescenta às listas de acesso, com o
+    // papel do convite, no mesmo lote em que cria o próprio membro e consome o convite.
+    function joiningWithInvite(wid) {
+      let member = getAfter(memberPath(wid, uid())).data;
+      let invite = get(invitePath(wid, member.inviteId)).data;
+      let adminIds = invite.role == 'admin' ? resource.data.adminIds.concat([uid()]) : resource.data.adminIds;
+      return signedIn()
+        && !(uid() in resource.data.memberIds)
+        && onlyChanges(['memberIds', 'adminIds'])
+        && request.resource.data.memberIds == resource.data.memberIds.concat([uid()])
+        && request.resource.data.adminIds == adminIds;
+    }
+
+    function selfJoin(wid, memberId) {
+      let data = request.resource.data;
+      let invite = get(invitePath(wid, data.inviteId)).data;
+      return signedIn()
+        && uid() == memberId
+        && data.role == invite.role
+        && data.weeklyCapacityHours == invite.weeklyCapacityHours
+        && data.hourlyRate == invite.hourlyRate
+        && data.active == true;
+    }
+
+    function consumedBy(wid, inviteId) {
+      return signedIn()
+        && existsAfter(memberPath(wid, uid()))
+        && getAfter(memberPath(wid, uid())).data.inviteId == inviteId;
+    }
+
+    // Qualquer membro pode soltar tarefa, projeto ou tag do apontamento de outra
+    // pessoa (exclusão de tarefa, projeto ou tag), sem mudar mais nada.
+    function unlinkOnly() {
+      let data = request.resource.data;
+      return onlyChanges(['taskId', 'projectId', 'tagIds', 'updatedAt'])
+        && (data.taskId == resource.data.taskId || data.taskId == null)
+        && (data.projectId == resource.data.projectId || data.projectId == null)
+        && data.tagIds.hasOnly(resource.data.tagIds);
+    }
+
+    match /users/{userId} {
+      allow read, delete: if signedIn() && uid() == userId;
+      allow create, update: if signedIn() && uid() == userId && request.resource.data.id == userId;
+    }
+
+    match /workspaces/{wid} {
+      allow read: if signedIn() && uid() in resource.data.memberIds;
+      allow create: if signedIn()
+        && request.resource.data.id == wid
+        && request.resource.data.createdBy == uid()
+        && request.resource.data.memberIds == [uid()]
+        && request.resource.data.adminIds == [uid()];
+      allow update: if (signedIn()
+          && uid() in resource.data.adminIds
+          && request.resource.data.id == wid
+          && request.resource.data.createdBy == resource.data.createdBy)
+        || joiningWithInvite(wid);
+
+      match /members/{memberId} {
+        allow read: if isMember(wid) || (signedIn() && uid() == memberId);
+        allow create: if request.resource.data.userId == memberId
+          && request.resource.data.workspaceId == wid
+          && (isAdminAfter(wid) || selfJoin(wid, memberId));
+        allow update: if (isAdmin(wid)
+            && request.resource.data.userId == memberId
+            && request.resource.data.workspaceId == wid)
+          || (signedIn() && uid() == memberId && onlyChanges(['name', 'email', 'avatarColor']));
+        allow delete: if isAdmin(wid);
+      }
+
+      match /invites/{inviteId} {
+        // Quem tem o link (o id é o segredo) consegue ler o convite antes de entrar.
+        allow get: if signedIn();
+        allow list: if isAdmin(wid);
+        allow create: if isAdmin(wid) && validDoc(wid, inviteId);
+        allow delete: if isAdmin(wid) || consumedBy(wid, inviteId);
+      }
+
+      match /holidays/{holidayId} {
+        allow read: if isMember(wid);
+        allow create, update: if isAdminAfter(wid) && validDoc(wid, holidayId);
+        allow delete: if isAdmin(wid);
+      }
+
+      match /clients/{docId} {
+        allow read, delete: if isMember(wid);
+        allow create, update: if isMemberAfter(wid) && validDoc(wid, docId);
+      }
+
+      match /tags/{docId} {
+        allow read, delete: if isMember(wid);
+        allow create, update: if isMemberAfter(wid) && validDoc(wid, docId);
+      }
+
+      match /tasks/{docId} {
+        allow read, delete: if isMember(wid);
+        allow create, update: if isMemberAfter(wid) && validDoc(wid, docId);
+      }
+
+      match /dependencies/{docId} {
+        allow read, delete: if isMember(wid);
+        allow create, update: if isMemberAfter(wid) && validDoc(wid, docId);
+      }
+
+      match /projects/{docId} {
+        allow read: if isMember(wid);
+        allow create, update: if isMemberAfter(wid) && validDoc(wid, docId);
+        allow delete: if isAdmin(wid);
+      }
+
+      match /timeEntries/{docId} {
+        allow read: if isMember(wid);
+        allow create: if isMemberAfter(wid)
+          && validDoc(wid, docId)
+          && (request.resource.data.userId == uid() || isAdminAfter(wid));
+        allow update: if isMember(wid)
+          && validDoc(wid, docId)
+          && request.resource.data.userId == resource.data.userId
+          && (resource.data.userId == uid() || isAdmin(wid) || unlinkOnly());
+        allow delete: if isMember(wid) && (resource.data.userId == uid() || isAdmin(wid));
+      }
+    }
+  }
+}

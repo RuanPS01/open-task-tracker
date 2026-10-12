@@ -1,3 +1,4 @@
+import type { Id } from '@ott/shared';
 import clsx from 'clsx';
 import styles from './Avatar.module.css';
 
@@ -38,7 +39,7 @@ export function AvatarStack({
   max = 4,
   size = 22,
 }: {
-  people: { id: number; name: string; avatarColor: string }[];
+  people: { id: Id; name: string; avatarColor: string }[];
   max?: number;
   size?: number;
 }) {

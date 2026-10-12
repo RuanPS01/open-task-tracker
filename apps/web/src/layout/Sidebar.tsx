@@ -27,14 +27,15 @@ import {
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { useProjectMap } from '../api/projects';
-import { useLogout, useSwitchWorkspace, useUpdateProfile } from '../api/session';
-import { useRunningTimer, useStopTimer } from '../api/timeEntries';
-import { useCreateWorkspace } from '../api/workspace';
+import { useProjectMap } from '../data/projects';
+import { useLogout, useSwitchWorkspace, useUpdateProfile } from '../data/session';
+import { useRunningTimer, useStopTimer } from '../data/timeEntries';
+import { useCreateWorkspace } from '../data/workspace';
 import { useSession } from '../app/session';
 import { Avatar } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
-import { Field, Input } from '../components/ui/Field';
+import { DataModeBadge } from '../components/DataModeNotice';
+import { Checkbox, Field, Input } from '../components/ui/Field';
 import { Menu } from '../components/ui/Menu';
 import { Modal } from '../components/ui/Modal';
 import { useT } from '../i18n';
@@ -80,6 +81,7 @@ function WorkspaceSwitcher() {
   const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
+  const [demo, setDemo] = useState(false);
 
   return (
     <>
@@ -121,10 +123,11 @@ function WorkspaceSwitcher() {
               disabled={!name.trim()}
               loading={createWorkspace.isPending}
               onClick={() =>
-                createWorkspace.mutate(name.trim(), {
+                createWorkspace.mutate({ name: name.trim(), demo }, {
                   onSuccess: () => {
                     setCreating(false);
                     setName('');
+                    setDemo(false);
                     navigate('/timer');
                   },
                 })
@@ -137,6 +140,9 @@ function WorkspaceSwitcher() {
       >
         <Field label={t.nav.newWorkspaceName}>
           {(id) => <Input id={id} value={name} onChange={(event) => setName(event.target.value)} autoFocus />}
+        </Field>
+        <Field hint={t.nav.demoWorkspaceHint}>
+          {() => <Checkbox checked={demo} onChange={setDemo} label={t.nav.demoWorkspace} />}
         </Field>
       </Modal>
     </>
@@ -282,6 +288,9 @@ export function Sidebar({
               <Settings />
               <span>{t.nav.settings}</span>
             </NavLink>
+            <div className={styles.dataMode}>
+              <DataModeBadge />
+            </div>
           </div>
         </div>
       )}

@@ -3,10 +3,10 @@ import { addDays, computeCriticalPath, toIsoDate, type Project, type Task } from
 import { ArrowLeft, LayoutList, Pencil, Plus, SquareKanban } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, NavLink, Navigate, useParams } from 'react-router-dom';
-import { useProjects } from '../../api/projects';
-import { useSummaryReport } from '../../api/reports';
-import { useDependencies, useTasks } from '../../api/tasks';
-import { useClients, useMembers } from '../../api/workspace';
+import { useProjects } from '../../data/projects';
+import { useSummaryReport } from '../../data/reports';
+import { useDependencies, useTasks } from '../../data/tasks';
+import { useClients, useMembers } from '../../data/workspace';
 import { usePreferences } from '../../app/session';
 import { HorizontalBars, StackedMeter, StatTile } from '../../components/charts/Charts';
 import { StatusIcon } from '../../components/pickers/TaskIcons';
@@ -32,7 +32,7 @@ type Tab = 'overview' | 'gantt' | 'tasks';
 export function ProjectPage() {
   const t = useT();
   const params = useParams();
-  const projectId = Number(params.projectId);
+  const projectId = params.projectId ?? '';
   const tab = (params.tab ?? 'overview') as Tab;
   const { data: projects, isLoading } = useProjects();
   const { data: clients = [] } = useClients();

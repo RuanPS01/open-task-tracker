@@ -1,5 +1,5 @@
 // Agrupamento e ordenação da tela de Tarefas (funções puras, testadas).
-import { addDays, startOfWeekIso, type Id, type IsoDate, type Task } from '@ott/shared';
+import { addDays, compareIds, NO_ID, startOfWeekIso, type Id, type IsoDate, type Task } from '@ott/shared';
 
 export type GroupBy = 'date' | 'project' | 'status' | 'priority' | 'assignee' | 'none';
 export type SortBy = 'priority' | 'dueDate' | 'name' | 'created';
@@ -37,7 +37,7 @@ export function sortTasks(tasks: Task[], sortBy: SortBy, descending: boolean): T
     name: byName,
     created: (a, b) => a.createdAt.localeCompare(b.createdAt),
   };
-  return [...tasks].sort((a, b) => compare[sortBy](a, b) * direction || a.id - b.id);
+  return [...tasks].sort((a, b) => compare[sortBy](a, b) * direction || compareIds(a.id, b.id));
 }
 
 export interface TaskGroup {
@@ -59,7 +59,7 @@ export function groupTasks(tasks: Task[], groupBy: GroupBy, today: IsoDate, week
         push(dateBucket(task, today, weekStart), task);
         break;
       case 'project':
-        push(String(task.projectId ?? 0), task);
+        push(task.projectId ?? NO_ID, task);
         break;
       case 'status':
         push(task.status, task);
@@ -68,8 +68,8 @@ export function groupTasks(tasks: Task[], groupBy: GroupBy, today: IsoDate, week
         push(String(task.priority), task);
         break;
       case 'assignee':
-        if (task.assigneeIds.length === 0) push('0', task);
-        for (const id of task.assigneeIds) push(String(id), task);
+        if (task.assigneeIds.length === 0) push(NO_ID, task);
+        for (const id of task.assigneeIds) push(id, task);
         break;
     }
   }
@@ -81,7 +81,7 @@ export function groupTasks(tasks: Task[], groupBy: GroupBy, today: IsoDate, week
     assignee: null,
     none: null,
   };
-  const keys = order[groupBy] ?? [...groups.keys()].sort((a, b) => (a === '0' ? 1 : b === '0' ? -1 : 0));
+  const keys = order[groupBy] ?? [...groups.keys()].sort((a, b) => (a === NO_ID ? 1 : b === NO_ID ? -1 : 0));
   return keys.filter((key) => groups.has(key)).map((key) => ({ key, tasks: groups.get(key)! }));
 }
 
@@ -101,7 +101,7 @@ export function applyFilters(
     if (!options.showCompleted && task.status === 'done') return false;
     if (options.assigneeId !== null && !task.assigneeIds.includes(options.assigneeId)) return false;
     if (filters.statuses.length > 0 && !filters.statuses.includes(task.status)) return false;
-    if (filters.projectIds.length > 0 && !filters.projectIds.includes(task.projectId ?? 0)) return false;
+    if (filters.projectIds.length > 0 && !filters.projectIds.includes(task.projectId ?? NO_ID)) return false;
     if (filters.priorities.length > 0 && !filters.priorities.includes(task.priority)) return false;
     if (search && !task.name.toLowerCase().includes(search) && !task.description.toLowerCase().includes(search)) return false;
     return true;

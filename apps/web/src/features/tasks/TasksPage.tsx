@@ -1,6 +1,15 @@
 // Tela Tarefas (Toggl "Tasks"): Lista agrupada ou Quadro, com "Minhas tarefas",
 // filtros, agrupar por, ordenar por, busca e mostrar concluídas.
-import { PRIORITIES, PRIORITY_KEYS, TASK_STATUSES, toIsoDate, type CreateTaskInput, type Id, type Task } from '@ott/shared';
+import {
+  NO_ID,
+  PRIORITIES,
+  PRIORITY_KEYS,
+  TASK_STATUSES,
+  toIsoDate,
+  type CreateTaskInput,
+  type Id,
+  type Task,
+} from '@ott/shared';
 import {
   Archive,
   ArrowDown,
@@ -16,9 +25,9 @@ import {
   User,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useProjectMap } from '../../api/projects';
-import { useCreateTask, useTasks } from '../../api/tasks';
-import { useMembers } from '../../api/workspace';
+import { useProjectMap } from '../../data/projects';
+import { useCreateTask, useTasks } from '../../data/tasks';
+import { useMembers } from '../../data/workspace';
 import { useCurrentUser, usePreferences } from '../../app/session';
 import { PriorityIcon, StatusIcon } from '../../components/pickers/TaskIcons';
 import { Button, IconButton } from '../../components/ui/Button';
@@ -41,7 +50,7 @@ export function useTaskRowContext(tasks: Task[]): TaskRowContext {
   const projects = useProjectMap();
   const { data: members = [] } = useMembers();
   return useMemo(() => {
-    const childCount = new Map<number, { done: number; total: number }>();
+    const childCount = new Map<Id, { done: number; total: number }>();
     for (const task of tasks) {
       if (task.parentId === null) continue;
       const current = childCount.get(task.parentId) ?? { done: 0, total: 0 };
@@ -70,11 +79,11 @@ function groupLabel(t: Messages, groupBy: GroupBy, key: string, context: TaskRow
         icon: <PriorityIcon priority={Number(key) as 0} />,
       };
     case 'project': {
-      const project = context.projects.get(Number(key));
+      const project = context.projects.get(key);
       return project ? { label: project.name, icon: <ColorDot color={project.color} /> } : { label: t.tasks.noProject };
     }
     case 'assignee':
-      return { label: context.members.get(Number(key))?.name ?? t.tasks.unassigned };
+      return { label: context.members.get(key)?.name ?? t.tasks.unassigned };
     default:
       return { label: t.tasks.allTasks };
   }
@@ -194,8 +203,8 @@ export function TaskFiltersButton({
           <>
             <div className={styles.filterTitle}>{t.tasks.filterProject}</div>
             <Checkbox
-              checked={filters.projectIds.includes(0)}
-              onChange={() => onChange({ ...filters, projectIds: toggle(filters.projectIds, 0) })}
+              checked={filters.projectIds.includes(NO_ID)}
+              onChange={() => onChange({ ...filters, projectIds: toggle(filters.projectIds, NO_ID) })}
               label={t.tasks.noProject}
             />
             {[...projects.values()]

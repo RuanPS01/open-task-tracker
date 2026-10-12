@@ -1,8 +1,9 @@
-// Algoritmos de planejamento usados pelo Gantt (web) e pela API.
+// Algoritmos de planejamento usados pelo Gantt (web) e pela camada de dados.
 // A explicação de cada regra, com exemplos, está em docs/08-planejamento-gantt-e-algoritmos.md.
 // Mudou uma regra aqui? Atualize o documento e os testes em packages/shared/test.
 import type { DependencyType } from './constants';
 import type { Id, IsoDate } from './entities';
+import { compareIds } from './ids';
 import {
   addWorkdays,
   ALL_DAYS,
@@ -394,8 +395,8 @@ export function cascadeSchedule(
     }
   }
 
-  // Ordem estável por id: facilita teste e deixa o lote enviado à API previsível.
-  return [...changes.values()].sort((a, b) => a.id - b.id);
+  // Ordem estável por id: facilita teste e deixa o lote de gravação previsível.
+  return [...changes.values()].sort((a, b) => compareIds(a.id, b.id));
 }
 
 // ---------------------------------------------------------------------------

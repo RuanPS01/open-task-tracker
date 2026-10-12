@@ -25,8 +25,8 @@ import {
   X,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useProjectMap } from '../../api/projects';
-import { useMembers, useTags } from '../../api/workspace';
+import { useProjectMap } from '../../data/projects';
+import { useMembers, useTags } from '../../data/workspace';
 import { DateRangePicker } from '../../components/pickers/DateRangePicker';
 import { MemberPicker } from '../../components/pickers/MemberPicker';
 import pickerStyles from '../../components/pickers/Picker.module.css';

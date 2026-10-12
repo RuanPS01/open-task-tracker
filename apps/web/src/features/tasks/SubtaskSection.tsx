@@ -1,7 +1,7 @@
 import type { Task } from '@ott/shared';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { useCreateTask, useUpdateTask } from '../../api/tasks';
+import { useCreateTask, useUpdateTask } from '../../data/tasks';
 import { StatusIcon } from '../../components/pickers/TaskIcons';
 import { useT } from '../../i18n';
 import { useFormat } from '../../lib/format';

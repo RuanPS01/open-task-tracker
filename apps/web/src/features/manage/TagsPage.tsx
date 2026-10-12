@@ -1,7 +1,7 @@
-import type { Tag } from '@ott/shared';
+import type { Id, Tag } from '@ott/shared';
 import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { useCreateTag, useDeleteTag, useRenameTag, useTags } from '../../api/workspace';
+import { useCreateTag, useDeleteTag, useRenameTag, useTags } from '../../data/workspace';
 import { Button, IconButton } from '../../components/ui/Button';
 import { useConfirm } from '../../components/ui/Confirm';
 import { EmptyState, LoadingBlock } from '../../components/ui/EmptyState';
@@ -23,7 +23,7 @@ export function TagsPage() {
   const remove = useDeleteTag();
   const [name, setName] = useState('');
   const [search, setSearch] = useState('');
-  const [renaming, setRenaming] = useState<number | null>(null);
+  const [renaming, setRenaming] = useState<Id | null>(null);
 
   const submit = () => {
     if (!name.trim()) return;

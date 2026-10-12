@@ -66,19 +66,19 @@ describe('tarefa liberada para fins de semana e feriados', () => {
 
   it('a cascata pode colocar a tarefa liberada no sábado e no feriado', () => {
     const tasks = [
-      { ...base, id: 1, startDate: '2026-10-14', dueDate: '2026-10-16' },
-      { ...base, id: 2, startDate: '2026-10-15', dueDate: '2026-10-16', allowNonWorkingDays: true },
-      { ...base, id: 3, startDate: '2026-10-15', dueDate: '2026-10-15' },
+      { ...base, id: '1', startDate: '2026-10-14', dueDate: '2026-10-16' },
+      { ...base, id: '2', startDate: '2026-10-15', dueDate: '2026-10-16', allowNonWorkingDays: true },
+      { ...base, id: '3', startDate: '2026-10-15', dueDate: '2026-10-15' },
     ];
     const deps = [
-      { predecessorId: 1, successorId: 2, type: 'FS' as const, lagDays: 0 },
-      { predecessorId: 1, successorId: 3, type: 'FS' as const, lagDays: 0 },
+      { predecessorId: '1', successorId: '2', type: 'FS' as const, lagDays: 0 },
+      { predecessorId: '1', successorId: '3', type: 'FS' as const, lagDays: 0 },
     ];
     const calendar: WorkCalendar = { workingDays: [1, 2, 3, 4, 5], holidays: new Set(['2026-10-19']) };
     expect(cascadeSchedule(tasks, deps, calendar)).toEqual([
-      { id: 2, startDate: '2026-10-17', dueDate: '2026-10-18' },
+      { id: '2', startDate: '2026-10-17', dueDate: '2026-10-18' },
       // A tarefa comum pula o fim de semana e o feriado da segunda 19.
-      { id: 3, startDate: '2026-10-20', dueDate: '2026-10-20' },
+      { id: '3', startDate: '2026-10-20', dueDate: '2026-10-20' },
     ]);
   });
 
@@ -86,30 +86,30 @@ describe('tarefa liberada para fins de semana e feriados', () => {
     const { byUser } = computeAllocations(
       [
         {
-          id: 1,
+          id: '1',
           parentId: null,
           status: 'todo',
           startDate: '2026-10-16',
           dueDate: '2026-10-18',
           estimateSeconds: 6 * 3600,
           estimateMode: 'total',
-          assigneeIds: [7],
+          assigneeIds: ['7'],
           allowNonWorkingDays: true,
         },
       ],
       { start: '2026-10-12', end: '2026-10-18' },
       CAL,
     );
-    expect(byUser.get(7)!.get('2026-10-17')).toBe(7200);
+    expect(byUser.get('7')!.get('2026-10-17')).toBe(7200);
     expect(capacityInRange(40, { start: '2026-10-12', end: '2026-10-18' }, CAL)).toBe(32 * 3600);
   });
 
   it('o caminho crítico continua calculado com o feriado no meio', () => {
     const tasks = [
-      { ...base, id: 1, startDate: '2026-10-09', dueDate: '2026-10-09' },
-      { ...base, id: 2, startDate: '2026-10-13', dueDate: '2026-10-13' },
+      { ...base, id: '1', startDate: '2026-10-09', dueDate: '2026-10-09' },
+      { ...base, id: '2', startDate: '2026-10-13', dueDate: '2026-10-13' },
     ];
-    const result = computeCriticalPath(tasks, [{ predecessorId: 1, successorId: 2, type: 'FS', lagDays: 0 }], CAL);
-    expect([...result.criticalTaskIds].sort()).toEqual([1, 2]);
+    const result = computeCriticalPath(tasks, [{ predecessorId: '1', successorId: '2', type: 'FS', lagDays: 0 }], CAL);
+    expect([...result.criticalTaskIds].sort()).toEqual(['1', '2']);
   });
 });

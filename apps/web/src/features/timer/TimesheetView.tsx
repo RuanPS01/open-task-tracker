@@ -2,10 +2,10 @@
 // Digitar um total numa célula ajusta os apontamentos daquele dia:
 // aumentar cria um apontamento com a diferença; diminuir encurta ou remove os
 // apontamentos mais recentes da célula, como no Toggl.
-import { formatClock, toIsoDate, type Id, type Project, type TimeEntry } from '@ott/shared';
+import { compareIds, formatClock, toIsoDate, type Id, type Project, type TimeEntry } from '@ott/shared';
 import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useCreateTimeEntry, useDeleteTimeEntry, useUpdateTimeEntry } from '../../api/timeEntries';
+import { useCreateTimeEntry, useDeleteTimeEntry, useUpdateTimeEntry } from '../../data/timeEntries';
 import { ProjectTaskPicker } from '../../components/pickers/ProjectTaskPicker';
 import { DurationInput } from '../../components/pickers/TimeInputs';
 import { Button } from '../../components/ui/Button';
@@ -30,8 +30,8 @@ export function TimesheetView({
 }: {
   days: Date[];
   entries: TimeEntry[];
-  projects: Map<number, Project>;
-  tasksById: Map<number, string>;
+  projects: Map<Id, Project>;
+  tasksById: Map<Id, string>;
 }) {
   const t = useT();
   const format = useFormat();
@@ -56,7 +56,7 @@ export function TimesheetView({
     const sorted = [...rowMap.values()].sort((a, b) => {
       const nameA = a.projectId ? (projects.get(a.projectId)?.name ?? '') : '';
       const nameB = b.projectId ? (projects.get(b.projectId)?.name ?? '') : '';
-      return nameA.localeCompare(nameB) || (a.taskId ?? 0) - (b.taskId ?? 0);
+      return nameA.localeCompare(nameB) || compareIds(a.taskId ?? '', b.taskId ?? '');
     });
     return { rows: sorted, cells: cellMap };
   }, [entries, extraRows, projects]);

@@ -18,7 +18,7 @@ const FORBIDDEN = [
   { code: 0x279c, name: 'seta curva' },
 ].map(({ code, name }) => ({ char: String.fromCodePoint(code), name }));
 const EMOJI = /\p{Extended_Pictographic}/u;
-const TEXT_FILE = /\.(ts|tsx|js|mjs|cjs|json|md|css|html|svg|yml|yaml|txt|example)$/;
+const TEXT_FILE = /\.(ts|tsx|js|mjs|cjs|json|md|css|html|svg|yml|yaml|txt|example|rules)$/;
 // Arquivos gerados ou de terceiros ficam de fora.
 const IGNORED = [/^package-lock\.json$/, /(^|\/)node_modules\//, /(^|\/)dist\//];
 

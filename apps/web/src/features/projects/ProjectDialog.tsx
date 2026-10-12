@@ -3,8 +3,8 @@ import { PROJECT_COLORS, type Id, type Project } from '@ott/shared';
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import { useState } from 'react';
-import { useCreateProject, useUpdateProject } from '../../api/projects';
-import { useClients, useCreateClient } from '../../api/workspace';
+import { useCreateProject, useUpdateProject } from '../../data/projects';
+import { useClients, useCreateClient } from '../../data/workspace';
 import { useWorkspace } from '../../app/session';
 import { DateRangePicker } from '../../components/pickers/DateRangePicker';
 import { Button } from '../../components/ui/Button';
@@ -127,7 +127,7 @@ export function ProjectDialog({
                 value={clientId ?? ''}
                 onChange={(event) => {
                   if (event.target.value === NEW_CLIENT) setNewClient('');
-                  else setClientId(event.target.value ? Number(event.target.value) : null);
+                  else setClientId(event.target.value || null);
                 }}
               >
                 <option value="">{t.projects.noClient}</option>

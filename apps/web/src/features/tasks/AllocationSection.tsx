@@ -1,7 +1,7 @@
 // Alocação: como a estimativa se distribui pelos dias úteis, por responsável.
 // Usa o mesmo cálculo da Linha do tempo (computeAllocations do pacote shared).
 import { calendarFor, computeAllocations, UNASSIGNED, workdaysBetween, type Task } from '@ott/shared';
-import { useMembers } from '../../api/workspace';
+import { useMembers } from '../../data/workspace';
 import { useWorkCalendar } from '../../lib/calendar';
 import { Avatar } from '../../components/ui/Avatar';
 import { useT } from '../../i18n';

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
-import { useSessionQuery } from '../api/session';
+import { useSessionQuery } from '../data/session';
 import { ConfirmProvider } from '../components/ui/Confirm';
 import { toast, Toaster } from '../components/ui/Toast';
 import { guessLocale, I18nProvider } from '../i18n';

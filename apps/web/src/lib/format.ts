@@ -99,7 +99,7 @@ export function useFormat(): Formatters {
   );
 }
 
-/** Mensagem traduzida para um erro da API (ou genérica). */
+/** Mensagem traduzida para um erro da camada de dados (ou genérica). */
 export function useErrorMessage(): (error: unknown) => string {
   const t = useT();
   return (error: unknown) => {

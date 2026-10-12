@@ -1,8 +1,9 @@
+import type { Id } from '@ott/shared';
 // Geometria do calendário do cronômetro: recorte por dia e colunas para
 // apontamentos sobrepostos (mesma ideia do Google Agenda e do Toggl).
 
 export interface DaySegment {
-  id: number;
+  id: Id;
   /** Minutos desde a meia-noite local do dia exibido. */
   startMin: number;
   endMin: number;
@@ -18,7 +19,7 @@ export interface PlacedSegment extends DaySegment {
  * da meia-noite aparece nos dois dias. Devolve null se não toca o dia.
  */
 export function segmentForDay(
-  id: number,
+  id: Id,
   start: Date,
   end: Date,
   dayStart: Date,

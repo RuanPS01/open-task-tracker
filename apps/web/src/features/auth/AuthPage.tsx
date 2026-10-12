@@ -1,7 +1,9 @@
+import { Sparkles } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { ApiError } from '../../api/client';
-import { useLogin, useSignup } from '../../api/session';
+import { Link, useLocation } from 'react-router-dom';
+import { DataModeNote } from '../../components/DataModeNotice';
+import { backend } from '../../data/backend';
+import { useLogin, useSignup, useStartDemo } from '../../data/session';
 import { Button } from '../../components/ui/Button';
 import { Illustration } from '../../components/ui/EmptyState';
 import { Field, Input } from '../../components/ui/Field';
@@ -14,8 +16,11 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const t = useT();
   const locale = useLocale();
   const errorMessage = useErrorMessage();
+  const location = useLocation();
   const login = useLogin();
   const signup = useSignup();
+  const demo = useStartDemo();
+  const isLocal = backend().mode === 'local';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,8 +31,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const submit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
-    const onError = (err: unknown) =>
-      setError(err instanceof ApiError && err.status === 401 ? t.auth.wrongCredentials : errorMessage(err));
+    const onError = (err: unknown) => setError(errorMessage(err));
     if (mode === 'login') {
       login.mutate({ email, password }, { onError });
     } else {
@@ -106,9 +110,25 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           </Button>
           <p className={styles.switch}>
             {mode === 'login' ? t.auth.noAccount : t.auth.haveAccount}{' '}
-            <Link to={mode === 'login' ? '/signup' : '/login'}>{mode === 'login' ? t.auth.signup : t.auth.login}</Link>
+            {/* Leva junto o destino (por exemplo, o link de convite) para depois do login. */}
+            <Link to={mode === 'login' ? '/signup' : '/login'} state={location.state}>
+              {mode === 'login' ? t.auth.signup : t.auth.login}
+            </Link>
           </p>
-          {mode === 'login' && <p className={styles.demo}>{t.auth.demoHint}</p>}
+          {mode === 'login' && isLocal && (
+            <div className={styles.demo}>
+              <Button
+                type="button"
+                icon={<Sparkles />}
+                loading={demo.isPending}
+                onClick={() => demo.mutate(undefined, { onError: (err) => setError(errorMessage(err)) })}
+              >
+                {t.auth.demoButton}
+              </Button>
+              <span>{t.auth.demoHint}</span>
+            </div>
+          )}
+          <DataModeNote />
         </form>
       </main>
     </div>

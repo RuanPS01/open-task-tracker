@@ -1,6 +1,6 @@
 // Empilhamento de barras na Linha do tempo: tarefas que se sobrepõem no tempo vão
 // para subfaixas diferentes dentro da faixa da pessoa (algoritmo guloso por início).
-import type { Id, IsoDate } from '@ott/shared';
+import { compareIds, type Id, type IsoDate } from '@ott/shared';
 
 export interface LaneItem {
   id: Id;
@@ -9,7 +9,7 @@ export interface LaneItem {
 }
 
 export function packLanes(items: LaneItem[]): { lanes: Map<Id, number>; count: number } {
-  const sorted = [...items].sort((a, b) => a.start.localeCompare(b.start) || b.end.localeCompare(a.end) || a.id - b.id);
+  const sorted = [...items].sort((a, b) => a.start.localeCompare(b.start) || b.end.localeCompare(a.end) || compareIds(a.id, b.id));
   const laneEnds: IsoDate[] = [];
   const lanes = new Map<Id, number>();
   for (const item of sorted) {

@@ -2,6 +2,7 @@
 // Tudo aqui é puro (sem React) para ser testado em ganttModel.test.ts.
 import {
   addDays,
+  compareIds,
   diffDays,
   isWorkday,
   isoToUtcMs,
@@ -161,7 +162,7 @@ export function buildRows<T extends TreeTask>(tasks: T[], collapsed: ReadonlySet
     list.push(task);
     children.set(parent, list);
   }
-  for (const list of children.values()) list.sort((a, b) => a.position - b.position || a.id - b.id);
+  for (const list of children.values()) list.sort((a, b) => a.position - b.position || compareIds(a.id, b.id));
 
   const rows: GanttRow<T>[] = [];
   const visit = (parent: Id | null, depth: number, prefix: string, hidden: boolean, seen: Set<Id>) => {

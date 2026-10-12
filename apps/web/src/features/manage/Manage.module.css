@@ -115,6 +115,17 @@
   flex: 1;
 }
 
+.link {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.sectionTitle {
+  margin: 28px 0 10px;
+  font-size: var(--text-lg);
+  font-weight: 650;
+}
+
 .createRow {
   display: flex;
   gap: 8px;

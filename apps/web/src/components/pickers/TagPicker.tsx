@@ -2,7 +2,7 @@ import type { Id } from '@ott/shared';
 import clsx from 'clsx';
 import { Check, Plus } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
-import { useCreateTag, useTags } from '../../api/workspace';
+import { useCreateTag, useTags } from '../../data/workspace';
 import { useT } from '../../i18n';
 import { Popover, type PopoverTriggerProps } from '../ui/Popover';
 import styles from './Picker.module.css';

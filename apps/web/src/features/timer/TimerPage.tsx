@@ -2,9 +2,9 @@ import { formatClock, fromIsoDate, toIsoDate, type TimeEntry } from '@ott/shared
 import { addDays, startOfDay, startOfWeek } from 'date-fns';
 import { CalendarDays, ChevronLeft, ChevronRight, LayoutGrid, List, Settings } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useProjectMap } from '../../api/projects';
-import { useTasks } from '../../api/tasks';
-import { useTimeEntries, useUpdateTimeEntry } from '../../api/timeEntries';
+import { useProjectMap } from '../../data/projects';
+import { useTasks } from '../../data/tasks';
+import { useTimeEntries, useUpdateTimeEntry } from '../../data/timeEntries';
 import { usePreferences } from '../../app/session';
 import { IconButton } from '../../components/ui/Button';
 import { Calendar } from '../../components/ui/Calendar';
