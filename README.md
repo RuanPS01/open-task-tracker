@@ -2,8 +2,10 @@
 
 Sistema de tarefas com planejamento de projeto em gráfico de Gantt e rastreamento de
 tempo, feito por engenharia reversa do **Toggl Track**. Interface em português do Brasil
-(e inglês), temas escuro e claro, e instalação própria com um processo Node e um arquivo
-SQLite.
+(e inglês), temas escuro e claro. Roda inteiro no navegador: os dados ficam no
+**Firebase** (Authentication e Cloud Firestore) e, se o Firebase não estiver configurado
+ou não responder, no próprio navegador com o **lowdb**. Publicação pronta para o
+**GitHub Pages** pelo GitHub Actions.
 
 ![Cronograma do projeto em Gantt](docs/imagens/gantt.png)
 
@@ -26,57 +28,78 @@ SQLite.
   trabalhar em dias não úteis.
 - **Linha do tempo** de capacidade da equipe ("Xh livres", carga diária por pessoa).
 - **Relatórios** Resumo, Detalhado e Semanal, com valor faturável e exportação CSV.
-- Membros com capacidade e valor/hora, clientes, tags, vários workspaces, busca rápida
-  (Ctrl K) e atalhos de teclado.
+- Membros com capacidade e valor/hora e **convite por link**, clientes, tags, vários
+  workspaces, busca rápida (Ctrl K) e atalhos de teclado.
 
 ## Começando
 
-Requisitos: **Node.js 22.13 ou mais novo** (usa o SQLite nativo do Node).
+Requisitos: **Node.js 22.13 ou mais novo**.
 
 ```bash
 npm install
-npm run seed     # opcional: conta demo@exemplo.com / senha demo1234 com dados de exemplo
-npm run dev      # API em http://localhost:3000 e web em http://localhost:5173
+npm run dev      # web em http://localhost:5173
 ```
 
-Abra http://localhost:5173 e entre com a conta de demonstração ou crie uma conta nova.
-Em desenvolvimento o banco fica em `apps/api/data/ott.sqlite`.
+Sem configuração, o app abre no **modo local**: tudo fica no `localStorage` do
+navegador (lowdb). Na tela de login, **"Explorar com dados de exemplo"** entra com a conta
+`demo@exemplo.com` (senha `demo1234`) e um workspace de exemplo pronto.
 
-### Produção
+### Usando o Firebase
 
-```bash
-npm run build
-PORT=3000 DATABASE_PATH=/caminho/ott.sqlite COOKIE_SECURE=true npm start
-```
+1. No [console do Firebase](https://console.firebase.google.com), crie o projeto, ative
+   Authentication com **E-mail/senha**, crie o banco do **Cloud Firestore** e registre um
+   app da Web.
+2. Copie `.env.example` para `.env` (na raiz) e preencha as variáveis `VITE_FIREBASE_*`
+   com a configuração do app.
+3. Publique as regras de acesso e o índice:
+   `npx firebase-tools@15.31.0 deploy --only firestore:rules,firestore:indexes --project SEU_PROJETO`.
 
-Um único processo entrega a API e a interface. Variáveis em `.env.example` e em
-[docs/02-tecnologias.md](docs/02-tecnologias.md).
+Se o Firebase não responder na abertura, o app cai no modo local e avisa com uma faixa no
+topo da tela. Para criar dados de exemplo no Firebase, marque "Preencher com dados de
+exemplo" ao criar um workspace.
+
+## Publicação no GitHub Pages
+
+O workflow `.github/workflows/deploy.yml` publica a cada push na `main`:
+
+1. Em **Settings, Pages**, escolha **Source: GitHub Actions**.
+2. Em **Settings, Secrets and variables, Actions**, cadastre os secrets
+   `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID` e `FIREBASE_APP_ID`
+   (e, opcionalmente, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_MESSAGING_SENDER_ID` e
+   `FIREBASE_SERVICE_ACCOUNT` para o workflow publicar as regras do Firestore).
+3. No Firebase, acrescente `seu-usuario.github.io` aos domínios autorizados do
+   Authentication.
+
+Sem os secrets, o site é publicado assim mesmo e funciona no modo local. Detalhes em
+[docs/02-tecnologias.md](docs/02-tecnologias.md), seção 2.6.
 
 ## Comandos
 
 | Comando | O que faz |
 |---|---|
-| `npm run dev` | API e web com recarga automática |
-| `npm run seed` | Cria os dados de demonstração |
-| `npm run build` / `npm start` | Build e execução de produção |
-| `npm test` | Testes do pacote compartilhado, da API e da web |
+| `npm run dev` | Web com recarga automática |
+| `npm run build` / `npm run preview` | Site estático em `apps/web/dist` e conferência local |
+| `npm test` | Testes do pacote compartilhado, da camada de dados (lowdb) e da web |
+| `npm run test:firebase` | As mesmas suítes e os testes de regras nos emuladores do Firebase (precisa de Java 21) |
 | `npm run check` | Caracteres proibidos, lint, tipos e testes (rode antes de cada commit) |
 
 ## Estrutura
 
 ```
-apps/api         API Fastify + SQLite (rotas, regras, relatórios, seed)
-apps/web         Interface React no estilo do Toggl Track
+apps/web         Interface React no estilo do Toggl Track (site estático)
+packages/data    Camada de dados: Firestore ou lowdb, autenticação e regras de negócio
 packages/shared  Tipos, validação e algoritmos (calendário, cascata, caminho crítico, capacidade)
+firestore.rules  Regras de acesso do Firestore
+.github          CI de pull requests e publicação no GitHub Pages
 docs             10 documentos de referência
 ```
 
 ## Documentação
 
 A pasta [docs](docs/README.md) tem os dez documentos de referência do projeto
-(arquitetura, tecnologias, identidade visual, componentes, padrões, dados e API, fluxos,
-algoritmos do Gantt e contexto do produto). **Quem for alterar o código, pessoa ou agente
-de IA, começa por [docs/00-regras-para-ia.md](docs/00-regras-para-ia.md).**
+(arquitetura, tecnologias, identidade visual, componentes, padrões, dados e
+armazenamento, fluxos, algoritmos do Gantt e contexto do produto). **Quem for alterar o
+código, pessoa ou agente de IA, começa por [docs/00-regras-para-ia.md](docs/00-regras-para-ia.md).**
 
 ## Aviso
 

@@ -1,6 +1,6 @@
 # 8. Planejamento, Gantt e algoritmos
 
-> Código: `packages/shared/src/{dates,scheduling,capacity,holidays}.ts` (usados pela API e
+> Código: `packages/shared/src/{dates,scheduling,capacity,holidays}.ts` (usados pela camada de dados e
 > pela web) e os modelos de tela `apps/web/src/features/{gantt/ganttModel,timeline/timelineModel,timer/calendarLayout}.ts`.
 > Testes: `packages/shared/test/*` e os `*.test.ts` ao lado dos modelos.
 > Mudou uma regra? Atualize esta página e acrescente um caso de teste.
@@ -79,7 +79,7 @@ Regras de produto:
 - **Só empurra, nunca puxa.** Antecipar a predecessora não antecipa a sucessora (mesmo
   comportamento do Toggl Plan e do TeamGantt). Quem quiser puxar arrasta a sucessora.
 - Tarefas sem datas são ignoradas.
-- A API roda a cascata sempre que datas, hierarquia, dependências, feriados ou a opção de
+- A camada de dados roda a cascata sempre que datas, hierarquia, dependências, feriados ou a opção de
   dias não úteis mudam (`applyScheduling`), se o workspace estiver com agendamento
   automático ligado. A web roda a mesma função durante o arraste para mostrar a prévia.
 
@@ -90,7 +90,7 @@ Regras de produto:
 - início = menor início das filhas; fim = maior fim;
 - progresso = média do progresso das filhas ponderada pela duração em dias corridos
   (filha sem datas pesa 1);
-- status (na API): todas concluídas = concluída; alguma começada ou concluída = em
+- status (na camada de dados): todas concluídas = concluída; alguma começada ou concluída = em
   andamento; senão a fazer.
 
 ## 8.6 Caminho crítico

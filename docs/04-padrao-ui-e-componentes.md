@@ -84,7 +84,8 @@ Estilos compartilhados dos seletores: `Picker.module.css` (`trigger`, `dashed`,
 | Item | Arquivo | Para que serve |
 |---|---|---|
 | `StackedColumns`, `HorizontalBars`, `Donut`, `StackedMeter`, `StatTile`, `Legend`, `niceStep` | `components/charts/Charts.tsx` | Gráficos SVG dos Relatórios e da visão geral do projeto |
-| `AppShell` | `layout/AppShell.tsx` | Moldura interna, atalhos, título da aba com cronômetro |
+| `AppShell` | `layout/AppShell.tsx` | Moldura interna, faixa de aviso do modo local, atalhos, título da aba com cronômetro |
+| `DataModeBadge`, `FallbackBanner`, `DataModeNote` | `components/DataModeNotice.tsx` | Selo "Modo local" na barra lateral, faixa de alerta quando o Firebase não respondeu, nota na tela de login |
 | `Sidebar` | `layout/Sidebar.tsx` | Barra lateral: workspace, busca, cronômetro rodando, seções, usuário, tema |
 | `PageHeader`, `PageBody` | `layout/PageHeader.tsx` | Cabeçalho de página |
 | `LogoMark` | `layout/Logo.tsx` | Logotipo |
@@ -95,16 +96,18 @@ Estilos compartilhados dos seletores: `Picker.module.css` (`trigger`, `dashed`,
 | `useT`, `useLocale`, `I18nProvider` | `i18n/index.tsx` | Textos traduzidos |
 | `useTaskPanel` | `features/tasks/TaskPanelContext.tsx` | Abrir o painel de tarefa de qualquer tela (`openTask`, `openNew`) |
 
-Hooks de dados (`apps/web/src/api/`), um arquivo por grupo:
+Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backend()`
+(`data/backend.ts`), a camada de dados conectada na abertura:
 
 | Arquivo | Hooks |
 |---|---|
-| `session.ts` | `useSessionQuery`, `useLogin`, `useSignup`, `useLogout`, `useUpdateProfile`, `useChangePassword`, `useSwitchWorkspace` |
-| `workspace.ts` | `useUpdateWorkspace`, `useCreateWorkspace`, membros, clientes, tags e feriados (`useHolidays`, `useCreateHoliday`, `useImportHolidays`, `useDeleteHoliday`) |
+| `backend.ts` | `backend()`, `connectBackend()` (lê as variáveis `VITE_*` e escolhe o modo) |
+| `session.ts` | `useSessionQuery`, `useLogin`, `useSignup`, `useStartDemo`, `useLogout`, `useUpdateProfile`, `useChangePassword`, `useSwitchWorkspace` |
+| `workspace.ts` | `useUpdateWorkspace`, `useCreateWorkspace`, membros, convites (`useInvites`, `useCreateInvite`, `useRevokeInvite`, `useInvite`, `useAcceptInvite`), clientes, tags e feriados (`useHolidays`, `useCreateHoliday`, `useImportHolidays`, `useDeleteHoliday`) |
 | `projects.ts` | `useProjects`, `useProjectMap`, `useCreateProject`, `useUpdateProject`, `useDeleteProject` |
 | `tasks.ts` | `useTasks`, `useDependencies`, `useCreateTask`, `useUpdateTask`, `useScheduleTasks`, `useDeleteTask`, dependências |
 | `timeEntries.ts` | `useRunningTimer`, `useTimeEntries`, `useStartTimer`, `useStopTimer`, criar, editar e excluir apontamento |
-| `reports.ts` | `useSummaryReport`, `useDetailedReport`, `useCsvUrl` |
+| `reports.ts` | `useSummaryReport`, `useDetailedReport`, `useDownloadCsv` (gera o CSV no navegador e baixa) |
 
 ## 4.6 Componentes de tela (não reutilizáveis fora da pasta)
 
@@ -116,7 +119,8 @@ Hooks de dados (`apps/web/src/api/`), um arquivo por grupo:
 | Gantt | `ProjectGantt` (barra de ferramentas), `GanttChart`, `ganttModel.ts` |
 | Linha do tempo | `TimelinePage`, `timelineModel.ts` |
 | Relatórios | `ReportsPage` (Resumo, Detalhado, Semanal), `ReportFilters` (`DateRangeControl`, `MultiFilter`, `BillableFilter`), `reportRange.ts` |
-| Gestão | `MembersPage`, `ClientsPage`, `TagsPage`, `RenameCell` |
+| Gestão | `MembersPage` (membros, `InviteDialog`, `PendingInvites`, `inviteLink`), `ClientsPage`, `TagsPage`, `RenameCell` |
+| Entrada | `AuthPage` (login, cadastro e demonstração local), `InvitePage` (aceitar convite) |
 | Configurações | `ProfileSettingsPage`, `WorkspaceSettingsPage`, `HolidaysSection`, `NoWorkspace` |
 | Busca | `QuickSearch`, `ShortcutsDialog` |
 
@@ -128,8 +132,10 @@ Hooks de dados (`apps/web/src/api/`), um arquivo por grupo:
   do ponteiro; durante o arraste só a prévia (cascata) é recalculada.
 - O calendário do cronômetro recalcula a posição dos apontamentos a cada 30 s (linha de
   agora); o relógio do cronômetro atualiza a cada 1 s só nos componentes que o mostram.
-- A lista de tarefas do workspace vem inteira numa resposta. `[planejado]`: paginação no
-  servidor para workspaces com milhares de tarefas.
+- A lista de tarefas do workspace vem inteira numa leitura (no Firestore, uma consulta
+  à subcoleção `tasks`). `[planejado]`: paginação para workspaces com milhares de
+  tarefas.
+- O SDK do Firebase é um pedaço separado do build, baixado só no modo Firebase.
 
 ## 4.8 Acessibilidade
 

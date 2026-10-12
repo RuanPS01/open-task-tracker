@@ -4,8 +4,8 @@
 
 | O quê | Idioma |
 |---|---|
-| Comentários, documentação, mensagens de commit, mensagens de erro da API | Português do Brasil |
-| Identificadores (variáveis, funções, tipos, arquivos, rotas, colunas) | Inglês |
+| Comentários, documentação, mensagens de commit, mensagens de erro da camada de dados | Português do Brasil |
+| Identificadores (variáveis, funções, tipos, arquivos, rotas, coleções, campos) | Inglês |
 | Textos da interface | `pt-BR.ts` (referência) e `en.ts` |
 | Dados de demonstração | Português do Brasil |
 
@@ -19,8 +19,8 @@ emoji (regra 3 do [documento 00](00-regras-para-ia.md)).
 | Componente React | `PascalCase.tsx`, um componente principal por arquivo | `TaskPanel.tsx` |
 | Estilo do componente | mesmo nome com `.module.css` | `TaskPanel.module.css` |
 | Lógica pura de uma tela | `camelCase.ts` ao lado da tela | `ganttModel.ts`, `taskGrouping.ts` |
-| Teste | mesmo nome com `.test.ts` (web) ou em `test/` (api, shared) | `ganttModel.test.ts`, `test/tasks.test.ts` |
-| Módulo da API | `modules/<recurso-no-plural>/{repo,service,routes}.ts` | `modules/time-entries/service.ts` |
+| Teste | mesmo nome com `.test.ts` (web) ou em `test/` (data, shared) | `ganttModel.test.ts`, `test/suites.ts` |
+| Serviço da camada de dados | `services/<recurso>.ts` em `camelCase`, funções `(ctx, workspaceId, ..., entrada)` | `services/timeEntries.ts` |
 | Pasta de tela | `features/<tela>` em inglês | `features/timeline` |
 
 ## 5.3 Código TypeScript
@@ -37,23 +37,26 @@ emoji (regra 3 do [documento 00](00-regras-para-ia.md)).
 | Duração | sempre em segundos inteiros, nome com `Seconds` | `estimateSeconds`, `trackedSeconds` |
 
 - Importações de tipo com `import type` (o ESLint exige).
-- Sem `any`. Para dado externo, valide com zod; para JSON do banco, converta no `repo.ts`.
+- Sem `any`. Toda entrada de serviço passa por `parse(esquema, entrada)`; documento lido
+  do armazenamento tem o tipo de `store/schema.ts` e é convertido para a entidade no
+  serviço (`toProject`, `toTimeEntry`).
 - Funções puras e testáveis ficam fora dos componentes (`*Model.ts`, `shared`).
 
-## 5.4 Banco, API e textos
+## 5.4 Dados, rotas e textos
 
 | Elemento | Padrão | Exemplo |
 |---|---|---|
-| Tabela | `snake_case` no plural | `time_entries`, `task_dependencies` |
-| Coluna | `snake_case` | `allow_non_working_days` |
-| Booleano no banco | `INTEGER` 0 ou 1 (o `node:sqlite` não aceita `boolean`); converter com `bool()` | `billable` |
-| JSON da API | `camelCase` | `allowNonWorkingDays` |
-| Rota | substantivo no plural, minúsculas, hífen | `/time-entries/:id/stop` |
+| Coleção | `camelCase` no plural; dado de negócio sempre sob `workspaces/{id}/` | `timeEntries`, `dependencies` |
+| Campo de documento | `camelCase`, igual à entidade | `allowNonWorkingDays` |
+| Id | texto; `NO_ID` (`"none"`) para "nenhum"; ordenar com `compareIds` | `task.id` |
+| Caminho de coleção | só pelas funções de `paths` (`store/schema.ts`) | `paths.tasks(wid)` |
+| Rota de tela | substantivo no plural, minúsculas, hífen | `/projects/:projectId/gantt` |
 | Código de erro | `UPPER_SNAKE_CASE`, estável | `DEPENDENCY_CYCLE` |
 | Chave de tradução | caminho por tela, `camelCase` | `t.tasks.nonWorkingDays` |
 | Texto com número | função no dicionário, com plural | `t.tasks.count(n)` |
 | Chave do navegador | prefixo `ott.` | `ott.ganttZoom` |
-| Chave do React Query | fábrica em `api/keys.ts` | `keys.tasks(wid)` |
+| Chave do React Query | fábrica em `data/keys.ts` | `keys.tasks(wid)` |
+| Variável de ambiente da web | prefixo `VITE_` em `UPPER_SNAKE_CASE` | `VITE_FIREBASE_PROJECT_ID` |
 
 ## 5.5 Granularidade
 
@@ -61,7 +64,8 @@ emoji (regra 3 do [documento 00](00-regras-para-ia.md)).
   arquivos na mesma pasta (veja como o painel de tarefa foi dividido em `TaskFields`,
   `SubtaskSection`, `DependencySection`, `AllocationSection`).
 - Lógica que não depende de React vai para um `*.ts` puro com teste.
-- Regra usada pela API e pela web vai para `packages/shared`.
+- Algoritmo usado pela camada de dados e pela web vai para `packages/shared`; regra que
+  lê ou grava dados vai para um serviço de `packages/data`.
 - Um hook de dados por operação; nada de "hook genérico que faz tudo".
 - Estado de tela local com `useState`; estado que outras telas precisam vai para contexto
   (como o painel de tarefa) ou para o cache do React Query.
@@ -86,7 +90,7 @@ item como `[planejado]` no [documento 09](09-contexto-do-produto.md).
 | Pacote | Onde | Como |
 |---|---|---|
 | `shared` | `packages/shared/test/*.test.ts` | Unitários, datas fixas (nunca "hoje") |
-| `api` | `apps/api/test/*.test.ts` | Integração com `buildApp` + banco `:memory:` + `app.inject`; helpers em `test/helpers.ts` |
+| `data` | `packages/data/test/` | `suites.ts` registra os casos pela fachada `Backend`; `local.test.ts` roda no lowdb em memória (sempre) e `firebase.test.ts` no emulador (`npm run test:firebase`); `rules.ts` testa `firestore.rules` com o SDK direto |
 | `web` | `src/**/*.test.ts` | Unitários da lógica pura das telas (sem DOM) |
 
 Nome do caso de teste em português, descrevendo o comportamento ("empurra a sucessora

@@ -5,8 +5,9 @@
 O **Open Task Tracker (OTT)** é um sistema de tarefas com planejamento de projeto em
 gráfico de Gantt e rastreamento de tempo, feito por engenharia reversa do **Toggl Track**
 (com as funções de planejamento que vieram do Toggl Plan e do Toggl Focus). É de código
-aberto, roda numa instalação própria (um processo Node e um arquivo SQLite) e funciona em
-português do Brasil e inglês.
+aberto, publicado como site estático (por exemplo no GitHub Pages), guarda os dados no
+Firebase ou, sem ele, no próprio navegador (lowdb), e funciona em português do Brasil e
+inglês.
 
 Ele responde a três perguntas de uma equipe pequena ou média:
 
@@ -22,7 +23,7 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 
 | Pessoa | O que faz no sistema |
 |---|---|
-| Gestora de projetos (admin) | Monta o cronograma, liga dependências, acompanha caminho crítico, capacidade e relatórios; cadastra membros, feriados e valores |
+| Gestora de projetos (admin) | Monta o cronograma, liga dependências, acompanha caminho crítico, capacidade e relatórios; convida membros, cadastra feriados e valores |
 | Pessoa da equipe (membro) | Vê "Minhas tarefas", atualiza status, liga o cronômetro na tarefa, corrige apontamentos no calendário |
 | Financeiro ou atendimento | Usa relatórios por cliente e projeto, exporta CSV com valores faturáveis |
 
@@ -46,7 +47,7 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 | Saved views da Timeline | | `[planejado]` |
 | Gantt de projeto (Toggl Plan) com dependências | Cronograma com FS, SS, FF, SF, atraso, cascata e caminho crítico | `[implementado]` |
 | Calendário de trabalho e feriados | Dias úteis, feriados e importação nacional; tarefa liberada para fins de semana e feriados | `[implementado]` |
-| Members, Clients, Tags | Membros, Clientes, Tags | `[implementado]` |
+| Members (convite por e-mail), Clients, Tags | Membros com convite por link, Clientes, Tags | `[implementado]` |
 | Workspaces e troca de workspace | Igual | `[implementado]` |
 | Approvals (aprovação de horas) | | `[planejado]` |
 | Time off (folgas) | | `[planejado]` |
@@ -56,13 +57,17 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 
 Diferenças intencionais em relação ao Toggl: marca e ilustrações próprias; interface em
 português por padrão; feriados nacionais do Brasil; caminho crítico e tipos de
-dependência além do término para início.
+dependência além do término para início; convite por link em vez de e-mail; modo local
+que funciona sem nenhum serviço externo.
 
 ## 9.4 Glossário
 
 | Termo na interface | Significado | No código |
 |---|---|---|
 | Workspace | Espaço da equipe; todo dado pertence a um | `Workspace` |
+| Convite | Link de uso único para entrar num workspace | `Invite` |
+| Modo local | Dados guardados só no navegador (lowdb), sem Firebase | `mode: 'local'` |
+| Modo Firebase | Dados no Cloud Firestore e login no Firebase Auth | `mode: 'firebase'` |
 | Membro, administrador | Pessoa do workspace e seu papel | `Member`, `role` |
 | Apontamento | Registro de tempo (início e fim) | `TimeEntry` |
 | Cronômetro rodando | Apontamento sem fim | `stop = null` |
@@ -88,7 +93,8 @@ dependência além do término para início.
    pode ser desligada.
 4. **Fiel ao Toggl onde o Toggl acerta.** Mesma organização de telas, nomes e atalhos
    para quem já conhece.
-5. **Instalação própria simples.** Um processo, um arquivo de banco, sem serviço externo.
+5. **Publicação simples.** Site estático no GitHub Pages com Firebase; sem Firebase,
+   continua funcionando no navegador.
 
 ## 9.6 Roteiro
 
@@ -103,13 +109,15 @@ afetados.
 | Linha do tempo de capacidade | `[implementado]` |
 | Relatórios e CSV | `[implementado]` |
 | Feriados e tarefas em fins de semana e feriados | `[implementado]` |
-| Limite de tentativas de login e registro de auditoria | `[planejado]` |
-| Convite de membro por e-mail (com servidor SMTP opcional) | `[planejado]` |
+| Firebase (Auth e Firestore) com queda para o modo local (lowdb) e publicação no GitHub Pages | `[implementado]` |
+| Sincronizar com o Firebase o que foi feito no modo local durante uma queda | `[planejado]` |
+| Registro de auditoria (o Firebase Auth já limita tentativas de login) | `[planejado]` |
+| Convite de membro por e-mail (hoje é por link) | `[planejado]` |
 | Folgas (Time off) descontando da capacidade | `[planejado]` |
 | Aprovação de horas (Approvals) | `[planejado]` |
 | Relatórios salvos e links de compartilhamento | `[planejado]` |
 | Anexos e tarefas privadas | `[planejado]` |
 | Linha de base do cronograma (planejado x atual) | `[planejado]` |
-| Virtualização de linhas no Gantt e paginação de tarefas no servidor | `[planejado]` |
-| Imagem Docker e guia de implantação | `[planejado]` |
+| Virtualização de linhas no Gantt e paginação de tarefas | `[planejado]` |
+| Atualização em tempo real entre pessoas (ouvintes do Firestore) | `[planejado]` |
 | Importação de apontamentos e tarefas do Toggl (CSV) | `[planejado]` |
