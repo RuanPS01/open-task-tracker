@@ -52,6 +52,28 @@ describe('armazenamento local', () => {
     expect((await again.session.get())?.user.email).toBe('ana@exemplo.com');
   });
 
+  it('excluir workspace não deixa nenhum documento dele no armazenamento', async () => {
+    const adapter = new MemorySync<LocalData>();
+    const backend = createLocalBackend({ adapter });
+    const session = await backend.session.startDemo();
+    const wid = session.workspaces[0]!.id;
+    const [project] = await backend.projects.list(wid);
+    await backend.projects.update(wid, project!.id, { pinned: true });
+    await backend.timeEntries.start(wid, { description: 'Rodando' });
+    const other = await backend.workspaces.create('Pessoal');
+    await backend.session.switchWorkspace(wid);
+    await backend.workspaces.remove(wid);
+    const data = adapter.read()!;
+    expect(Object.keys(data.collections).filter((path) => path.includes(wid))).toEqual([]);
+    expect(data.collections.workspaces?.[wid]).toBeUndefined();
+    expect(data.collections.workspaces?.[other.id]).toBeDefined();
+    expect(data.collections.users?.[session.user.id]).toMatchObject({
+      currentWorkspaceId: other.id,
+      runningEntry: null,
+      pinnedProjectIds: [],
+    });
+  });
+
   it('demonstração local entra com a conta de exemplo', async () => {
     const backend = createLocalBackend({ adapter: new MemorySync<LocalData>() });
     const session = await backend.session.startDemo();

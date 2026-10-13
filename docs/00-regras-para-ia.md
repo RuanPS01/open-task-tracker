@@ -147,8 +147,10 @@ Estas valem sempre, sem precisar pedir:
    `apps/web/src/i18n/pt-BR.ts` (idioma de referência) e `en.ts`. O compilador acusa se
    uma chave faltar em `en.ts`. Mensagens de erro da web saem de `errors.<CODIGO>`.
 2. **Nenhuma cor escrita em componente.** Use os tokens de `apps/web/src/styles/tokens.css`
-   (`var(--token)`). Cor de projeto vem do dado (`project.color`). Ver
-   [03-identidade-visual.md](03-identidade-visual.md).
+   (`var(--token)`). Cor de projeto vem do dado (`project.color`). Os temas de cor por
+   workspace no fim do `tokens.css` são gerados: mude `scripts/workspace-themes.mjs` e rode
+   `npm run themes`, nunca edite o trecho à mão. Ver
+   [03-identidade-visual.md](03-identidade-visual.md), seções 3.2 e 3.8.
 3. **Reaproveite antes de criar.** Procure no inventário de
    [04-padrao-ui-e-componentes.md](04-padrao-ui-e-componentes.md) e em
    `apps/web/src/components/` antes de escrever um componente novo. Se o existente faz
@@ -177,7 +179,8 @@ Estas valem sempre, sem precisar pedir:
 
 Antes de dizer que terminou:
 
-- [ ] `npm run check` passa (caracteres proibidos, ESLint, tipos e todos os testes).
+- [ ] `npm run check` passa (caracteres proibidos, temas de workspace em dia, ESLint, tipos
+      e todos os testes).
 - [ ] `npm run build` termina sem erro.
 - [ ] Mexeu em `packages/data` ou `firestore.rules`: `npm run test:firebase` passa
       (precisa de Java 21; o CI roda a mesma coisa).
@@ -185,7 +188,8 @@ Antes de dizer que terminou:
 - [ ] Textos novos estão em `pt-BR.ts` e `en.ts`.
 - [ ] Nenhuma cor literal fora de `tokens.css`.
 - [ ] Todo dado novo fica sob o workspace e tem regra correspondente em `firestore.rules`.
-- [ ] Conferi a tela nos temas escuro e claro, em 1366x768 e em 1920x1080, no modo local
-      e, se a mudança grava dados, no modo Firebase (emulador).
+- [ ] Conferi a tela nos temas escuro e claro (com a cor padrão e com uma cor de workspace),
+      em 1366x768 e em 1920x1080, no modo local e, se a mudança grava dados, no modo
+      Firebase (emulador).
 - [ ] Documentos afetados desta pasta foram atualizados e os marcadores de estado trocados.
 - [ ] Não criei componente, hook ou algoritmo duplicado do que já existia.

@@ -183,6 +183,72 @@ export function registerSuites(makeEnv: () => Promise<TestEnv>): void {
       const workspace = await api().workspaces.update(wid(), { workingDays: [5, 1, 2, 3, 4, 6], autoSchedule: false });
       expect(workspace).toMatchObject({ workingDays: [1, 2, 3, 4, 5, 6], autoSchedule: false });
     });
+
+    it('tema de cor: padrão ciano, cria com cor, troca, volta ao padrão e recusa cor fora da paleta', async () => {
+      expect(ana.session.workspaces[0]!.color).toBeNull();
+      const created = await api().workspaces.create('Colorido', { color: '#9E5BD9' });
+      expect(created.color).toBe('#9e5bd9');
+      expect((await api().workspaces.update(created.id, { color: '#2da608' })).color).toBe('#2da608');
+      const session = (await api().session.get())!;
+      expect(session.workspaces.find((w) => w.id === created.id)?.color).toBe('#2da608');
+      expect((await api().workspaces.update(created.id, { color: null })).color).toBeNull();
+      await expectCode(api().workspaces.update(created.id, { color: '#123456' }), 'VALIDATION');
+      await expectCode(api().workspaces.create('Errado', { color: 'azul' }), 'VALIDATION');
+
+      // A cor é configuração do workspace: membro comum não troca.
+      const bruno = await join('Bruno');
+      await env.loginAs(bruno);
+      await expectCode(api().workspaces.update(wid(), { color: '#d92b2b' }), 'FORBIDDEN');
+    });
+
+    it('excluir workspace: só administrador; quem estava nele cai em outro workspace sem cronômetro', async () => {
+      const bruno = await join('Bruno');
+      const project = await api().projects.create(wid(), { name: 'Site', color: '#0b83d9' });
+      const first = await api().tasks.create(wid(), { name: 'A', projectId: project.id, startDate: '2026-10-12' });
+      const second = await api().tasks.create(wid(), { name: 'B', projectId: project.id });
+      await api().dependencies.create(wid(), { predecessorId: first.id, successorId: second.id });
+      await api().clients.create(wid(), { name: 'Padaria' });
+      await api().tags.create(wid(), 'Reunião');
+      await api().holidays.create(wid(), { date: '2026-12-24', name: 'Véspera' });
+      const invite = await api().members.createInvite(wid(), {});
+      await api().timeEntries.start(wid(), { description: 'Ana', projectId: project.id });
+      const other = await api().workspaces.create('Pessoal');
+      await api().session.switchWorkspace(wid());
+
+      // Bruno deixa o cronômetro rodando no workspace que vai sumir e não pode excluí-lo.
+      await env.loginAs(bruno);
+      await api().timeEntries.start(wid(), { description: 'Bruno' });
+      await expectCode(api().workspaces.remove(wid()), 'FORBIDDEN');
+
+      await env.loginAs(ana);
+      await api().workspaces.remove(wid());
+      const session = (await api().session.get())!;
+      expect(session.workspaces.map((w) => w.id)).toEqual([other.id]);
+      expect(session.user.currentWorkspaceId).toBe(other.id);
+      expect(await api().session.runningTimer()).toBeNull();
+      await expectCode(api().projects.list(wid()), 'NOT_FOUND');
+      await expectCode(api().workspaces.remove(wid()), 'NOT_FOUND');
+
+      await env.loginAs(bruno);
+      const brunoSession = (await api().session.get())!;
+      expect(brunoSession.workspaces.map((w) => w.id)).toEqual([bruno.workspaceId]);
+      expect(brunoSession.user.currentWorkspaceId).toBe(bruno.workspaceId);
+      expect(await api().session.runningTimer()).toBeNull();
+      // O cronômetro novo não tropeça no que rodava no workspace excluído.
+      const entry = await api().timeEntries.start(bruno.workspaceId, { description: 'Seguindo' });
+      expect((await api().session.runningTimer())?.id).toBe(entry.id);
+      // O link de convite do workspace excluído não vale mais.
+      await expectCode(api().members.acceptInvite(wid(), invite.id), 'INVITE_NOT_FOUND');
+    });
+
+    it('excluir o único workspace deixa a pessoa sem workspace', async () => {
+      await api().workspaces.remove(wid());
+      const session = (await api().session.get())!;
+      expect(session.workspaces).toEqual([]);
+      expect(session.user.currentWorkspaceId).toBeNull();
+      const created = await api().workspaces.create('Recomeço');
+      expect((await api().session.get())!.user.currentWorkspaceId).toBe(created.id);
+    });
   });
 
   describe('tarefas', () => {

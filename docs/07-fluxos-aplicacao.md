@@ -46,8 +46,8 @@ sequenceDiagram
   cadastro).
 - Login e logout em outra aba, ou sessão expirada no Firebase, chegam pelo
   `onAuthChange` e atualizam a tela sozinhos.
-- Workspace atual removido ou desativado: a camada de dados escolhe o primeiro
-  disponível; sem nenhum, a web mostra "Novo workspace".
+- Workspace atual removido, desativado ou excluído: a camada de dados escolhe o primeiro
+  disponível; sem nenhum, a web mostra "Novo workspace" (seção 7.11).
 - Trocar de workspace limpa todo o cache `['ws', ...]` da web.
 - No modo Firebase o e-mail é o da conta de login e não muda pelo perfil
   (`EMAIL_CHANGE_UNSUPPORTED`); no modo local muda.
@@ -299,3 +299,39 @@ flowchart TD
    de 120), rosca por projeto com tabela e tabela por projeto com subgrupos por descrição.
 4. Exportar gera o CSV no navegador com os mesmos filtros (`reports.csv`) e baixa o
    arquivo `relatorio-INICIO-a-FIM.csv`.
+
+## 7.11 Workspace: tema de cor e exclusão
+
+**Tema de cor.** Ao criar um workspace (modal "Novo workspace" da barra lateral ou tela
+sem workspace) escolhe-se a cor junto com o nome: "Ciano (padrão)" ou uma das 14 cores de
+projeto. Depois, a seção "Cor do workspace" das configurações (só administrador) troca a
+cor com um clique, gravando na hora (`workspaces.update` com `color`). A cor vale para
+todas as pessoas do workspace, nos dois temas de cada uma: botões, seleção, barra lateral,
+logotipo, fundos e textos levemente tingidos. Trocar de workspace troca a paleta; a bolinha
+ao lado de cada nome no seletor de workspace mostra a cor. Detalhes da derivação das
+paletas em [03-identidade-visual.md](03-identidade-visual.md), seção 3.8.
+
+**Exclusão** (`services/workspaces.ts`, `deleteWorkspace`):
+
+```mermaid
+sequenceDiagram
+  participant AD as Admin
+  participant W as DeleteWorkspaceSection
+  participant D as Camada de dados
+  AD->>W: Excluir workspace
+  W->>AD: modal pede o nome do workspace digitado
+  AD->>W: digita o nome e confirma "Excluir tudo"
+  W->>D: workspaces.remove
+  D->>D: lote: apaga todas as subcoleções, ajusta o perfil de quem exclui, apaga o workspace por último
+  W->>D: session.get
+  D-->>W: sessão com o próximo workspace (ou nenhum)
+  W->>W: limpa o cache do workspace, abre /timer com aviso "Workspace excluído"
+```
+
+- Só administrador (`FORBIDDEN` para membro comum; as regras do Firestore recusam o mesmo).
+- Some tudo do workspace: projetos, tarefas, dependências, apontamentos de todas as
+  pessoas, clientes, tags, feriados, membros e convites (o link de convite deixa de valer).
+- Quem excluiu cai no próximo workspace dele (ou na tela "Novo workspace"). Os outros
+  membros, na próxima leitura da sessão, caem no primeiro workspace que ainda têm; um
+  cronômetro que rodava no workspace excluído deixa de aparecer e iniciar outro não falha.
+

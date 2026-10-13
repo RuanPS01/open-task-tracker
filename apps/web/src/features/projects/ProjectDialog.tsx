@@ -1,11 +1,10 @@
 // Criar ou editar projeto: nome, cor, cliente, faturável, valor/hora, estimativa e período.
 import { PROJECT_COLORS, type Id, type Project } from '@ott/shared';
-import clsx from 'clsx';
-import { Check } from 'lucide-react';
 import { useState } from 'react';
 import { useCreateProject, useUpdateProject } from '../../data/projects';
 import { useClients, useCreateClient } from '../../data/workspace';
 import { useWorkspace } from '../../app/session';
+import { ColorSwatches } from '../../components/pickers/ColorSwatches';
 import { DateRangePicker } from '../../components/pickers/DateRangePicker';
 import { Button } from '../../components/ui/Button';
 import { Field, Input, Select, Switch } from '../../components/ui/Field';
@@ -34,7 +33,7 @@ export function ProjectDialog({
   const updateProject = useUpdateProject();
   const createClient = useCreateClient();
   const [name, setName] = useState(project?.name ?? '');
-  const [color, setColor] = useState(project?.color ?? PROJECT_COLORS[0]);
+  const [color, setColor] = useState<string>(project?.color ?? PROJECT_COLORS[0]);
   const [clientId, setClientId] = useState<Id | null>(project?.clientId ?? null);
   const [newClient, setNewClient] = useState<string | null>(null);
   const [billable, setBillable] = useState(project?.billable ?? false);
@@ -99,24 +98,7 @@ export function ProjectDialog({
         )}
       </Field>
       <Field label={t.projects.color}>
-        {() => (
-          <div className={styles.colors} role="radiogroup" aria-label={t.projects.color}>
-            {PROJECT_COLORS.map((swatch) => (
-              <button
-                key={swatch}
-                type="button"
-                role="radio"
-                aria-checked={swatch === color}
-                aria-label={swatch}
-                className={clsx(styles.swatch, swatch === color && styles.swatchActive)}
-                style={{ background: swatch }}
-                onClick={() => setColor(swatch)}
-              >
-                {swatch === color && <Check size={14} />}
-              </button>
-            ))}
-          </div>
-        )}
+        {() => <ColorSwatches value={color} onChange={(swatch) => swatch && setColor(swatch)} label={t.projects.color} />}
       </Field>
       <div className={styles.grid}>
         <Field label={t.projects.client}>

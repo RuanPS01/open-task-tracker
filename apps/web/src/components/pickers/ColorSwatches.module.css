@@ -1,0 +1,40 @@
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatch {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  color: var(--on-color);
+}
+
+.swatch:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* Paleta padrão: o ciano fixo, mesmo quando o workspace aberto usa outra cor. */
+.default {
+  background: var(--brand-cyan);
+  color: var(--brand-cyan-contrast);
+}
+
+.selected {
+  box-shadow:
+    0 0 0 2px var(--bg-elevated),
+    0 0 0 4px var(--text-secondary);
+}
+
+@media (max-width: 760px) {
+  .swatch {
+    width: 30px;
+    height: 30px;
+  }
+}

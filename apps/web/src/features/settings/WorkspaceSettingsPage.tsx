@@ -3,12 +3,14 @@ import clsx from 'clsx';
 import { useState } from 'react';
 import { useUpdateWorkspace } from '../../data/workspace';
 import { useIsAdmin, useWorkspace } from '../../app/session';
+import { ColorSwatches } from '../../components/pickers/ColorSwatches';
 import { Button } from '../../components/ui/Button';
 import { Field, Input, Select, Switch } from '../../components/ui/Field';
 import { toast } from '../../components/ui/Toast';
 import { useT } from '../../i18n';
 import { PageHeader } from '../../layout/PageHeader';
 import { useFormat } from '../../lib/format';
+import { DeleteWorkspaceSection } from './DeleteWorkspaceSection';
 import { HolidaysSection } from './HolidaysSection';
 import styles from './Settings.module.css';
 
@@ -91,6 +93,18 @@ export function WorkspaceSettingsPage() {
             </div>
           </section>
 
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>{t.settings.color}</h2>
+            <p className={styles.sectionHint}>{t.settings.colorHint}</p>
+            <ColorSwatches
+              value={workspace.color}
+              onChange={(color) => update.mutate({ color }, { onSuccess: () => toast.success(t.common.saved) })}
+              label={t.settings.color}
+              withDefault
+              disabled={!isAdmin}
+            />
+          </section>
+
           <HolidaysSection disabled={!isAdmin} />
 
           <section className={styles.section}>
@@ -108,6 +122,7 @@ export function WorkspaceSettingsPage() {
             </div>
           </section>
         </fieldset>
+        {isAdmin && <DeleteWorkspaceSection />}
       </div>
     </>
   );

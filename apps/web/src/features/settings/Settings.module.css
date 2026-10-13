@@ -13,6 +13,17 @@
   border-radius: var(--radius-lg);
 }
 
+/* Ação que apaga dados de todas as pessoas: borda de alerta para não passar despercebida. */
+.danger {
+  border-color: var(--danger);
+}
+
+.modalText {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
 .sectionTitle {
   margin: 0 0 16px;
   font-size: 15px;

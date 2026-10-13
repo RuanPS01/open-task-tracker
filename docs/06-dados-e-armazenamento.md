@@ -50,6 +50,7 @@ calendário em `AAAA-MM-DD`.
 | defaultHourlyRate | Valor/hora padrão, nulo |
 | workingDays | Dias úteis da semana, `[1,2,3,4,5]` (0 = domingo) |
 | autoSchedule | Liga a cascata de dependências |
+| color | Tema de cor do site no workspace: uma das cores de projeto (`PROJECT_COLORS`, `#rrggbb` em minúsculas) ou nulo para a paleta ciano padrão. Ausente nos workspaces antigos (lido como nulo) |
 | memberIds | Uids dos membros **ativos**: é o que as regras consultam para liberar acesso |
 | adminIds | Uids dos administradores ativos |
 | createdBy, createdAt | |
@@ -78,6 +79,7 @@ dois).
 
 | Exclusão | Efeito (no mesmo lote) |
 |---|---|
+| Workspace (admin) | Apaga todos os documentos das subcoleções (`timeEntries`, `dependencies`, `tasks`, `projects`, `tags`, `clients`, `holidays`, `invites`, `members`) e, por último, o documento do workspace. No perfil de quem exclui: workspace atual passa para o próximo (ou nulo), cronômetro rodando nele e projetos fixados dele saem. Os perfis das outras pessoas não podem ser gravados por ela: a sessão delas troca o workspace atual que sumiu e o cronômetro que rodava nele deixa de aparecer |
 | Projeto (admin) | Exclui as tarefas do projeto e as dependências delas; apontamentos ficam sem projeto e sem tarefa |
 | Tarefa | Exclui as subtarefas e as dependências que tocam qualquer uma; apontamentos ficam sem tarefa; recalcula o cronograma |
 | Cliente | Projetos ficam sem cliente |
@@ -104,7 +106,7 @@ Apontamento rodando não entra em `trackedSeconds`: as horas entram quando ele p
 | Caminho | Ler | Criar ou alterar | Excluir |
 |---|---|---|---|
 | `users/{uid}` | a própria pessoa | a própria pessoa | a própria pessoa |
-| `workspaces/{id}` | quem está em `memberIds` | criar: quem cria vira o único membro e admin; alterar: admin, ou o convidado se acrescentando com o papel do convite | ninguém |
+| `workspaces/{id}` | quem está em `memberIds` | criar: quem cria vira o único membro e admin; alterar: admin, ou o convidado se acrescentando com o papel do convite | admin (o serviço apaga as subcoleções antes, porque as regras delas leem `memberIds` e `adminIds` deste documento) |
 | `members/{uid}` | membros, e cada pessoa o próprio | admin; a própria pessoa ao aceitar convite (papel, capacidade e valor iguais aos do convite); a própria pessoa só em nome, e-mail e cor | admin |
 | `invites/{id}` | qualquer pessoa logada que tenha o id (o link); listar só admin | admin | admin, ou o convidado ao aceitar |
 | `holidays` | membros | admin | admin |
@@ -138,8 +140,9 @@ Toda entrada passa pelo esquema zod de `@ott/shared`.
 ### Workspace (`workspaces`, `members`, `clients`, `tags`, `holidays`)
 | Operação | Descrição |
 |---|---|
-| `workspaces.create(name, { demo })` | Cria o workspace (quem cria vira admin); com `demo`, preenche com os dados de exemplo |
-| `workspaces.update` (admin) | Nome, moeda, valor/hora, dias úteis, agendamento automático (mudou o calendário, recalcula o cronograma) |
+| `workspaces.create(name, { demo, color })` | Cria o workspace (quem cria vira admin) com o tema de cor escolhido (padrão nulo); com `demo`, preenche com os dados de exemplo |
+| `workspaces.update` (admin) | Nome, moeda, valor/hora, dias úteis, agendamento automático (mudou o calendário, recalcula o cronograma) e cor (`color`, cor fora de `PROJECT_COLORS` dá `VALIDATION`) |
+| `workspaces.remove` (admin) | Exclui o workspace e tudo o que está nele (tabela de exclusões, seção 6.2). Num lote grande o Firestore grava em partes de 400: se uma parte falhar, o workspace continua existindo e a exclusão pode ser repetida |
 | `members.list`, `update` (admin), `remove` (admin) | Papel, capacidade, valor, ativo; `LAST_ADMIN` e `REMOVE_SELF` |
 | `members.createInvite` (admin), `listInvites` (admin), `revokeInvite` (admin) | Convites por link |
 | `members.getInvite`, `acceptInvite` | Lê o convite pelo link e entra no workspace (seção 7.2) |
@@ -298,7 +301,8 @@ são traduzidos em `packages/data/src/firebase/index.ts`.
 
 ## 6.9 Dados guardados no navegador
 
-- **Conveniências por pessoa**, com prefixo `ott.`: `ott.theme`, `ott.locale`,
+- **Conveniências por pessoa**, com prefixo `ott.`: `ott.theme`, `ott.accent` (cor do
+  último workspace aberto, para a abertura não piscar), `ott.locale`,
   `ott.sidebarCollapsed`, `ott.timerView`, `ott.timerSpan`, `ott.timerMode`,
   `ott.showWeekends`, `ott.tasksView`, `ott.tasksAssignee`, `ott.tasksGroup`,
   `ott.tasksSort`, `ott.tasksDesc`, `ott.tasksShowDone`, `ott.projectsStatus`,

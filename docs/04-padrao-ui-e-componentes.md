@@ -76,6 +76,7 @@ sem rolagem horizontal da página.
 | Alternar visão | `Segmented` | Calendário, Lista, Planilha |
 | Criar ou editar item rico | Painel lateral (`SidePanel`) ou `Modal` | Painel de tarefa, editor de apontamento |
 | Confirmar exclusão | `await confirm({ ..., danger: true })` de `useConfirm` | Excluir projeto |
+| Confirmar exclusão que apaga dados de todas as pessoas | `Modal` com o nome digitado para liberar o botão `danger` | Excluir workspace (`DeleteWorkspaceSection`) |
 | Avisar resultado | `toast.success()`; erros de mutação já viram aviso sozinhos | "Tarefa criada" |
 | Aviso que espera a pessoa | `toast.persistent(texto, { label, onClick })`, sem sumir sozinho | "Nova versão disponível" |
 | Tela sem dados | `EmptyState` com ilustração, título, texto e ação | Tarefas vazias |
@@ -114,6 +115,7 @@ Atalhos não disparam com o foco num campo de texto.
 | `StatusMenu`, `PriorityMenu` | `StatusPriority.tsx` | Menus de status e prioridade |
 | `StatusIcon`, `PriorityIcon` | `TaskIcons.tsx` | Ícones SVG de status e prioridade |
 | `DateRangePicker` | `DateRangePicker.tsx` | Datas de tarefa e período de projeto (intervalo ou data única) |
+| `ColorSwatches` | `ColorSwatches.tsx` | Amostras das cores de projeto (`PROJECT_COLORS`) com o nome de cada cor. Cor do projeto e tema de cor do workspace; `withDefault` acrescenta a amostra "Ciano (padrão)", que devolve nulo |
 | `TimeInput`, `DurationInput`, `parseClockTime` | `TimeInputs.tsx` | Hora e duração com digitação livre ("930", "1h30") |
 
 Estilos compartilhados dos seletores: `Picker.module.css` (`trigger`, `dashed`,
@@ -130,7 +132,8 @@ Estilos compartilhados dos seletores: `Picker.module.css` (`trigger`, `dashed`,
 | `DataModeBadge`, `FallbackBanner`, `DataModeNote` | `components/DataModeNotice.tsx` | Selo "Modo local" na barra lateral, faixa de alerta quando o Firebase não respondeu ou falta criar o banco, nota na tela de login (em destaque nesses dois casos) |
 | `BootScreen`, `BootError` | `app/BootScreen.tsx` | Abertura antes da camada de dados: "Carregando..." e o erro quando o Firebase é obrigatório e falhou |
 | `usePwa`, `registerServiceWorker`, `listenInstallPrompt` | `app/pwa.ts` | PWA: versão nova (`applyUpdate`), convite de instalação (`install`) e se está aberto como app (`standalone`) |
-| `Sidebar` | `layout/Sidebar.tsx` | Barra lateral: workspace, busca, cronômetro rodando, seções, usuário, tema |
+| `Sidebar` | `layout/Sidebar.tsx` | Barra lateral: workspace (com a bolinha da cor de cada um e o modal "Novo workspace" com nome, cor e dados de exemplo), busca, cronômetro rodando, seções, usuário, tema |
+| `applyTheme`, `applyAccent` | `app/theme.ts` | Tema escuro ou claro e tema de cor do workspace no `<html>` (`data-theme`, `data-accent`), lembrados para a próxima abertura |
 | `PageHeader`, `PageBody` | `layout/PageHeader.tsx` | Cabeçalho de página |
 | `LogoMark` | `layout/Logo.tsx` | Logotipo |
 | `useFormat`, `createFormatters`, `useErrorMessage` | `lib/format.ts` | Datas, horas, durações, dinheiro e intervalos no idioma e preferências do usuário |
@@ -148,7 +151,7 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 |---|---|
 | `backend.ts` | `backend()`, `connectBackend()` (lê as variáveis `VITE_*` e escolhe o modo) |
 | `session.ts` | `useSessionQuery`, `useLogin`, `useGoogleLogin`, `useSignup`, `useStartDemo`, `useLogout`, `useUpdateProfile`, `useChangePassword`, `useSwitchWorkspace` |
-| `workspace.ts` | `useUpdateWorkspace`, `useCreateWorkspace`, membros, convites (`useInvites`, `useCreateInvite`, `useRevokeInvite`, `useInvite`, `useAcceptInvite`), clientes, tags e feriados (`useHolidays`, `useCreateHoliday`, `useImportHolidays`, `useDeleteHoliday`) |
+| `workspace.ts` | `useUpdateWorkspace`, `useCreateWorkspace` (nome, cor e dados de exemplo), `useDeleteWorkspace` (devolve a sessão nova e limpa o cache do workspace), membros, convites (`useInvites`, `useCreateInvite`, `useRevokeInvite`, `useInvite`, `useAcceptInvite`), clientes, tags e feriados (`useHolidays`, `useCreateHoliday`, `useImportHolidays`, `useDeleteHoliday`) |
 | `projects.ts` | `useProjects`, `useProjectMap`, `useCreateProject`, `useUpdateProject`, `useDeleteProject` |
 | `tasks.ts` | `useTasks`, `useDependencies`, `useCreateTask`, `useUpdateTask`, `useScheduleTasks`, `useDeleteTask`, dependências, `usePreviewTaskImport` (revisão sem gravar) e `useImportTasks` |
 | `timeEntries.ts` | `useRunningTimer`, `useTimeEntries`, `useStartTimer`, `useStopTimer`, criar, editar e excluir apontamento |
@@ -166,7 +169,7 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 | Relatórios | `ReportsPage` (Resumo, Detalhado, Semanal), `ReportFilters` (`DateRangeControl`, `MultiFilter`, `BillableFilter`), `reportRange.ts` |
 | Gestão | `MembersPage` (membros, `InviteDialog`, `PendingInvites`, `inviteLink`), `ClientsPage`, `TagsPage`, `RenameCell` |
 | Entrada | `AuthPage` (login, cadastro e demonstração local), `GoogleButton` ("Continuar com Google", só no modo Firebase), `InvitePage` (aceitar convite) |
-| Configurações | `ProfileSettingsPage`, `WorkspaceSettingsPage`, `HolidaysSection`, `NoWorkspace` |
+| Configurações | `ProfileSettingsPage` (conta, preferências, aplicativo e senha), `WorkspaceSettingsPage` (geral, cor do workspace, feriados, agendamento automático), `HolidaysSection`, `DeleteWorkspaceSection` (só administrador; confirma com o nome digitado), `NoWorkspace` |
 | Busca | `QuickSearch`, `ShortcutsDialog` |
 
 ## 4.7 Desempenho

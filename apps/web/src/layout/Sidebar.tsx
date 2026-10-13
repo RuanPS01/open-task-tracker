@@ -38,9 +38,11 @@ import { useSession } from '../app/session';
 import { Avatar } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
 import { DataModeBadge } from '../components/DataModeNotice';
+import { ColorSwatches } from '../components/pickers/ColorSwatches';
 import { Checkbox, Field, Input } from '../components/ui/Field';
 import { Menu } from '../components/ui/Menu';
 import { Modal } from '../components/ui/Modal';
+import { ColorDot } from '../components/ui/ProjectLabel';
 import { useT } from '../i18n';
 import { useNow } from '../lib/hooks';
 import { LogoMark } from './Logo';
@@ -85,6 +87,7 @@ function WorkspaceSwitcher() {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
   const [demo, setDemo] = useState(false);
+  const [color, setColor] = useState<string | null>(null);
 
   return (
     <>
@@ -101,6 +104,7 @@ function WorkspaceSwitcher() {
           ...workspaces.map((w) => ({
             key: `ws-${w.id}`,
             label: w.name,
+            icon: <ColorDot color={w.color ?? 'var(--brand-cyan)'} size={10} />,
             checked: w.id === workspace.id,
             onSelect: () => {
               if (w.id !== workspace.id) switchWorkspace.mutate(w.id, { onSuccess: () => navigate('/timer') });
@@ -126,11 +130,12 @@ function WorkspaceSwitcher() {
               disabled={!name.trim()}
               loading={createWorkspace.isPending}
               onClick={() =>
-                createWorkspace.mutate({ name: name.trim(), demo }, {
+                createWorkspace.mutate({ name: name.trim(), demo, color }, {
                   onSuccess: () => {
                     setCreating(false);
                     setName('');
                     setDemo(false);
+                    setColor(null);
                     navigate('/timer');
                   },
                 })
@@ -143,6 +148,9 @@ function WorkspaceSwitcher() {
       >
         <Field label={t.nav.newWorkspaceName}>
           {(id) => <Input id={id} value={name} onChange={(event) => setName(event.target.value)} autoFocus />}
+        </Field>
+        <Field label={t.nav.workspaceColor} hint={t.nav.workspaceColorHint}>
+          {() => <ColorSwatches value={color} onChange={setColor} label={t.nav.workspaceColor} withDefault />}
         </Field>
         <Field hint={t.nav.demoWorkspaceHint}>
           {() => <Checkbox checked={demo} onChange={setDemo} label={t.nav.demoWorkspace} />}

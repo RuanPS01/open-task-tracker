@@ -21,7 +21,9 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "check:text": "node scripts/check-text.mjs",
-    "check": "npm run check:text && npm run lint && npm run typecheck && npm run test"
+    "themes": "node scripts/workspace-themes.mjs",
+    "check:themes": "node scripts/workspace-themes.mjs --check",
+    "check": "npm run check:text && npm run check:themes && npm run lint && npm run typecheck && npm run test"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

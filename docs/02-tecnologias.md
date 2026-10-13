@@ -83,7 +83,9 @@ dependências por arraste) que bibliotecas prontas não oferecem do jeito do Tog
 | `npm run typecheck` | `tsc --noEmit` nos três pacotes |
 | `npm run lint` | ESLint no repositório |
 | `npm run check:text` | Procura travessão, seta e emoji em arquivos versionados |
-| `npm run check` | Texto, lint, tipos e testes, nessa ordem |
+| `npm run themes` | Gera os temas de cor por workspace no fim do `tokens.css` a partir de `PROJECT_COLORS` (`scripts/workspace-themes.mjs`) |
+| `npm run check:themes` | Falha se o `tokens.css` estiver diferente do que `npm run themes` geraria |
+| `npm run check` | Texto, temas de workspace, lint, tipos e testes, nessa ordem |
 
 Não existe mais `npm run seed` nem `npm start`: a demonstração é criada pela própria
 interface (botão "Explorar com dados de exemplo" no modo local, ou "Preencher com dados
