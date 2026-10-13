@@ -12,3 +12,46 @@
   overflow: hidden;
   background: var(--bg-app);
 }
+
+/* Celular: conteúdo em cima, barra inferior embaixo; dvh acompanha a barra do navegador. */
+.mobile {
+  flex-direction: column;
+  height: 100dvh;
+}
+
+.drawerLayer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-overlay);
+  animation: fade 0.12s ease-out;
+}
+
+.drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(300px, 86vw);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--sidebar-bg);
+  box-shadow: var(--shadow-panel);
+  animation: slideIn 0.16s ease-out;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+}

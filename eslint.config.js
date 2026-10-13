@@ -25,7 +25,12 @@ export default tseslint.config(
     rules: reactHooks.configs.recommended.rules,
   },
   {
-    files: ['scripts/**/*.mjs', 'packages/**/*.ts'],
+    files: ['scripts/**/*.mjs', 'packages/**/*.ts', 'apps/web/pwa/**/*.ts', 'apps/web/vite.config.ts'],
     languageOptions: { globals: globals.node },
+  },
+  {
+    // Modelo do service worker: __VERSION__ e __PRECACHE__ são trocados no build.
+    files: ['apps/web/pwa/service-worker.js'],
+    languageOptions: { globals: { ...globals.serviceworker, __VERSION__: 'readonly', __PRECACHE__: 'readonly' } },
   },
 );

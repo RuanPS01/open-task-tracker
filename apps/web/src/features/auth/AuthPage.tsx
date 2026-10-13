@@ -79,6 +79,11 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       </aside>
       <main className={styles.main}>
         <form className={styles.card} onSubmit={submit} noValidate>
+          {/* No celular o painel da marca some: o logotipo vem para cima do formulário. */}
+          <div className={styles.mobileBrand} aria-hidden>
+            <LogoMark size={32} />
+            <span>Open Task Tracker</span>
+          </div>
           <h1 className={styles.title}>{mode === 'login' ? t.auth.loginTitle : t.auth.signupTitle}</h1>
           <p className={styles.subtitle}>{mode === 'login' ? t.auth.loginSubtitle : t.auth.signupSubtitle}</p>
           {backend().canUseGoogle && <GoogleButton loading={google.isPending} onClick={enterWithGoogle} />}

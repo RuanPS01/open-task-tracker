@@ -83,8 +83,17 @@
 }
 
 @media (max-width: 1100px) {
-  .hint {
+  .legend .hint {
     display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .legend {
+    gap: 12px;
+    padding: 0 12px;
+    overflow: hidden;
+    white-space: nowrap;
   }
 }
 

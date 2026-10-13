@@ -144,3 +144,38 @@
     display: none;
   }
 }
+
+/* Celular: descrição e duração em cima; projeto e "continuar" embaixo. */
+@media (max-width: 760px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto 32px;
+    grid-template-areas:
+      'desc duration menu'
+      'project project continue';
+    row-gap: 2px;
+    padding: 6px 4px 6px 12px;
+  }
+
+  .description {
+    grid-area: desc;
+  }
+
+  .project {
+    grid-area: project;
+    justify-self: start;
+    max-width: 100%;
+  }
+
+  .duration {
+    grid-area: duration;
+  }
+
+  .continue {
+    grid-area: continue;
+    opacity: 1;
+  }
+
+  .row > :last-child {
+    grid-area: menu;
+  }
+}

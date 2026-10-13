@@ -61,3 +61,18 @@
     transform: translateY(8px);
   }
 }
+
+/* Celular: os avisos ficam acima da barra inferior e ocupam a largura. */
+@media (max-width: 760px) {
+  .region {
+    left: 12px;
+    right: 12px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    transform: none;
+  }
+
+  .toast {
+    width: 100%;
+    min-width: 0;
+  }
+}

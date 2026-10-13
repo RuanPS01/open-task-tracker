@@ -118,6 +118,16 @@ export const ptBR = {
     NETWORK: 'Sem conexão. Verifique a internet e tente de novo.',
     UNKNOWN: 'Não foi possível concluir a ação.',
   },
+  pwa: {
+    updateReady: 'Nova versão do Open Task Tracker disponível.',
+    update: 'Atualizar',
+    install: 'Instalar aplicativo',
+    section: 'Aplicativo',
+    hint: 'Instale o Open Task Tracker para abrir como aplicativo, em tela cheia e com ícone na tela inicial do celular ou no computador.',
+    ios: 'No iPhone ou iPad: abra o site no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início".',
+    other: 'Se o botão não aparecer, use o menu do navegador: "Instalar aplicativo" ou "Adicionar à tela inicial".',
+    installed: 'Você está usando o aplicativo instalado.',
+  },
   boot: {
     connecting: 'Carregando...',
     failedTitle: 'Não foi possível abrir o Open Task Tracker',
@@ -153,6 +163,9 @@ export const ptBR = {
     running: 'Rodando',
     quickSearch: 'Busca rápida',
     shortcuts: 'Atalhos de teclado',
+    menu: 'Menu',
+    closeMenu: 'Fechar menu',
+    mainNav: 'Navegação principal',
   },
   auth: {
     loginTitle: 'Entrar',

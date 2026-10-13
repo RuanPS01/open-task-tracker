@@ -296,3 +296,18 @@
   background: var(--danger-subtle);
   border-radius: 4px;
 }
+
+/* Celular: coluna das pessoas estreita (LABEL_WIDTH_MOBILE), para sobrar espaço para os dias. */
+@media (max-width: 760px) {
+  .corner,
+  .laneHead {
+    width: 140px;
+    padding-left: 12px;
+    padding-right: 8px;
+  }
+
+  .laneName {
+    gap: 6px;
+    font-size: 13px;
+  }
+}

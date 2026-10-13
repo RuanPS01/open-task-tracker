@@ -35,3 +35,21 @@
 .padded {
   padding: 20px 24px 40px;
 }
+
+@media (max-width: 760px) {
+  .header {
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--text-lg);
+  }
+
+  .padded {
+    padding: 16px 12px 32px;
+  }
+}

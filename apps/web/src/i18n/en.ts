@@ -96,6 +96,16 @@ export const en: Messages = {
     NETWORK: 'No connection. Check your internet and try again.',
     UNKNOWN: 'The action could not be completed.',
   },
+  pwa: {
+    updateReady: 'A new version of Open Task Tracker is available.',
+    update: 'Update',
+    install: 'Install app',
+    section: 'App',
+    hint: 'Install Open Task Tracker to open it as an app, full screen and with an icon on your phone home screen or computer.',
+    ios: 'On iPhone or iPad: open the site in Safari, tap Share and then "Add to Home Screen".',
+    other: 'If the button does not show up, use the browser menu: "Install app" or "Add to Home screen".',
+    installed: 'You are using the installed app.',
+  },
   boot: {
     connecting: 'Loading...',
     failedTitle: 'Open Task Tracker could not start',
@@ -131,6 +141,9 @@ export const en: Messages = {
     running: 'Running',
     quickSearch: 'Quick search',
     shortcuts: 'Keyboard shortcuts',
+    menu: 'Menu',
+    closeMenu: 'Close menu',
+    mainNav: 'Main navigation',
   },
   auth: {
     loginTitle: 'Log in',

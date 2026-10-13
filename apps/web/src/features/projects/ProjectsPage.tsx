@@ -142,11 +142,11 @@ export function ProjectsPage() {
               <tr>
                 <th className={styles.pinCol} />
                 <th>{t.projects.title}</th>
-                <th>{t.projects.client}</th>
-                <th>{t.projects.timeframe}</th>
+                <th className={styles.mobileHidden}>{t.projects.client}</th>
+                <th className={styles.mobileHidden}>{t.projects.timeframe}</th>
                 <th>{t.projects.timeStatus}</th>
-                <th>{t.projects.billableStatus}</th>
-                <th>{t.projects.team}</th>
+                <th className={styles.mobileHidden}>{t.projects.billableStatus}</th>
+                <th className={styles.mobileHidden}>{t.projects.team}</th>
                 <th className={styles.actionsCol} />
               </tr>
             </thead>
@@ -174,17 +174,21 @@ export function ProjectsPage() {
                         <ColorDot color={project.color} size={10} />
                         <span style={{ color: project.color }}>{project.name}</span>
                       </span>
-                      <span className={styles.subline}>{t.projects.tasksDone(project.doneTaskCount, project.taskCount)}</span>
+                      <span className={styles.subline}>
+                        {t.projects.tasksDone(project.doneTaskCount, project.taskCount)}
+                        {/* No celular a coluna do cliente some: o nome vai para cá. */}
+                        {project.clientId && <span className={styles.mobileOnly}> &middot; {clientName.get(project.clientId)}</span>}
+                      </span>
                     </td>
-                    <td className={styles.muted}>{project.clientId ? clientName.get(project.clientId) : ''}</td>
-                    <td className={styles.muted}>
+                    <td className={clsx(styles.muted, styles.mobileHidden)}>{project.clientId ? clientName.get(project.clientId) : ''}</td>
+                    <td className={clsx(styles.muted, styles.mobileHidden)}>
                       {project.startDate && project.endDate ? format.range(project.startDate, project.endDate) : ''}
                     </td>
                     <td>
                       <TimeStatus project={project} />
                     </td>
-                    <td className={styles.muted}>{project.billable ? t.projects.billable : t.projects.nonBillable}</td>
-                    <td>{team.length > 0 && <AvatarStack people={team} size={22} max={5} />}</td>
+                    <td className={clsx(styles.muted, styles.mobileHidden)}>{project.billable ? t.projects.billable : t.projects.nonBillable}</td>
+                    <td className={styles.mobileHidden}>{team.length > 0 && <AvatarStack people={team} size={22} max={5} />}</td>
                     <td className={styles.actionsCol} onClick={(event) => event.stopPropagation()}>
                       <Menu
                         placement="bottom-end"

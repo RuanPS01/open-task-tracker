@@ -205,8 +205,8 @@ function PendingInvites() {
           <tr>
             <th>{t.members.email}</th>
             <th>{t.members.role}</th>
-            <th>{t.members.capacityShort}</th>
-            <th>{t.members.createdAt}</th>
+            <th className={styles.mobileHidden}>{t.members.capacityShort}</th>
+            <th className={styles.mobileHidden}>{t.members.createdAt}</th>
             <th className={styles.actions} />
           </tr>
         </thead>
@@ -219,8 +219,8 @@ function PendingInvites() {
                   {invite.role === 'admin' ? t.members.admin : t.members.member}
                 </span>
               </td>
-              <td className={styles.muted}>{t.members.hoursPerWeek(invite.weeklyCapacityHours)}</td>
-              <td className={styles.muted}>{format.fullDate(invite.createdAt)}</td>
+              <td className={clsx(styles.muted, styles.mobileHidden)}>{t.members.hoursPerWeek(invite.weeklyCapacityHours)}</td>
+              <td className={clsx(styles.muted, styles.mobileHidden)}>{format.fullDate(invite.createdAt)}</td>
               <td className={styles.actions}>
                 <Menu
                   placement="bottom-end"
@@ -296,12 +296,12 @@ export function MembersPage() {
             <thead>
               <tr>
                 <th>{t.members.name}</th>
-                <th>{t.members.email}</th>
+                <th className={styles.mobileHidden}>{t.members.email}</th>
                 <th>{t.members.role}</th>
-                <th>{t.members.capacityShort}</th>
-                <th>{t.members.hourlyRate}</th>
+                <th className={styles.mobileHidden}>{t.members.capacityShort}</th>
+                <th className={styles.mobileHidden}>{t.members.hourlyRate}</th>
                 <th>{t.members.status}</th>
-                <th>{t.members.joined}</th>
+                <th className={styles.mobileHidden}>{t.members.joined}</th>
                 <th className={styles.actions} />
               </tr>
             </thead>
@@ -315,14 +315,14 @@ export function MembersPage() {
                       {member.userId === user.id && <span className={styles.you}>({t.members.you})</span>}
                     </span>
                   </td>
-                  <td className={styles.muted}>{member.email}</td>
+                  <td className={clsx(styles.muted, styles.mobileHidden)}>{member.email}</td>
                   <td>
                     <span className={clsx(styles.badge, member.role === 'admin' && styles.badgeAdmin)}>
                       {member.role === 'admin' ? t.members.admin : t.members.member}
                     </span>
                   </td>
-                  <td className={styles.muted}>{t.members.hoursPerWeek(member.weeklyCapacityHours)}</td>
-                  <td className={styles.muted}>
+                  <td className={clsx(styles.muted, styles.mobileHidden)}>{t.members.hoursPerWeek(member.weeklyCapacityHours)}</td>
+                  <td className={clsx(styles.muted, styles.mobileHidden)}>
                     {member.hourlyRate !== null ? format.money(member.hourlyRate, workspace.currency) : '-'}
                   </td>
                   <td>
@@ -330,7 +330,7 @@ export function MembersPage() {
                       {member.active ? t.members.active : t.members.inactive}
                     </span>
                   </td>
-                  <td className={styles.muted}>{format.fullDate(member.joinedAt)}</td>
+                  <td className={clsx(styles.muted, styles.mobileHidden)}>{format.fullDate(member.joinedAt)}</td>
                   <td className={styles.actions}>
                     {isAdmin && (
                       <Menu

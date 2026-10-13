@@ -62,7 +62,7 @@ export function TagsPage() {
             <thead>
               <tr>
                 <th>{t.tags.name}</th>
-                <th>{t.tags.created}</th>
+                <th className={styles.mobileHidden}>{t.tags.created}</th>
                 <th className={styles.actions} />
               </tr>
             </thead>
@@ -76,7 +76,7 @@ export function TagsPage() {
                       <span className={styles.badge}># {tag.name}</span>
                     )}
                   </td>
-                  <td className={styles.muted}>{format.fullDate(tag.createdAt)}</td>
+                  <td className={`${styles.muted} ${styles.mobileHidden}`}>{format.fullDate(tag.createdAt)}</td>
                   <td className={styles.actions}>
                     <Menu
                       placement="bottom-end"

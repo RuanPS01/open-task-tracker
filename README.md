@@ -35,6 +35,11 @@ ou não responder, no próprio navegador com o **lowdb**. Publicação pronta pa
 - **Relatórios** Resumo, Detalhado e Semanal, com valor faturável e exportação CSV.
 - Membros com capacidade e valor/hora e **convite por link**, clientes, tags, vários
   workspaces, busca rápida (Ctrl K) e atalhos de teclado.
+- **Login com Google** (no modo Firebase), além de e-mail e senha.
+- **No celular**: todas as telas adaptadas, com barra inferior (Cronômetro, Tarefas,
+  Projetos, Relatórios e Menu) e o cronômetro rodando sempre à mão.
+- **PWA**: instale como aplicativo no celular ou no computador; abre sem internet e avisa
+  quando há versão nova.
 
 ## Começando
 
@@ -52,8 +57,9 @@ navegador (lowdb). Na tela de login, **"Explorar com dados de exemplo"** entra c
 ### Usando o Firebase
 
 1. No [console do Firebase](https://console.firebase.google.com), crie o projeto, ative
-   Authentication com **E-mail/senha**, crie o banco do **Cloud Firestore** e registre um
-   app da Web.
+   Authentication com **E-mail/senha** e **Google**, crie o banco do **Cloud Firestore** e
+   registre um app da Web. Em Authentication, Configurações, Domínios autorizados,
+   acrescente o domínio onde o site vai abrir (necessário para o login com Google).
 2. Copie `.env.example` para `.env` (na raiz) e preencha as variáveis `VITE_FIREBASE_*`
    com a configuração do app.
 3. Publique as regras de acesso e o índice:

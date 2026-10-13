@@ -233,3 +233,22 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Celular: menos margem e colunas secundárias do detalhado embaixo da descrição. */
+.mobileOnly {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .body {
+    padding: 16px 12px 32px;
+  }
+
+  .mobileHidden {
+    display: none;
+  }
+
+  .mobileOnly {
+    display: block;
+  }
+}

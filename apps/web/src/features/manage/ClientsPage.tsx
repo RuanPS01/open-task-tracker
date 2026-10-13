@@ -62,7 +62,7 @@ export function ClientsPage() {
               <tr>
                 <th>{t.clients.name}</th>
                 <th>{t.projects.title}</th>
-                <th>{t.projects.status}</th>
+                <th className={styles.mobileHidden}>{t.projects.status}</th>
                 <th className={styles.actions} />
               </tr>
             </thead>
@@ -77,7 +77,7 @@ export function ClientsPage() {
                     )}
                   </td>
                   <td className={styles.muted}>{t.clients.projects(client.projectCount)}</td>
-                  <td>{client.archived && <span className={styles.badge}>{t.clients.archived}</span>}</td>
+                  <td className={styles.mobileHidden}>{client.archived && <span className={styles.badge}>{t.clients.archived}</span>}</td>
                   <td className={styles.actions}>
                     <Menu
                       placement="bottom-end"

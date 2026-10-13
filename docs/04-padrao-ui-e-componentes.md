@@ -28,6 +28,45 @@ Toda tela interna segue a mesma estrutura do Toggl Track:
 Telas com interação de arrastar (Cronômetro, Gantt, Linha do tempo) usam eventos de
 ponteiro próprios, com limiar de 3 a 4 px para separar clique de arraste.
 
+### Celular (até 760 px)
+
+O limite é um só: `@media (max-width: 760px)` no CSS e `useIsMobile()` (`lib/hooks.ts`,
+constante `MOBILE_MEDIA`) no código. Toda tela nova precisa funcionar nessa largura,
+sem rolagem horizontal da página.
+
+```
++------------------------------+
+| PageHeader (título e ações)  |
+|------------------------------|
+| Toolbar (uma linha que rola) |
+|------------------------------|
+| Corpo                        |
+|------------------------------|
+| Cronômetro rodando           |
+| [Cron.][Tarefas][Proj.][Rel.][Menu] |
++------------------------------+
+```
+
+- Navegação: `MobileNav` (barra inferior) e a `Sidebar` inteira numa gaveta (botão Menu).
+- `Toolbar`: não quebra linha; rola na horizontal.
+- `PageHeader`: título com reticências; ação secundária pode virar só ícone com
+  `Button mobileIconOnly` (o texto vira `aria-label` e dica).
+- `Modal` ocupa a largura da tela e o `SidePanel` (painel de tarefa) a tela inteira.
+- Listas em grade (tarefas, lista do cronômetro) usam `grid-template-areas` para virar
+  duas linhas: o nome em cima e os detalhes embaixo.
+- Tabelas: colunas secundárias recebem a classe `mobileHidden` (somem) e a informação vai
+  para uma linha `mobileOnly` embaixo do nome (projetos, membros, clientes, tags,
+  relatório detalhado). Tabelas largas por natureza (planilha, semanal) rolam dentro da
+  própria área.
+- Gráficos de tempo: o Gantt mostra só a coluna do nome (150 px) e a Linha do tempo usa
+  a coluna das pessoas com 140 px; o calendário do cronômetro mostra um dia por vez.
+- Toque: o dedo rola o calendário do cronômetro (arrastar para criar e mover fica para
+  mouse e caneta) e um toque abre o apontamento. Nada pode depender de passar o mouse:
+  o que aparece no `:hover` fica sempre visível no celular (botão de iniciar cronômetro
+  das linhas).
+- Margens laterais de 8 a 12 px e `env(safe-area-inset-*)` onde a tela encosta nas bordas
+  do aparelho (barra inferior, login, rodapé dos modais).
+
 ## 4.2 Padrões de interação
 
 | Padrão | Como fazer | Exemplo |
@@ -38,6 +77,7 @@ ponteiro próprios, com limiar de 3 a 4 px para separar clique de arraste.
 | Criar ou editar item rico | Painel lateral (`SidePanel`) ou `Modal` | Painel de tarefa, editor de apontamento |
 | Confirmar exclusão | `await confirm({ ..., danger: true })` de `useConfirm` | Excluir projeto |
 | Avisar resultado | `toast.success()`; erros de mutação já viram aviso sozinhos | "Tarefa criada" |
+| Aviso que espera a pessoa | `toast.persistent(texto, { label, onClick })`, sem sumir sozinho | "Nova versão disponível" |
 | Tela sem dados | `EmptyState` com ilustração, título, texto e ação | Tarefas vazias |
 | Carregando | `LoadingBlock` na primeira carga; esmaecer na recarga | Relatórios |
 | Edição na própria linha | Campo que grava ao sair (blur) ou Enter, Esc cancela | Descrição na Lista do cronômetro |
@@ -51,12 +91,12 @@ Atalhos não disparam com o foco num campo de texto.
 
 | Componente | Arquivo | Para que serve |
 |---|---|---|
-| `Button`, `IconButton` | `Button.tsx` | Botões (primary, secondary, ghost, subtle, danger; sm, md, lg). `IconButton` exige `label` (vira `aria-label` e dica nativa) |
+| `Button`, `IconButton` | `Button.tsx` | Botões (primary, secondary, ghost, subtle, danger; sm, md, lg). `IconButton` exige `label` (vira `aria-label` e dica nativa). `mobileIconOnly` mostra só o ícone no celular |
 | `Popover` | `Popover.tsx` | Base de todo conteúdo flutuante: posiciona, fecha com Esc e clique fora, devolve o foco |
 | `Menu`, `MenuList` | `Menu.tsx` | Menu suspenso com itens, títulos, separadores e marca de selecionado |
 | `Modal`, `SidePanel` | `Modal.tsx` | Diálogo central e painel lateral com fundo escurecido e foco preso |
 | `ConfirmProvider`, `useConfirm` | `Confirm.tsx` | Confirmação assíncrona |
-| `Toaster`, `toast` | `Toast.tsx` | Avisos no rodapé; `toast` funciona fora do React |
+| `Toaster`, `toast` | `Toast.tsx` | Avisos no rodapé (no celular, acima da barra inferior); `toast` funciona fora do React; `toast.persistent` não some sozinho |
 | `Field`, `Input`, `TextArea`, `Select`, `Switch`, `Checkbox` | `Field.tsx` | Controles de formulário com rótulo, dica e erro |
 | `Toolbar`, `ToolbarSpacer`, `ToolbarDivider`, `ChipButton`, `Segmented` | `Toolbar.tsx` | Barra de ferramentas no padrão do Toggl |
 | `Avatar`, `AvatarStack`, `initials` | `Avatar.tsx` | Iniciais coloridas e pilha de pessoas |
@@ -84,15 +124,18 @@ Estilos compartilhados dos seletores: `Picker.module.css` (`trigger`, `dashed`,
 | Item | Arquivo | Para que serve |
 |---|---|---|
 | `StackedColumns`, `HorizontalBars`, `Donut`, `StackedMeter`, `StatTile`, `Legend`, `niceStep` | `components/charts/Charts.tsx` | Gráficos SVG dos Relatórios e da visão geral do projeto |
-| `AppShell` | `layout/AppShell.tsx` | Moldura interna, faixa de aviso do modo local, atalhos, título da aba com cronômetro |
+| `AppShell` | `layout/AppShell.tsx` | Moldura interna, faixa de aviso do modo local, atalhos, título da aba com cronômetro; no celular, gaveta com a `Sidebar` e a `MobileNav` |
+| `MobileNav` | `layout/MobileNav.tsx` | Barra inferior do celular (Cronômetro, Tarefas, Projetos, Relatórios, Menu) com o cronômetro rodando acima |
+| `RunningTimerCard` | `layout/Sidebar.tsx` | Cronômetro rodando fora da tela do cronômetro (barra lateral e barra inferior) |
 | `DataModeBadge`, `FallbackBanner`, `DataModeNote` | `components/DataModeNotice.tsx` | Selo "Modo local" na barra lateral, faixa de alerta quando o Firebase não respondeu ou falta criar o banco, nota na tela de login (em destaque nesses dois casos) |
 | `BootScreen`, `BootError` | `app/BootScreen.tsx` | Abertura antes da camada de dados: "Carregando..." e o erro quando o Firebase é obrigatório e falhou |
+| `usePwa`, `registerServiceWorker`, `listenInstallPrompt` | `app/pwa.ts` | PWA: versão nova (`applyUpdate`), convite de instalação (`install`) e se está aberto como app (`standalone`) |
 | `Sidebar` | `layout/Sidebar.tsx` | Barra lateral: workspace, busca, cronômetro rodando, seções, usuário, tema |
 | `PageHeader`, `PageBody` | `layout/PageHeader.tsx` | Cabeçalho de página |
 | `LogoMark` | `layout/Logo.tsx` | Logotipo |
 | `useFormat`, `createFormatters`, `useErrorMessage` | `lib/format.ts` | Datas, horas, durações, dinheiro e intervalos no idioma e preferências do usuário |
 | `useWorkCalendar` | `lib/calendar.ts` | Calendário de trabalho (dias úteis e feriados) e nomes dos feriados |
-| `useNow`, `useStoredState`, `useHotkey` | `lib/hooks.ts` | Relógio, estado salvo no navegador, atalhos |
+| `useNow`, `useStoredState`, `useHotkey`, `useIsMobile`, `MOBILE_MEDIA` | `lib/hooks.ts` | Relógio, estado salvo no navegador, atalhos, tela de celular (até 760 px) |
 | `useSession`, `useWorkspace`, `useWorkspaceId`, `useCurrentUser`, `usePreferences`, `useIsAdmin` | `app/session.tsx` | Dados da sessão dentro das rotas internas |
 | `useT`, `useLocale`, `I18nProvider` | `i18n/index.tsx` | Textos traduzidos |
 | `useTaskPanel` | `features/tasks/TaskPanelContext.tsx` | Abrir o painel de tarefa de qualquer tela (`openTask`, `openNew`) |
@@ -104,7 +147,7 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 | Arquivo | Hooks |
 |---|---|
 | `backend.ts` | `backend()`, `connectBackend()` (lê as variáveis `VITE_*` e escolhe o modo) |
-| `session.ts` | `useSessionQuery`, `useLogin`, `useSignup`, `useStartDemo`, `useLogout`, `useUpdateProfile`, `useChangePassword`, `useSwitchWorkspace` |
+| `session.ts` | `useSessionQuery`, `useLogin`, `useGoogleLogin`, `useSignup`, `useStartDemo`, `useLogout`, `useUpdateProfile`, `useChangePassword`, `useSwitchWorkspace` |
 | `workspace.ts` | `useUpdateWorkspace`, `useCreateWorkspace`, membros, convites (`useInvites`, `useCreateInvite`, `useRevokeInvite`, `useInvite`, `useAcceptInvite`), clientes, tags e feriados (`useHolidays`, `useCreateHoliday`, `useImportHolidays`, `useDeleteHoliday`) |
 | `projects.ts` | `useProjects`, `useProjectMap`, `useCreateProject`, `useUpdateProject`, `useDeleteProject` |
 | `tasks.ts` | `useTasks`, `useDependencies`, `useCreateTask`, `useUpdateTask`, `useScheduleTasks`, `useDeleteTask`, dependências, `usePreviewTaskImport` (revisão sem gravar) e `useImportTasks` |
@@ -122,7 +165,7 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 | Linha do tempo | `TimelinePage`, `timelineModel.ts` |
 | Relatórios | `ReportsPage` (Resumo, Detalhado, Semanal), `ReportFilters` (`DateRangeControl`, `MultiFilter`, `BillableFilter`), `reportRange.ts` |
 | Gestão | `MembersPage` (membros, `InviteDialog`, `PendingInvites`, `inviteLink`), `ClientsPage`, `TagsPage`, `RenameCell` |
-| Entrada | `AuthPage` (login, cadastro e demonstração local), `InvitePage` (aceitar convite) |
+| Entrada | `AuthPage` (login, cadastro e demonstração local), `GoogleButton` ("Continuar com Google", só no modo Firebase), `InvitePage` (aceitar convite) |
 | Configurações | `ProfileSettingsPage`, `WorkspaceSettingsPage`, `HolidaysSection`, `NoWorkspace` |
 | Busca | `QuickSearch`, `ShortcutsDialog` |
 
@@ -146,4 +189,5 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 - Status, prioridade, faturável e capacidade nunca dependem só de cor: há ícone, rótulo
   ou texto ("6h acima").
 - Gráficos têm tabela equivalente na mesma tela.
-- Testar as telas em 1366x768 e 1920x1080, nos dois temas.
+- Testar as telas em 1366x768 e 1920x1080 e num celular (412x915), nos dois temas.
+- Alvos de toque no celular com pelo menos 30 px; a barra inferior tem 58 px de altura.

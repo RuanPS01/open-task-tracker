@@ -122,3 +122,14 @@
     transform: rotate(360deg);
   }
 }
+
+@media (max-width: 760px) {
+  .mobileIconOnly {
+    padding: 0;
+    aspect-ratio: 1;
+  }
+
+  .mobileIconOnly .label {
+    display: none;
+  }
+}

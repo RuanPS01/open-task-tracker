@@ -2,9 +2,18 @@
 <html lang="pt-BR" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="dark light" />
+    <meta name="description" content="Tarefas, cronograma em Gantt e controle de horas da equipe." />
+    <!-- PWA: manifesto, ícones e cor da barra do sistema (a do tema escuro; o app troca pela do tema em uso). -->
+    <meta name="theme-color" content="#1c1a1d" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="OTT" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>Open Task Tracker</title>
     <script>
       // Aplica o último tema antes do React carregar, para a tela não piscar em branco.
@@ -14,6 +23,8 @@
           theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
         }
         document.documentElement.dataset.theme = theme;
+        // Cor da barra do sistema antes do CSS carregar (fundo de cada tema, tokens.css --bg-app).
+        document.querySelector('meta[name="theme-color"]').content = theme === 'light' ? '#ffffff' : '#1c1a1d';
       } catch (error) {}
     </script>
   </head>

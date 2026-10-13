@@ -15,7 +15,7 @@ import { ChipButton, Segmented, Toolbar, ToolbarSpacer } from '../../components/
 import { useT } from '../../i18n';
 import { useWorkCalendar } from '../../lib/calendar';
 import { useFormat } from '../../lib/format';
-import { useStoredState } from '../../lib/hooks';
+import { useIsMobile, useStoredState } from '../../lib/hooks';
 import { CalendarView } from './CalendarView';
 import { EntryEditor, type EntryEditorState } from './EntryEditor';
 import { ListView } from './ListView';
@@ -31,7 +31,10 @@ export function TimerPage() {
   const format = useFormat();
   const { weekStart } = usePreferences();
   const [view, setView] = useStoredState<View>('ott.timerView', 'calendar');
-  const [span, setSpan] = useStoredState<Span>('ott.timerSpan', 'week');
+  const [storedSpan, setSpan] = useStoredState<Span>('ott.timerSpan', 'week');
+  // No celular a semana inteira não cabe: o calendário mostra um dia por vez.
+  const mobile = useIsMobile();
+  const span: Span = mobile ? 'day' : storedSpan;
   const [showWeekends, setShowWeekends] = useStoredState('ott.showWeekends', true);
   const [anchor, setAnchor] = useState(() => startOfDay(new Date()));
   const [editor, setEditor] = useState<EntryEditorState | null>(null);
@@ -118,7 +121,7 @@ export function TimerPage() {
           {t.timer.weekTotal}: <strong className="tabular">{formatClock(weekTotal)}</strong>
         </span>
         <ToolbarSpacer />
-        {view === 'calendar' && (
+        {view === 'calendar' && !mobile && (
           <Segmented<Span>
             value={span}
             onChange={setSpan}

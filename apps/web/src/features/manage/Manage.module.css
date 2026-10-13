@@ -167,3 +167,26 @@
   background: var(--bg-input);
   font-size: 13px;
 }
+
+/* Celular: colunas secundárias somem (a informação principal fica na primeira). */
+.mobileOnly {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .body {
+    padding: 0 8px 32px;
+  }
+
+  .mobileHidden {
+    display: none;
+  }
+
+  .search {
+    width: 170px;
+  }
+
+  .mobileOnly {
+    display: inline;
+  }
+}

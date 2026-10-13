@@ -12,6 +12,28 @@
   flex: 1;
 }
 
+/* Celular: uma linha só, com rolagem horizontal no lugar de quebrar em várias. */
+@media (max-width: 760px) {
+  .toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 6px 12px;
+    scrollbar-width: none;
+  }
+
+  .toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toolbar > * {
+    flex-shrink: 0;
+  }
+
+  .spacer {
+    flex: 0 0 4px;
+  }
+}
+
 .divider {
   width: 1px;
   height: 20px;

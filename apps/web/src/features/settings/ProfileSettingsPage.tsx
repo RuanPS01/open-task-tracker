@@ -1,7 +1,9 @@
 import { DURATION_FORMATS, LOCALES, THEMES, TIME_FORMATS, type DurationFormat, type Locale, type Theme, type TimeFormat } from '@ott/shared';
+import { Download } from 'lucide-react';
 import { useState } from 'react';
 import { backend } from '../../data/backend';
 import { useChangePassword, useUpdateProfile } from '../../data/session';
+import { usePwa } from '../../app/pwa';
 import { useCurrentUser } from '../../app/session';
 import { Avatar } from '../../components/ui/Avatar';
 import { Button } from '../../components/ui/Button';
@@ -28,6 +30,7 @@ export function ProfileSettingsPage() {
   const canChangeEmail = backend().canChangeEmail;
   // Quem entrou só pelo Google não tem senha aqui: a senha é a da conta Google.
   const hasPassword = backend().hasPassword();
+  const pwa = usePwa();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const prefs = user.preferences;
@@ -140,6 +143,26 @@ export function ProfileSettingsPage() {
               )}
             </Field>
           </div>
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>{t.pwa.section}</h2>
+          {pwa.standalone ? (
+            <p className={styles.sectionHint}>{t.pwa.installed}</p>
+          ) : (
+            <>
+              <p className={styles.sectionHint}>{t.pwa.hint}</p>
+              {pwa.install && (
+                <div className={styles.actions}>
+                  <Button icon={<Download />} onClick={() => void pwa.install?.()}>
+                    {t.pwa.install}
+                  </Button>
+                </div>
+              )}
+              <p className={styles.sectionHint}>{t.pwa.ios}</p>
+              {!pwa.install && <p className={styles.sectionHint}>{t.pwa.other}</p>}
+            </>
+          )}
         </section>
 
         <section className={styles.section}>

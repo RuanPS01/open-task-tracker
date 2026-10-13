@@ -4,9 +4,14 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
 import { BootError, BootScreen } from './app/BootScreen';
+import { listenInstallPrompt, registerServiceWorker } from './app/pwa';
 import { connectBackend } from './data/backend';
 
 const root = createRoot(document.getElementById('root')!);
+
+// PWA: o convite de instalação precisa ser guardado cedo; o service worker só no build.
+listenInstallPrompt();
+registerServiceWorker();
 
 // Mostra o carregamento na hora: testar o Firebase pode levar alguns segundos.
 root.render(<BootScreen />);

@@ -1,4 +1,25 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+
+/**
+ * Largura em que a interface vira a versão de celular (barra inferior, gaveta, painéis
+ * em tela cheia). O CSS usa o mesmo valor: @media (max-width: 760px).
+ */
+export const MOBILE_MEDIA = '(max-width: 760px)';
+
+function subscribeMobile(onChange: () => void): () => void {
+  const query = window.matchMedia(MOBILE_MEDIA);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
+
+/** Tela de celular (ou janela estreita). Muda junto quando a tela gira ou a janela encolhe. */
+export function useIsMobile(): boolean {
+  return useSyncExternalStore(
+    subscribeMobile,
+    () => window.matchMedia(MOBILE_MEDIA).matches,
+    () => false,
+  );
+}
 
 /** Data atual que se atualiza no intervalo pedido (cronômetro, linha de agora). */
 export function useNow(intervalMs = 1000): Date {
