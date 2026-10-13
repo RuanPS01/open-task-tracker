@@ -7,6 +7,7 @@ import {
   ChartGantt,
   ChevronDown,
   Clock,
+  Download,
   FileText,
   Folder,
   Keyboard,
@@ -16,6 +17,7 @@ import {
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
+  X,
   Plus,
   Search,
   Settings,
@@ -31,6 +33,7 @@ import { useProjectMap } from '../data/projects';
 import { useLogout, useSwitchWorkspace, useUpdateProfile } from '../data/session';
 import { useRunningTimer, useStopTimer } from '../data/timeEntries';
 import { useCreateWorkspace } from '../data/workspace';
+import { usePwa } from '../app/pwa';
 import { useSession } from '../app/session';
 import { Avatar } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
@@ -149,7 +152,8 @@ function WorkspaceSwitcher() {
   );
 }
 
-function RunningTimerCard() {
+/** Cronômetro rodando (fora da tela do cronômetro): na barra lateral e, no celular, acima da barra inferior. */
+export function RunningTimerCard({ className }: { className?: string }) {
   const t = useT();
   const { data: running } = useRunningTimer();
   const stop = useStopTimer();
@@ -160,7 +164,7 @@ function RunningTimerCard() {
   if (!running || location.pathname === '/timer') return null;
   const project = running.projectId ? projects.get(running.projectId) : undefined;
   return (
-    <div className={styles.running} onClick={() => navigate('/timer')} role="link" tabIndex={0}>
+    <div className={clsx(styles.running, className)} onClick={() => navigate('/timer')} role="link" tabIndex={0}>
       <div className={styles.runningText}>
         <span className={styles.runningDescription}>{running.description || t.timer.noDescription}</span>
         {project && (
@@ -192,6 +196,7 @@ function UserMenu() {
   const logout = useLogout();
   const updateProfile = useUpdateProfile();
   const navigate = useNavigate();
+  const { install } = usePwa();
   const setTheme = (theme: Theme) => updateProfile.mutate({ preferences: { theme } });
   return (
     <Menu
@@ -205,6 +210,7 @@ function UserMenu() {
       items={[
         { heading: user.email },
         { key: 'profile', label: t.nav.profile, icon: <User />, onSelect: () => navigate('/settings/profile') },
+        ...(install ? [{ key: 'install', label: t.pwa.install, icon: <Download />, onSelect: () => void install() }] : []),
         'separator',
         { heading: t.nav.theme },
         { key: 'dark', label: t.nav.themeDark, icon: <Moon />, checked: user.preferences.theme === 'dark', onSelect: () => setTheme('dark') },
@@ -222,18 +228,23 @@ export function Sidebar({
   onToggle,
   onSearch,
   onHelp,
+  drawer = false,
 }: {
   collapsed: boolean;
+  /** Recolhe ou expande; na gaveta do celular, fecha. */
   onToggle: () => void;
   onSearch: () => void;
   onHelp: () => void;
+  /** Gaveta do celular: sempre expandida e com botão de fechar. */
+  drawer?: boolean;
 }) {
   const t = useT();
   const sections = useNavSections();
   const navClass = ({ isActive }: { isActive: boolean }) => clsx(styles.link, isActive && styles.linkActive);
+  const toggleLabel = drawer ? t.nav.closeMenu : collapsed ? t.nav.expand : t.nav.collapse;
 
   return (
-    <aside className={clsx(styles.sidebar, collapsed && styles.collapsed)}>
+    <aside className={clsx(styles.sidebar, collapsed && styles.collapsed, drawer && styles.drawer)}>
       <div className={styles.rail}>
         <NavLink to="/timer" className={styles.logo} aria-label="Open Task Tracker">
           <LogoMark size={26} />
@@ -248,8 +259,8 @@ export function Sidebar({
             ))}
           </nav>
         )}
-        <button type="button" className={styles.railButton} onClick={onToggle} aria-label={collapsed ? t.nav.expand : t.nav.collapse} title={collapsed ? t.nav.expand : t.nav.collapse}>
-          {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+        <button type="button" className={styles.railButton} onClick={onToggle} aria-label={toggleLabel} title={toggleLabel}>
+          {drawer ? <X /> : collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
         </button>
         <div className={styles.railBottom}>
           <UserMenu />

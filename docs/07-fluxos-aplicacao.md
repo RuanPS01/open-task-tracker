@@ -15,9 +15,16 @@ flowchart TD
   B -- sim --> C{Firestore respondeu em até 8 s?}
   C -- sim --> F[Modo Firebase]
   C -- não --> Q[Modo local com faixa de alerta]
+  C -- "em 1,5 s a API REST diz que não há banco" --> M[Modo local com aviso para criar o banco]
   L --> S[Selo Modo local na barra lateral e nota no login]
   Q --> S
+  M --> S
 ```
+
+Enquanto `connect()` decide, a tela mostra "Carregando..." (`BootScreen`). Quando o
+Firebase estava configurado e não foi usado, a nota do login vira um aviso em destaque
+com o motivo (sem resposta, ou banco do Firestore não criado no projeto) e o detalhe
+técnico do Firebase no `title`.
 
 ```mermaid
 sequenceDiagram
@@ -46,6 +53,29 @@ sequenceDiagram
   (`EMAIL_CHANGE_UNSUPPORTED`); no modo local muda.
 - **Demonstração no modo local:** "Explorar com dados de exemplo" no login entra (ou cria
   na primeira vez) a conta `demo@exemplo.com` com o workspace "Estúdio Aurora".
+- **Login com Google (só no modo Firebase):** "Continuar com Google", no login e no
+  cadastro, chama `session.loginWithGoogle` com o idioma e o fuso do navegador. A janela
+  do Google abre como pop-up (ou redirecionamento, se o pop-up for bloqueado). Na
+  primeira entrada a camada de dados cria o perfil com o nome do Google e o workspace
+  padrão, como no cadastro; nas seguintes só entra. O destino guardado (por exemplo, o
+  link de convite) vale igual. Fechar a janela do Google não mostra erro. Quem entrou só
+  pelo Google não vê a troca de senha no perfil (a senha é a da conta Google).
+
+### Celular e aplicativo instalado (PWA)
+
+- Até 760 px de largura a navegação vai para a barra inferior (Cronômetro, Tarefas,
+  Projetos, Relatórios e Menu, que abre a barra lateral completa numa gaveta). O
+  cronômetro rodando fica acima da barra, com o botão de parar. Detalhes de cada tela em
+  [04-padrao-ui-e-componentes.md](04-padrao-ui-e-componentes.md), seção 4.1.
+- **Instalar:** no Chrome, Edge e Android, o menu do usuário e o perfil mostram "Instalar
+  aplicativo" quando o navegador oferece; no iPhone, o perfil explica o caminho pelo
+  Safari (Compartilhar, Adicionar à Tela de Início). Instalado, abre em tela cheia com o
+  ícone do OTT e atalhos para Cronômetro, Tarefas e Projetos.
+- **Sem internet:** o app abre com os arquivos guardados pelo service worker. No modo
+  local tudo funciona; no modo Firebase a conexão não responde e o app cai no modo local
+  com o aviso de sempre (seção 1.4 da arquitetura).
+- **Versão nova:** depois de um deploy, o app avisa "Nova versão disponível"; Atualizar
+  recarrega já na versão nova.
 
 ## 7.2 Membros e convites
 

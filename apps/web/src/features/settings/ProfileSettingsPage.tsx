@@ -1,7 +1,9 @@
 import { DURATION_FORMATS, LOCALES, THEMES, TIME_FORMATS, type DurationFormat, type Locale, type Theme, type TimeFormat } from '@ott/shared';
+import { Download } from 'lucide-react';
 import { useState } from 'react';
 import { backend } from '../../data/backend';
 import { useChangePassword, useUpdateProfile } from '../../data/session';
+import { usePwa } from '../../app/pwa';
 import { useCurrentUser } from '../../app/session';
 import { Avatar } from '../../components/ui/Avatar';
 import { Button } from '../../components/ui/Button';
@@ -26,6 +28,9 @@ export function ProfileSettingsPage() {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const canChangeEmail = backend().canChangeEmail;
+  // Quem entrou só pelo Google não tem senha aqui: a senha é a da conta Google.
+  const hasPassword = backend().hasPassword();
+  const pwa = usePwa();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const prefs = user.preferences;
@@ -141,35 +146,61 @@ export function ProfileSettingsPage() {
         </section>
 
         <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>{t.pwa.section}</h2>
+          {pwa.standalone ? (
+            <p className={styles.sectionHint}>{t.pwa.installed}</p>
+          ) : (
+            <>
+              <p className={styles.sectionHint}>{t.pwa.hint}</p>
+              {pwa.install && (
+                <div className={styles.actions}>
+                  <Button icon={<Download />} onClick={() => void pwa.install?.()}>
+                    {t.pwa.install}
+                  </Button>
+                </div>
+              )}
+              <p className={styles.sectionHint}>{t.pwa.ios}</p>
+              {!pwa.install && <p className={styles.sectionHint}>{t.pwa.other}</p>}
+            </>
+          )}
+        </section>
+
+        <section className={styles.section}>
           <h2 className={styles.sectionTitle}>{t.settings.password}</h2>
-          <div className={styles.grid}>
-            <Field label={t.settings.currentPassword}>
-              {(id) => <Input id={id} type="password" autoComplete="current-password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />}
-            </Field>
-            <Field label={t.settings.newPassword} hint={t.auth.passwordHint}>
-              {(id) => <Input id={id} type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />}
-            </Field>
-          </div>
-          <div className={styles.actions}>
-            <Button
-              disabled={!currentPassword || newPassword.length < 8}
-              loading={changePassword.isPending}
-              onClick={() =>
-                changePassword.mutate(
-                  { currentPassword, newPassword },
-                  {
-                    onSuccess: () => {
-                      toast.success(t.settings.passwordChanged);
-                      setCurrentPassword('');
-                      setNewPassword('');
-                    },
-                  },
-                )
-              }
-            >
-              {t.settings.changePassword}
-            </Button>
-          </div>
+          {!hasPassword ? (
+            <p className={styles.sectionHint}>{t.settings.passwordGoogle}</p>
+          ) : (
+            <>
+              <div className={styles.grid}>
+                <Field label={t.settings.currentPassword}>
+                  {(id) => <Input id={id} type="password" autoComplete="current-password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />}
+                </Field>
+                <Field label={t.settings.newPassword} hint={t.auth.passwordHint}>
+                  {(id) => <Input id={id} type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />}
+                </Field>
+              </div>
+              <div className={styles.actions}>
+                <Button
+                  disabled={!currentPassword || newPassword.length < 8}
+                  loading={changePassword.isPending}
+                  onClick={() =>
+                    changePassword.mutate(
+                      { currentPassword, newPassword },
+                      {
+                        onSuccess: () => {
+                          toast.success(t.settings.passwordChanged);
+                          setCurrentPassword('');
+                          setNewPassword('');
+                        },
+                      },
+                    )
+                  }
+                >
+                  {t.settings.changePassword}
+                </Button>
+              </div>
+            </>
+          )}
         </section>
       </div>
     </>

@@ -152,15 +152,20 @@ export function CalendarView({ days, entries, projects, totals, holidayNames, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drag === null]);
 
+  // Tipo do último ponteiro num apontamento (o clique do Safari não informa).
+  const lastPointer = useRef('mouse');
+  // No toque o dedo rola o calendário: arrastar para criar ou mover fica para mouse e
+  // caneta. Um toque simples num apontamento abre a edição (onClick).
   const startCreate = (event: ReactPointerEvent<HTMLDivElement>, dayIndex: number) => {
-    if (event.button !== 0 || event.target !== event.currentTarget) return;
+    if (event.pointerType === 'touch' || event.button !== 0 || event.target !== event.currentTarget) return;
     event.preventDefault();
     const minute = snapMinutes(minuteFromEvent(event, event.currentTarget), 15);
     setDrag({ kind: 'create', dayIndex, anchorMin: minute, currentMin: minute });
   };
 
   const startEntryDrag = (event: ReactPointerEvent, entry: TimeEntry, dayIndex: number, kind: 'move' | 'resize') => {
-    if (event.button !== 0) return;
+    lastPointer.current = event.pointerType;
+    if (event.pointerType === 'touch' || event.button !== 0) return;
     event.stopPropagation();
     event.preventDefault();
     if (entry.stop === null) {
@@ -246,6 +251,10 @@ export function CalendarView({ days, entries, projects, totals, holidayNames, on
                           ['--entry-color' as string]: color,
                         }}
                         onPointerDown={(event) => startEntryDrag(event, entry, dayIndex, 'move')}
+                        onClick={() => {
+                          // Mouse já abre pelo fim do arraste sem movimento; aqui só o toque.
+                          if (lastPointer.current === 'touch') onOpen(entry);
+                        }}
                         title={`${entry.description || t.timer.noDescription} (${formatClock(entry.duration)})`}
                       >
                         <span className={styles.entryTitle}>{entry.description || t.timer.noDescription}</span>

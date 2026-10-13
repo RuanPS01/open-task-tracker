@@ -15,7 +15,7 @@ import { Segmented, Toolbar, ToolbarDivider, ToolbarSpacer } from '../../compone
 import { useT } from '../../i18n';
 import { useFormat } from '../../lib/format';
 import { useWorkCalendar } from '../../lib/calendar';
-import { useStoredState } from '../../lib/hooks';
+import { useIsMobile, useStoredState } from '../../lib/hooks';
 import { TaskImportButton } from '../tasks/TaskImportDialog';
 import { useTaskPanel } from '../tasks/TaskPanelContext';
 import { GanttChart } from './GanttChart';
@@ -42,6 +42,8 @@ export function ProjectGantt({ project }: { project: Project }) {
   const [zoom, setZoom] = useStoredState<Zoom>('ott.ganttZoom', 'days');
   const [showCritical, setShowCritical] = useStoredState('ott.ganttCritical', false);
   const [compactGrid, setCompactGrid] = useStoredState('ott.ganttCompact', false);
+  // No celular a grade já fica só com o nome (GanttChart): o botão de colunas some.
+  const mobile = useIsMobile();
   const [collapsed, setCollapsed] = useState<Set<Id>>(new Set());
   const [todaySignal, setTodaySignal] = useState(0);
 
@@ -107,7 +109,7 @@ export function ProjectGantt({ project }: { project: Project }) {
           label={collapsed.size > 0 ? t.gantt.expandAll : t.gantt.collapseAll}
           onClick={() => setCollapsed(collapsed.size > 0 ? new Set() : new Set(parentIds))}
         />
-        <IconButton icon={<Columns3 />} label={t.gantt.columns} active={!compactGrid} onClick={() => setCompactGrid(!compactGrid)} />
+        {!mobile && <IconButton icon={<Columns3 />} label={t.gantt.columns} active={!compactGrid} onClick={() => setCompactGrid(!compactGrid)} />}
         <TaskImportButton projectId={project.id} size="sm" />
         <Button size="sm" icon={<Diamond />} onClick={() => addTask(true)}>
           {t.gantt.addMilestone}

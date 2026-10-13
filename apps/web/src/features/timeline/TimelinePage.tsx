@@ -36,10 +36,14 @@ import { useT } from '../../i18n';
 import { PageHeader } from '../../layout/PageHeader';
 import { useWorkCalendar } from '../../lib/calendar';
 import { useFormat } from '../../lib/format';
-import { useStoredState } from '../../lib/hooks';
+import { useIsMobile, useStoredState } from '../../lib/hooks';
 import { useTaskPanel } from '../tasks/TaskPanelContext';
 import { packLanes } from './timelineModel';
 import styles from './TimelinePage.module.css';
+
+/** Largura da coluna das pessoas ou projetos (a mesma do CSS: .corner e .laneHead). */
+const LABEL_WIDTH = 240;
+const LABEL_WIDTH_MOBILE = 140;
 
 type GroupBy = 'people' | 'projects';
 type CapacityPeriod = 'thisWeek' | 'nextWeek' | 'thisMonth';
@@ -63,6 +67,7 @@ interface Lane {
 type Drag = { taskId: Id; kind: 'move' | 'end'; originX: number; delta: number; moved: boolean };
 
 export function TimelinePage() {
+  const mobile = useIsMobile();
   const t = useT();
   const format = useFormat();
   const navigate = useNavigate();
@@ -258,7 +263,7 @@ export function TimelinePage() {
       </Toolbar>
 
       <div className={styles.scroller} ref={scrollRef}>
-        <div className={styles.inner} style={{ width: 240 + timelineWidth }}>
+        <div className={styles.inner} style={{ width: (mobile ? LABEL_WIDTH_MOBILE : LABEL_WIDTH) + timelineWidth }}>
           <div className={styles.head}>
             <div className={styles.corner}>
               {groupBy === 'people' ? t.timeline.people : t.timeline.groupProjects} <span className={styles.count}>{lanes.length - (groupBy === 'people' ? 1 : 0)}</span>

@@ -40,6 +40,7 @@ import {
 import { AvatarStack } from '../../components/ui/Avatar';
 import { useT } from '../../i18n';
 import { useFormat } from '../../lib/format';
+import { useIsMobile } from '../../lib/hooks';
 import {
   buildHeader,
   buildRows,
@@ -82,12 +83,18 @@ export interface GanttChartProps {
   onQuickAdd: (name: string) => void;
 }
 
+/** Largura da grade (só o nome) no celular. */
+const MOBILE_GRID_WIDTH = 150;
 const BAR_HEIGHT = 20;
 const SUMMARY_HEIGHT = 8;
 const DRAG_THRESHOLD = 3;
 
 export function GanttChart(props: GanttChartProps) {
-  const { tasks, dependencies, projects, members, zoom, showCritical, autoSchedule, calendar, holidayNames, weekStart, collapsed, compactGrid } = props;
+  const { tasks, dependencies, projects, members, zoom, showCritical, autoSchedule, calendar, holidayNames, weekStart, collapsed } = props;
+  // No celular a grade fica só com o nome, estreita, para sobrar espaço para as barras.
+  const mobile = useIsMobile();
+  const compactGrid = props.compactGrid || mobile;
+  const gridWidth = mobile ? MOBILE_GRID_WIDTH : compactGrid ? 280 : 520;
   const t = useT();
   const format = useFormat();
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -202,7 +209,6 @@ export function GanttChart(props: GanttChartProps) {
   const scrollToToday = () => {
     const element = scrollerRef.current;
     if (!element) return;
-    const gridWidth = compactGrid ? 280 : 520;
     element.scrollLeft = Math.max(0, dateToX(today, range, dayWidth) - (element.clientWidth - gridWidth) / 3);
   };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -279,7 +285,6 @@ export function GanttChart(props: GanttChartProps) {
     props.onSchedule([{ id: task.id, startDate: start, dueDate }]);
   };
 
-  const gridWidth = compactGrid ? 280 : 520;
   const todayX = dateToX(today, range, dayWidth);
   const linkFrom = drag?.kind === 'link' ? boxes.get(drag.fromId) : undefined;
 

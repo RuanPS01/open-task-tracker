@@ -50,6 +50,8 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 | Importação de tarefas (CSV) | Importação de várias tarefas por JSON, com prompt para IA e revisão antes de gravar | `[implementado]` |
 | Members (convite por e-mail), Clients, Tags | Membros com convite por link, Clientes, Tags | `[implementado]` |
 | Workspaces e troca de workspace | Igual | `[implementado]` |
+| Login com Google | "Continuar com Google" no modo Firebase | `[implementado]` |
+| Apps de celular (iOS e Android) | Site adaptado ao celular e instalável (PWA) | `[implementado]` |
 | Approvals (aprovação de horas) | | `[planejado]` |
 | Time off (folgas) | | `[planejado]` |
 | Ask Toggl AI | Substituído pela busca rápida (Ctrl K) | `[implementado]` (busca) |
@@ -112,6 +114,10 @@ afetados.
 | Feriados e tarefas em fins de semana e feriados | `[implementado]` |
 | Firebase (Auth e Firestore) com queda para o modo local (lowdb) e publicação no GitHub Pages | `[implementado]` |
 | Importação de tarefas por JSON (Gantt, aba Tarefas do projeto e tela de Tarefas), com prompt para IA e revisão | `[implementado]` |
+| Login com Google (modo Firebase) | `[implementado]` |
+| Plataforma inteira utilizável no celular (barra inferior, gaveta, telas adaptadas) | `[implementado]` |
+| PWA: instalação, abertura sem internet e aviso de versão nova | `[implementado]` |
+| Dados do Firestore disponíveis sem internet (cache persistente do SDK) | `[planejado]` |
 | Sincronizar com o Firebase o que foi feito no modo local durante uma queda | `[planejado]` |
 | Registro de auditoria (o Firebase Auth já limita tentativas de login) | `[planejado]` |
 | Convite de membro por e-mail (hoje é por link) | `[planejado]` |

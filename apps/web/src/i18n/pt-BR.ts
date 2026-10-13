@@ -99,9 +99,17 @@ export const ptBR = {
     INVALID_CREDENTIALS: 'E-mail ou senha incorretos.',
     WEAK_PASSWORD: 'Senha fraca. Use pelo menos 8 caracteres.',
     TOO_MANY_REQUESTS: 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.',
-    AUTH_DISABLED: 'O login por e-mail e senha não está ativado neste projeto do Firebase.',
+    AUTH_DISABLED:
+      'Este jeito de entrar não está ativado no projeto do Firebase. No console do Firebase, abra Authentication, Método de login, e ative E-mail/senha ou Google.',
+    AUTH_DOMAIN_UNAUTHORIZED:
+      'Este endereço não está autorizado para login no Firebase. No console, abra Authentication, Configurações, Domínios autorizados, e acrescente o domínio do site.',
+    ACCOUNT_EXISTS_OTHER_METHOD: 'Já existe uma conta com este e-mail. Entre com e-mail e senha.',
+    GOOGLE_UNAVAILABLE: 'O login com Google só funciona com o Firebase configurado.',
+    GOOGLE_CANCELLED: 'Login com Google cancelado.',
     INVITE_NOT_FOUND: 'Convite não encontrado ou já usado. Peça um novo link.',
     EMAIL_CHANGE_UNSUPPORTED: 'A troca de e-mail não está disponível no modo Firebase.',
+    FIRESTORE_MISSING:
+      'O projeto do Firebase ainda não tem o banco do Firestore. No console do Firebase, abra Firestore Database, crie o banco e recarregue a página.',
     FIRESTORE_INDEX: 'Falta um índice no Firestore. Publique o arquivo firestore.indexes.json.',
     QUOTA: 'O limite de uso do Firebase foi atingido. Tente mais tarde.',
     DEMO_LOCAL_ONLY: 'A conta de demonstração existe só no modo local.',
@@ -109,6 +117,21 @@ export const ptBR = {
     INTERNAL: 'Algo deu errado. Tente novamente.',
     NETWORK: 'Sem conexão. Verifique a internet e tente de novo.',
     UNKNOWN: 'Não foi possível concluir a ação.',
+  },
+  pwa: {
+    updateReady: 'Nova versão do Open Task Tracker disponível.',
+    update: 'Atualizar',
+    install: 'Instalar aplicativo',
+    section: 'Aplicativo',
+    hint: 'Instale o Open Task Tracker para abrir como aplicativo, em tela cheia e com ícone na tela inicial do celular ou no computador.',
+    ios: 'No iPhone ou iPad: abra o site no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início".',
+    other: 'Se o botão não aparecer, use o menu do navegador: "Instalar aplicativo" ou "Adicionar à tela inicial".',
+    installed: 'Você está usando o aplicativo instalado.',
+  },
+  boot: {
+    connecting: 'Carregando...',
+    failedTitle: 'Não foi possível abrir o Open Task Tracker',
+    reload: 'Recarregar',
   },
   nav: {
     timer: 'Cronômetro',
@@ -140,6 +163,9 @@ export const ptBR = {
     running: 'Rodando',
     quickSearch: 'Busca rápida',
     shortcuts: 'Atalhos de teclado',
+    menu: 'Menu',
+    closeMenu: 'Fechar menu',
+    mainNav: 'Navegação principal',
   },
   auth: {
     loginTitle: 'Entrar',
@@ -158,6 +184,7 @@ export const ptBR = {
     demoButton: 'Explorar com dados de exemplo',
     demoHint: 'Entra com a conta demo@exemplo.com (senha demo1234) e um workspace de exemplo pronto.',
     or: 'ou',
+    google: 'Continuar com Google',
   },
   timer: {
     placeholder: 'No que você está trabalhando?',
@@ -621,6 +648,8 @@ ${c.example}
     notConfigured: 'Firebase não configurado: os dados ficam só neste navegador (lowdb).',
     unreachable: 'Sem conexão com o Firebase. Usando o modo local: o que você fizer agora fica só neste navegador.',
     forcedLocal: 'Modo local escolhido na configuração: os dados ficam só neste navegador.',
+    firestoreMissing: (project: string) =>
+      `O projeto "${project}" do Firebase ainda não tem o banco do Firestore (ou a API do Firestore está desativada). No console do Firebase, abra Firestore Database, crie o banco e recarregue a página. Até lá, o modo local está em uso: o que você fizer fica só neste navegador.`,
     dismiss: 'Entendi',
   },
   members: {
@@ -696,6 +725,7 @@ ${c.example}
     newPassword: 'Nova senha',
     changePassword: 'Trocar senha',
     passwordChanged: 'Senha alterada.',
+    passwordGoogle: 'Você entra pelo Google. A senha e a segurança da conta ficam na sua conta Google.',
     preferences: 'Preferências',
     theme: 'Tema',
     language: 'Idioma',

@@ -204,3 +204,11 @@
   border-radius: 50%;
   background: var(--now-line);
 }
+
+/* Tela de toque: o dedo rola o calendário (arrastar fica para mouse e caneta). */
+@media (pointer: coarse) {
+  .column,
+  .entry {
+    touch-action: pan-x pan-y;
+  }
+}

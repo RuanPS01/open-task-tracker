@@ -55,7 +55,7 @@ export function TaskImportButton({ projectId = null, size = 'md' }: { projectId?
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button size={size} icon={<FileBraces />} onClick={() => setOpen(true)}>
+      <Button size={size} icon={<FileBraces />} onClick={() => setOpen(true)} mobileIconOnly>
         {t.taskImport.button}
       </Button>
       {open && <TaskImportDialog projectId={projectId} onClose={() => setOpen(false)} />}

@@ -122,6 +122,14 @@ Alturas padrão: botão 32 px (28 px pequeno), campo 34 px, chip de barra de fer
   no espírito das ilustrações do Toggl, com desenho próprio. Variantes: `shapes`,
   `people`, `clock`, `chart`, `folders`.
 - Logotipo (`layout/Logo.tsx` e `public/favicon.svg`): relógio sobre círculo rosa.
+- Ícones do PWA (`public/icons`): `icon-192.png` e `icon-512.png` (o círculo do logotipo
+  com fundo transparente), `icon-maskable-512.png` e `apple-touch-icon.png` (quadrado rosa
+  cheio com o relógio dentro da zona segura de 80%). Foram gerados a partir do desenho
+  do `favicon.svg`; mudou o logotipo, gere de novo os quatro arquivos.
+- Botão "Continuar com Google" (`features/auth/GoogleButton.tsx`): o "G" usa as cores da
+  marca do Google em tokens próprios, iguais nos dois temas (`--brand-google-blue`,
+  `--brand-google-green`, `--brand-google-yellow`, `--brand-google-red`). Não use esses
+  tokens em mais nada.
 
 ## 3.7 Temas
 
@@ -129,5 +137,11 @@ Alturas padrão: botão 32 px (28 px pequeno), campo 34 px, chip de barra de fer
 - O tema é o atributo `data-theme` no `<html>`. O `index.html` aplica o último tema salvo
   em `localStorage` (`ott.theme`) antes do React, para a tela não piscar.
 - Todo token existe nos dois temas. Ao criar token novo, defina os dois blocos.
+- Únicas cores fora do `tokens.css`, porque o navegador as lê antes do CSS: a barra do
+  sistema (`theme-color` no `index.html` e no `manifest.webmanifest`, com o `--bg-app`
+  escuro `#1c1a1d`; o script do `index.html` usa `#ffffff` no tema claro) e o fundo da
+  abertura do app instalado (`background_color` do manifesto). Depois de carregar,
+  `applyTheme` (`app/theme.ts`) copia o `--bg-app` do tema em uso para o `theme-color`.
+  Mudou o `--bg-app`? Atualize esses três lugares.
 - Feriados aparecem com hachura diagonal em `--warning` sobre `--bg-weekend`; fins de
   semana só com `--bg-weekend`.

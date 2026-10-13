@@ -150,3 +150,26 @@
 .bar .barOver {
   background: var(--danger);
 }
+
+/* Celular: colunas secundárias somem (a informação principal fica na primeira). */
+.mobileOnly {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .body {
+    padding: 0 8px 32px;
+  }
+
+  .mobileHidden {
+    display: none;
+  }
+
+  .search {
+    width: 170px;
+  }
+
+  .mobileOnly {
+    display: inline;
+  }
+}

@@ -1,4 +1,4 @@
-import type { ChangePasswordInput, Id, LoginInput, SignupInput, UpdateProfileInput } from '@ott/shared';
+import type { ChangePasswordInput, GoogleLoginInput, Id, LoginInput, SignupInput, UpdateProfileInput } from '@ott/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { backend } from './backend';
 import { keys } from './keys';
@@ -17,6 +17,16 @@ export function useLogin() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (input: LoginInput) => backend().session.login(input),
+    onSuccess: (session) => client.setQueryData(keys.session, session),
+    meta: { silent: true },
+  });
+}
+
+/** Entrada pelo Google (só no modo Firebase). Idioma e fuso valem para a conta nova. */
+export function useGoogleLogin() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: GoogleLoginInput) => backend().session.loginWithGoogle(input),
     onSuccess: (session) => client.setQueryData(keys.session, session),
     meta: { silent: true },
   });

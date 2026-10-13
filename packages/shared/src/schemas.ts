@@ -42,6 +42,13 @@ export const loginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
+/** Entrada pelo Google: idioma e fuso do navegador valem só para a conta nova. */
+export const googleLoginSchema = z.object({
+  locale: z.enum(LOCALES).optional(),
+  timezone: z.string().max(64).optional(),
+});
+export type GoogleLoginInput = z.infer<typeof googleLoginSchema>;
+
 export const preferencesSchema = z.object({
   theme: z.enum(THEMES),
   locale: z.enum(LOCALES),

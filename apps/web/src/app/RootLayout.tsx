@@ -5,12 +5,24 @@ import { ConfirmProvider } from '../components/ui/Confirm';
 import { toast, Toaster } from '../components/ui/Toast';
 import { guessLocale, I18nProvider } from '../i18n';
 import { useErrorMessage } from '../lib/format';
+import { useT } from '../i18n';
 import { setErrorNotifier } from './notifier';
+import { usePwa } from './pwa';
 import { applyTheme } from './theme';
 
 function ErrorBridge() {
   const message = useErrorMessage();
   useEffect(() => setErrorNotifier((error) => toast.error(message(error))), [message]);
+  return null;
+}
+
+/** Avisa uma vez quando há versão nova do app baixada; "Atualizar" recarrega com ela. */
+function PwaBridge() {
+  const t = useT();
+  const { applyUpdate } = usePwa();
+  useEffect(() => {
+    if (applyUpdate) toast.persistent(t.pwa.updateReady, { label: t.pwa.update, onClick: applyUpdate });
+  }, [applyUpdate]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;
 }
 
@@ -37,6 +49,7 @@ export function RootLayout() {
     <I18nProvider locale={locale}>
       <ConfirmProvider>
         <ErrorBridge />
+        <PwaBridge />
         <Outlet />
         <Toaster />
       </ConfirmProvider>

@@ -85,3 +85,36 @@
     opacity: 0.6;
   }
 }
+
+/* Celular: modal ocupa quase toda a tela e o painel lateral, a tela inteira. */
+@media (max-width: 760px) {
+  .overlay {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px;
+  }
+
+  .modal {
+    min-width: 0;
+    width: 100% !important;
+    max-height: calc(100dvh - 20px);
+  }
+
+  .header {
+    padding: 14px 12px 4px 16px;
+  }
+
+  .body {
+    padding: 12px 16px 16px;
+  }
+
+  .footer {
+    flex-wrap: wrap;
+    padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .panel {
+    width: 100vw;
+    height: 100dvh;
+    border-left: 0;
+  }
+}

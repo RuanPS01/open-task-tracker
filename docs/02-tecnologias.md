@@ -121,6 +121,11 @@ publicado); quem protege os dados é `firestore.rules`.
   gera um pedaço separado com o SDK do Firebase (cerca de 165 kB comprimido) que só é
   baixado quando o modo Firebase é tentado.
 - A web usa CSS Modules (`*.module.css`) mais os tokens globais.
+- PWA sem dependência extra: o plugin `apps/web/pwa/plugin.ts` (registrado no
+  `vite.config.ts`, só no build) grava `dist/sw.js` com a lista de arquivos publicados e
+  a versão calculada pelo conteúdo. O modelo do service worker é
+  `apps/web/pwa/service-worker.js` (JavaScript puro, com as variáveis do service worker
+  no ESLint). Detalhes em [01-arquitetura.md](01-arquitetura.md), seção 1.8.
 
 ## 2.6 Publicação no GitHub Pages
 
@@ -132,11 +137,14 @@ Pages e, se houver conta de serviço, publica as regras e os índices do Firesto
 Passo a passo para ligar:
 
 1. **Firebase.** No [console](https://console.firebase.google.com), crie o projeto,
-   ative **Authentication** com o provedor **E-mail/senha**, crie o banco do **Cloud
-   Firestore** (modo de produção) e registre um **app da Web** para obter a
-   configuração (`apiKey`, `authDomain`, `projectId`, `appId`...).
+   abra **Authentication**, clique em **Começar** e ative os provedores **E-mail/senha** e
+   **Google** (em Método de login; o Google pede só o e-mail de suporte), crie o banco do
+   **Cloud Firestore** em **Firestore Database** (modo de produção) e registre um **app da
+   Web** para obter a configuração (`apiKey`, `authDomain`, `projectId`, `appId`...).
 2. **Domínio autorizado.** Em Authentication, Configurações, Domínios autorizados,
-   acrescente `seu-usuario.github.io` (ou o domínio próprio).
+   acrescente o domínio onde o site abre: `seu-usuario.github.io` ou o domínio próprio
+   (por exemplo `ruanps.com.br`, sem o caminho). Sem isso o login com Google é recusado
+   (`AUTH_DOMAIN_UNAUTHORIZED`).
 3. **Secrets do repositório** (Settings, Secrets and variables, Actions, aba Secrets):
 
    | Secret | Obrigatório | Conteúdo |
@@ -159,6 +167,31 @@ Passo a passo para ligar:
    e crie o índice composto de `timeEntries` (`userId` crescente, `start` crescente).
 
 Sem os secrets do Firebase, o site é publicado assim mesmo e funciona no modo local.
+
+### Quando o site publicado não usa o Firebase
+
+| Sintoma | Causa | O que fazer |
+|---|---|---|
+| Aviso no login: o projeto "..." ainda não tem o banco do Firestore | Banco não criado (ou API do Firestore desativada) | Console do Firebase, Firestore Database, Criar banco de dados; depois recarregue a página |
+| Erro ao entrar ou criar conta: este jeito de entrar não está ativado | Authentication nunca iniciado ou provedor (E-mail/senha ou Google) desligado | Authentication, Começar, Método de login |
+| "Continuar com Google" diz que o endereço não está autorizado | Domínio do site fora da lista de domínios autorizados | Authentication, Configurações, Domínios autorizados (passo 2) |
+| Aviso "Sem conexão com o Firebase" | Rede, bloqueio do navegador ou configuração errada nos secrets | Confira os secrets `FIREBASE_*` e o console do navegador; rode o workflow de novo depois de corrigir |
+| Tudo funciona sem login pela API, ou o console mostra regras com `request.time <` | Banco criado em modo de teste e `firestore.rules` nunca publicado | Publique as regras (passo 6 ou secret `FIREBASE_SERVICE_ACCOUNT`). As regras de teste deixam o banco aberto a qualquer pessoa e expiram em 30 dias, quando tudo passa a ser recusado |
+
+O resumo da execução do workflow mostra um aviso quando falta `FIREBASE_SERVICE_ACCOUNT`
+(as regras não foram publicadas por ele).
+
+### Login com Google e PWA
+
+- O login com Google abre a janela do Google (pop-up). Onde não há janela (pop-up
+  bloqueado, alguns navegadores de celular), segue por redirecionamento. No iPhone com o
+  app instalado na tela de início, o Safari pode não devolver o login do redirecionamento
+  porque o `authDomain` (`projeto.firebaseapp.com`) é outro domínio; nesse caso entre pelo
+  navegador ou com e-mail e senha.
+- O PWA precisa de HTTPS (o GitHub Pages já serve assim). O navegador baixa a versão nova
+  do `sw.js` a cada deploy e o app mostra "Nova versão disponível".
+- No iPhone a instalação é pelo Safari: Compartilhar, Adicionar à Tela de Início (o
+  perfil mostra essa instrução).
 
 ### CI de pull requests
 

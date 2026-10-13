@@ -77,9 +77,17 @@ export const en: Messages = {
     INVALID_CREDENTIALS: 'Wrong email or password.',
     WEAK_PASSWORD: 'Weak password. Use at least 8 characters.',
     TOO_MANY_REQUESTS: 'Too many attempts. Wait a few minutes and try again.',
-    AUTH_DISABLED: 'Email and password sign-in is not enabled in this Firebase project.',
+    AUTH_DISABLED:
+      'This sign-in method is not enabled in the Firebase project. In the Firebase console, open Authentication, Sign-in method, and enable Email/Password or Google.',
+    AUTH_DOMAIN_UNAUTHORIZED:
+      'This address is not authorized for sign-in in Firebase. In the console, open Authentication, Settings, Authorized domains, and add the site domain.',
+    ACCOUNT_EXISTS_OTHER_METHOD: 'An account with this email already exists. Sign in with email and password.',
+    GOOGLE_UNAVAILABLE: 'Google sign-in only works with Firebase configured.',
+    GOOGLE_CANCELLED: 'Google sign-in cancelled.',
     INVITE_NOT_FOUND: 'Invite not found or already used. Ask for a new link.',
     EMAIL_CHANGE_UNSUPPORTED: 'Changing the email is not available in Firebase mode.',
+    FIRESTORE_MISSING:
+      'The Firebase project has no Firestore database yet. In the Firebase console, open Firestore Database, create the database and reload the page.',
     FIRESTORE_INDEX: 'A Firestore index is missing. Deploy firestore.indexes.json.',
     QUOTA: 'The Firebase usage limit was reached. Try again later.',
     DEMO_LOCAL_ONLY: 'The demo account only exists in local mode.',
@@ -87,6 +95,21 @@ export const en: Messages = {
     INTERNAL: 'Something went wrong. Please try again.',
     NETWORK: 'No connection. Check your internet and try again.',
     UNKNOWN: 'The action could not be completed.',
+  },
+  pwa: {
+    updateReady: 'A new version of Open Task Tracker is available.',
+    update: 'Update',
+    install: 'Install app',
+    section: 'App',
+    hint: 'Install Open Task Tracker to open it as an app, full screen and with an icon on your phone home screen or computer.',
+    ios: 'On iPhone or iPad: open the site in Safari, tap Share and then "Add to Home Screen".',
+    other: 'If the button does not show up, use the browser menu: "Install app" or "Add to Home screen".',
+    installed: 'You are using the installed app.',
+  },
+  boot: {
+    connecting: 'Loading...',
+    failedTitle: 'Open Task Tracker could not start',
+    reload: 'Reload',
   },
   nav: {
     timer: 'Timer',
@@ -118,6 +141,9 @@ export const en: Messages = {
     running: 'Running',
     quickSearch: 'Quick search',
     shortcuts: 'Keyboard shortcuts',
+    menu: 'Menu',
+    closeMenu: 'Close menu',
+    mainNav: 'Main navigation',
   },
   auth: {
     loginTitle: 'Log in',
@@ -136,6 +162,7 @@ export const en: Messages = {
     demoButton: 'Explore with sample data',
     demoHint: 'Logs in as demo@exemplo.com (password demo1234) with a ready sample workspace.',
     or: 'or',
+    google: 'Continue with Google',
   },
   timer: {
     placeholder: 'What are you working on?',
@@ -599,6 +626,8 @@ ${c.example}
     notConfigured: 'Firebase is not configured: data stays in this browser only (lowdb).',
     unreachable: 'Cannot reach Firebase. Using local mode: what you do now stays in this browser only.',
     forcedLocal: 'Local mode chosen in the configuration: data stays in this browser only.',
+    firestoreMissing: (project: string) =>
+      `The Firebase project "${project}" has no Firestore database yet (or the Firestore API is disabled). In the Firebase console, open Firestore Database, create the database and reload the page. Until then local mode is in use: what you do stays in this browser only.`,
     dismiss: 'Got it',
   },
   members: {
@@ -674,6 +703,7 @@ ${c.example}
     newPassword: 'New password',
     changePassword: 'Change password',
     passwordChanged: 'Password changed.',
+    passwordGoogle: 'You sign in with Google. Your password and account security live in your Google account.',
     preferences: 'Preferences',
     theme: 'Theme',
     language: 'Language',

@@ -237,3 +237,52 @@
     display: none;
   }
 }
+
+/* Celular: nome na primeira linha; projeto, data e prioridade embaixo. */
+@media (max-width: 760px) {
+  .row {
+    grid-template-columns: 28px minmax(0, 1fr) auto 32px;
+    grid-template-areas:
+      'check name name play'
+      '. project date priority';
+    row-gap: 2px;
+    min-height: 52px;
+    margin: 0 8px;
+    padding: 8px 4px 8px 8px;
+  }
+
+  .check {
+    grid-area: check;
+  }
+
+  .nameCell {
+    grid-area: name;
+  }
+
+  .projectCell {
+    grid-area: project;
+    min-width: 0;
+  }
+
+  .dateCell {
+    grid-area: date;
+  }
+
+  .priorityCell {
+    grid-area: priority;
+    justify-self: center;
+  }
+
+  .playCell {
+    grid-area: play;
+  }
+
+  .play {
+    opacity: 1;
+  }
+
+  .timeCell,
+  .peopleCell {
+    display: none;
+  }
+}

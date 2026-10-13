@@ -10,6 +10,7 @@ import {
   type ReportDetailedRow,
   type ReportSummary,
 } from '@ott/shared';
+import clsx from 'clsx';
 import { ChevronDown, ChevronRight, Download, FileText, LayoutGrid, PieChart, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useProjectMap } from '../../data/projects';
@@ -377,11 +378,11 @@ function DetailedView({ params }: { params: ReportParams }) {
           <tr>
             <th>{t.reports.description}</th>
             <th>{t.reports.project}</th>
-            <th>{t.reports.member}</th>
-            <th>{t.reports.date}</th>
-            <th>{t.reports.time}</th>
+            <th className={styles.mobileHidden}>{t.reports.member}</th>
+            <th className={styles.mobileHidden}>{t.reports.date}</th>
+            <th className={styles.mobileHidden}>{t.reports.time}</th>
             <th className={styles.num}>{t.reports.duration}</th>
-            <th className={styles.num}>{t.reports.amount}</th>
+            <th className={clsx(styles.num, styles.mobileHidden)}>{t.reports.amount}</th>
           </tr>
         </thead>
         <tbody>
@@ -393,6 +394,11 @@ function DetailedView({ params }: { params: ReportParams }) {
                 <td>
                   <span className={styles.entryDescription}>{row.description || t.reports.noDescription}</span>
                   {row.tagIds.length > 0 && <span className={styles.entryTags}>{row.tagIds.map((id) => tagMap.get(id)).join(', ')}</span>}
+                  {/* No celular as colunas de membro, data e horário somem: vão para cá. */}
+                  <span className={clsx(styles.entryTags, styles.mobileOnly)}>
+                    {format.dayMonth(row.date)} {format.time(row.start)} - {row.stop ? format.time(row.stop) : '...'}
+                    {member ? ` · ${member.name}` : ''}
+                  </span>
                 </td>
                 <td>
                   {project ? (
@@ -405,7 +411,7 @@ function DetailedView({ params }: { params: ReportParams }) {
                     <span className={styles.muted}>{t.reports.noProject}</span>
                   )}
                 </td>
-                <td>
+                <td className={styles.mobileHidden}>
                   {member && (
                     <span className={styles.groupLabel}>
                       <Avatar name={member.name} color={member.avatarColor} size={20} />
@@ -413,12 +419,12 @@ function DetailedView({ params }: { params: ReportParams }) {
                     </span>
                   )}
                 </td>
-                <td className={styles.nowrap}>{format.dayMonth(row.date)}</td>
-                <td className={styles.nowrap}>
+                <td className={clsx(styles.nowrap, styles.mobileHidden)}>{format.dayMonth(row.date)}</td>
+                <td className={clsx(styles.nowrap, styles.mobileHidden)}>
                   {format.time(row.start)} - {row.stop ? format.time(row.stop) : '...'}
                 </td>
                 <td className={styles.num}>{format.duration(row.seconds)}</td>
-                <td className={styles.num}>{row.billable ? format.money(row.amount, workspace.currency) : '-'}</td>
+                <td className={clsx(styles.num, styles.mobileHidden)}>{row.billable ? format.money(row.amount, workspace.currency) : '-'}</td>
               </tr>
             );
           })}

@@ -126,7 +126,9 @@ Toda entrada passa pelo esquema zod de `@ott/shared`.
 | Operação | Descrição |
 |---|---|
 | `signup` | Cria a conta, o perfil e o workspace padrão (com a pessoa como admin) |
-| `login`, `logout`, `get` | `get` devolve `SessionResponse` ou nulo; corrige `currentWorkspaceId` se o workspace sumiu |
+| `loginWithGoogle({ locale, timezone })` | Só no modo Firebase (no local, `GOOGLE_UNAVAILABLE`): entra pelo Google; na primeira vez cria o perfil com o nome do Google e o workspace padrão, como o cadastro |
+| `login`, `logout`, `get` | `get` devolve `SessionResponse` ou nulo; corrige `currentWorkspaceId` se o workspace sumiu; conta de login sem perfil (primeira entrada pelo Google, cadastro interrompido) ganha perfil e workspace padrão |
+| `canUseGoogle`, `hasPassword()` | Se o modo oferece o Google e se a conta logada tem senha (quem entrou só pelo Google não troca senha pelo perfil) |
 | `updateProfile` | Nome, preferências e (só no modo local) e-mail; nome e e-mail são copiados para os membros |
 | `changePassword` | Confere a senha atual (`WRONG_PASSWORD`) e troca |
 | `switchWorkspace` | Troca o workspace atual |
@@ -285,9 +287,12 @@ são traduzidos em `packages/data/src/firebase/index.ts`.
 | `DEPENDENCY_SELF`, `DEPENDENCY_HIERARCHY`, `DEPENDENCY_DUPLICATE`, `DEPENDENCY_CYCLE` | Dependência recusada |
 | `LAST_ADMIN`, `REMOVE_SELF`, `ALREADY_MEMBER`, `WRONG_PASSWORD` | Membros e senha |
 | `INVITE_NOT_FOUND` | Convite inexistente, revogado ou já usado |
-| `WEAK_PASSWORD`, `TOO_MANY_REQUESTS`, `AUTH_DISABLED` | Firebase Auth (senha fraca, muitas tentativas, e-mail e senha desligado no console) |
+| `WEAK_PASSWORD`, `TOO_MANY_REQUESTS`, `AUTH_DISABLED` | Firebase Auth (senha fraca, muitas tentativas, e-mail e senha desligado no console ou Authentication nunca iniciado no projeto) |
+| `FIRESTORE_MISSING` | Abertura: o projeto do Firebase não tem o banco do Firestore ou a API está desativada (com `VITE_DATA_MODE=auto` vira o motivo `firestore-missing` do modo local) |
 | `EMAIL_CHANGE_UNSUPPORTED`, `DEMO_LOCAL_ONLY` | Recurso só do modo local |
 | `IMPORT_INVALID` | `tasks.importJson` com erros no arquivo (`details` traz a lista de problemas) |
+| `GOOGLE_UNAVAILABLE`, `GOOGLE_CANCELLED` | Login com Google no modo local; janela do Google fechada pela pessoa (a web não mostra aviso) |
+| `AUTH_DOMAIN_UNAUTHORIZED`, `ACCOUNT_EXISTS_OTHER_METHOD` | Domínio do site fora dos domínios autorizados do Firebase; e-mail já cadastrado com senha |
 | `NETWORK`, `QUOTA`, `FIRESTORE_INDEX` | Sem conexão, limite do Firebase, índice composto não publicado |
 | `UNKNOWN`, `INTERNAL` | Falha inesperada |
 
@@ -303,6 +308,8 @@ são traduzidos em `packages/data/src/firebase/index.ts`.
 - **Modo local**: `ott.local.v1` guarda todos os dados, as contas e a sessão. Apagar
   essa chave apaga tudo do modo local naquele navegador.
 - **Modo Firebase**: o SDK guarda a sessão de login no IndexedDB do navegador.
+- **PWA**: o service worker guarda os arquivos do site no Cache Storage (`ott-<versão>`) e
+  apaga as versões antigas. Nenhum dado do Firestore vai para esse cache.
 
 ## 6.10 Dados de demonstração
 

@@ -8,6 +8,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
   iconRight?: ReactNode;
   loading?: boolean;
+  /** No celular mostra só o ícone (o texto vira aria-label e title). */
+  mobileIconOnly?: boolean;
   ref?: Ref<HTMLButtonElement>;
 }
 
@@ -21,17 +23,21 @@ export function Button({
   children,
   disabled,
   type = 'button',
+  mobileIconOnly = false,
   ...rest
 }: ButtonProps) {
+  const text = mobileIconOnly && typeof children === 'string' ? children : undefined;
   return (
     <button
       type={type}
-      className={clsx(styles.button, styles[variant], styles[size], !children && styles.iconOnly, className)}
+      className={clsx(styles.button, styles[variant], styles[size], !children && styles.iconOnly, mobileIconOnly && styles.mobileIconOnly, className)}
       disabled={disabled || loading}
+      aria-label={text}
+      title={text}
       {...rest}
     >
       {loading ? <span className={styles.spinner} aria-hidden /> : icon}
-      {children}
+      {mobileIconOnly ? <span className={styles.label}>{children}</span> : children}
       {iconRight}
     </button>
   );

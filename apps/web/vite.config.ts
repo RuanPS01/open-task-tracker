@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
+import { serviceWorker } from './pwa/plugin';
 
 // Site estático: a web fala direto com o Firebase (ou usa o lowdb no navegador).
 // VITE_BASE_PATH define o subcaminho de publicação; no GitHub Pages de projeto é
@@ -8,7 +9,8 @@ export default defineConfig({
   base: process.env.VITE_BASE_PATH || '/',
   // As variáveis VITE_* (Firebase, modo de dados) ficam no .env da raiz do repositório.
   envDir: '../..',
-  plugins: [react()],
+  // serviceWorker: gera o sw.js do PWA no build (apps/web/pwa).
+  plugins: [react(), serviceWorker()],
   server: {
     port: 5173,
   },

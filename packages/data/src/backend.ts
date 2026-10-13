@@ -16,8 +16,12 @@ import * as timeEntries from './services/timeEntries';
 import * as workspaces from './services/workspaces';
 import type { DataMode, DocStore } from './store/types';
 
-/** Por que o modo local está em uso, quando não foi escolha explícita. */
-export type FallbackReason = 'not-configured' | 'unreachable' | 'forced-local';
+/**
+ * Por que o modo local está em uso, quando não foi escolha explícita. `firestore-missing`:
+ * o Firebase está configurado, mas o projeto não tem o banco do Firestore criado (ou a
+ * API do Firestore está desativada).
+ */
+export type FallbackReason = 'not-configured' | 'unreachable' | 'firestore-missing' | 'forced-local';
 
 export interface BackendOptions {
   store: DocStore;
@@ -42,6 +46,9 @@ export function createBackend(options: BackendOptions) {
     fallbackReason: options.fallbackReason ?? null,
     fallbackDetail: options.fallbackDetail ?? null,
     canChangeEmail: options.auth.canChangeEmail,
+    canUseGoogle: options.auth.canUseGoogle,
+    /** A conta logada tem senha (quem entrou só pelo Google não tem). */
+    hasPassword: () => options.auth.hasPassword(),
     onAuthChange: (listener: (uid: string | null) => void) => options.auth.onChange(listener),
     reload: () => options.reload?.(),
 
@@ -49,6 +56,8 @@ export function createBackend(options: BackendOptions) {
       get: fn(session.getSession),
       signup: fn(session.signup),
       login: fn(session.login),
+      /** Só no modo Firebase (no local: GOOGLE_UNAVAILABLE). */
+      loginWithGoogle: fn(session.loginWithGoogle),
       logout: fn(session.logout),
       updateProfile: fn(session.updateProfile),
       changePassword: fn(session.changePassword),

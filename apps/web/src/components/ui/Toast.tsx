@@ -18,11 +18,12 @@ let nextId = 1;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((listener) => listener());
 
-function push(kind: ToastItem['kind'], message: string, action?: ToastItem['action']) {
+function push(kind: ToastItem['kind'], message: string, action?: ToastItem['action'], persistent = false): number {
   const id = nextId++;
   items = [...items.slice(-3), { id, kind, message, action }];
   emit();
-  window.setTimeout(() => dismiss(id), kind === 'error' ? 6000 : 3500);
+  if (!persistent) window.setTimeout(() => dismiss(id), kind === 'error' ? 6000 : 3500);
+  return id;
 }
 
 function dismiss(id: number) {
@@ -34,6 +35,8 @@ export const toast = {
   success: (message: string, action?: ToastItem['action']) => push('success', message, action),
   error: (message: string) => push('error', message),
   info: (message: string) => push('info', message),
+  /** Fica até a pessoa agir ou fechar (por exemplo, versão nova do app). */
+  persistent: (message: string, action: ToastItem['action']) => push('info', message, action, true),
 };
 
 export function Toaster() {
