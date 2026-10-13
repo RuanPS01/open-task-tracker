@@ -90,6 +90,38 @@
   line-height: 1.5;
 }
 
+/* Seção Aplicativo do perfil: botão logo abaixo da explicação, instruções em notas separadas. */
+.installRow {
+  display: flex;
+  margin-bottom: 16px;
+}
+
+.notes {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.notes svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--text-muted);
+}
+
 .importRow {
   display: flex;
   flex-wrap: wrap;

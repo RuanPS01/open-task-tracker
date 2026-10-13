@@ -1,5 +1,5 @@
 import { DURATION_FORMATS, LOCALES, THEMES, TIME_FORMATS, type DurationFormat, type Locale, type Theme, type TimeFormat } from '@ott/shared';
-import { Download } from 'lucide-react';
+import { Download, MonitorDown, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 import { backend } from '../../data/backend';
 import { useChangePassword, useUpdateProfile } from '../../data/session';
@@ -153,14 +153,24 @@ export function ProfileSettingsPage() {
             <>
               <p className={styles.sectionHint}>{t.pwa.hint}</p>
               {pwa.install && (
-                <div className={styles.actions}>
+                <div className={styles.installRow}>
                   <Button icon={<Download />} onClick={() => void pwa.install?.()}>
                     {t.pwa.install}
                   </Button>
                 </div>
               )}
-              <p className={styles.sectionHint}>{t.pwa.ios}</p>
-              {!pwa.install && <p className={styles.sectionHint}>{t.pwa.other}</p>}
+              <ul className={styles.notes}>
+                <li>
+                  <Smartphone size={16} aria-hidden />
+                  <span>{t.pwa.ios}</span>
+                </li>
+                {!pwa.install && (
+                  <li>
+                    <MonitorDown size={16} aria-hidden />
+                    <span>{t.pwa.other}</span>
+                  </li>
+                )}
+              </ul>
             </>
           )}
         </section>
