@@ -320,7 +320,7 @@
 }
 
 .linkDraft {
-  stroke: var(--accent);
+  stroke: var(--accent-strong);
   stroke-width: 2;
   stroke-dasharray: 5 4;
 }
@@ -405,7 +405,7 @@
   width: 10px;
   height: 10px;
   margin-top: -5px;
-  border: 2px solid var(--accent);
+  border: 2px solid var(--accent-strong);
   border-radius: 50%;
   background: var(--bg-app);
   opacity: 0;
@@ -427,7 +427,7 @@
 }
 
 .target {
-  box-shadow: 0 0 0 3px var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-strong);
 }
 
 .dragging {

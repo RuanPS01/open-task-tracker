@@ -60,7 +60,7 @@
 
 .description:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--accent-strong);
 }
 
 .description::placeholder {

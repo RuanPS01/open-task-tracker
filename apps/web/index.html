@@ -6,7 +6,7 @@
     <meta name="color-scheme" content="dark light" />
     <meta name="description" content="Tarefas, cronograma em Gantt e controle de horas da equipe." />
     <!-- PWA: manifesto, ícones e cor da barra do sistema (a do tema escuro; o app troca pela do tema em uso). -->
-    <meta name="theme-color" content="#1c1a1d" />
+    <meta name="theme-color" content="#181c1c" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="OTT" />
@@ -24,7 +24,7 @@
         }
         document.documentElement.dataset.theme = theme;
         // Cor da barra do sistema antes do CSS carregar (fundo de cada tema, tokens.css --bg-app).
-        document.querySelector('meta[name="theme-color"]').content = theme === 'light' ? '#ffffff' : '#1c1a1d';
+        document.querySelector('meta[name="theme-color"]').content = theme === 'light' ? '#ffffff' : '#181c1c';
       } catch (error) {}
     </script>
   </head>

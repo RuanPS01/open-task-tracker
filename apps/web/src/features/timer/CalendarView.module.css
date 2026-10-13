@@ -151,7 +151,7 @@
 }
 
 .creating {
-  border-left-color: var(--accent);
+  border-left-color: var(--accent-strong);
   background: color-mix(in srgb, var(--accent) 30%, var(--bg-app));
 }
 

@@ -9,7 +9,7 @@ Toda tela interna segue a mesma estrutura do Toggl Track:
 
 ```
 +---------------------------------------------------------------+
-| Barra lateral | PageHeader: "Tarefas · Lista"     [Ação rosa]  |
+| Barra lateral | PageHeader: "Tarefas · Lista"    [Ação ciano]  |
 | (Sidebar)     |------------------------------------------------|
 |               | Toolbar: [Minhas tarefas] [Filtros] [Agrupar]  |
 |               |          ...espaço...   [Lista|Quadro] [busca] |

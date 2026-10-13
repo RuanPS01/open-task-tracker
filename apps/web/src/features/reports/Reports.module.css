@@ -76,7 +76,7 @@
 }
 
 .description:focus-within {
-  border-color: var(--accent);
+  border-color: var(--accent-strong);
 }
 
 .body {
