@@ -42,7 +42,9 @@ export const CURRENCIES = ['BRL', 'USD', 'EUR'] as const;
 export type Currency = (typeof CURRENCIES)[number];
 
 // Paleta de cores de projeto. Mesmo conjunto de tons do Toggl para que os projetos
-// tenham contraste suficiente tanto no tema escuro quanto no claro.
+// tenham contraste suficiente tanto no tema escuro quanto no claro. As mesmas cores são
+// os temas de cor do workspace: cada uma tem a paleta completa do site em tokens.css,
+// gerada por scripts/workspace-themes.mjs (rode `npm run themes` se mudar esta lista).
 export const PROJECT_COLORS = [
   '#0b83d9',
   '#9e5bd9',

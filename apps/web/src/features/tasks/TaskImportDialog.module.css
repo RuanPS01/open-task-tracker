@@ -33,6 +33,23 @@
   flex-shrink: 0;
 }
 
+/* No celular a faixa não cabe numa linha: o texto ficaria espremido entre o ícone e o
+   botão. Ícone e texto ficam em cima e o botão ocupa a largura toda embaixo. */
+@media (max-width: 760px) {
+  .prompt {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .prompt p {
+    flex-basis: calc(100% - 30px);
+  }
+
+  .prompt button {
+    width: 100%;
+  }
+}
+
 .editor {
   width: 100%;
   min-height: 300px;

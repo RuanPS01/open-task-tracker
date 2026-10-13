@@ -52,6 +52,8 @@ export interface WorkspaceDoc {
   defaultHourlyRate: number | null;
   workingDays: number[];
   autoSchedule: boolean;
+  /** Tema de cor (uma das cores de projeto). Ausente nos workspaces antigos: vale nulo. */
+  color?: string | null;
   /** Uids dos membros ativos: é o que as regras do Firestore consultam para liberar acesso. */
   memberIds: Id[];
   /** Uids dos administradores ativos. */

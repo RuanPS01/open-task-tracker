@@ -23,6 +23,9 @@
           theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
         }
         document.documentElement.dataset.theme = theme;
+        // Tema de cor do último workspace aberto (paletas geradas em tokens.css).
+        var accent = localStorage.getItem('ott.accent');
+        if (accent && /^[0-9a-f]{6}$/.test(accent)) document.documentElement.dataset.accent = accent;
         // Cor da barra do sistema antes do CSS carregar (fundo de cada tema, tokens.css --bg-app).
         document.querySelector('meta[name="theme-color"]').content = theme === 'light' ? '#ffffff' : '#181c1c';
       } catch (error) {}

@@ -50,6 +50,11 @@ export interface Workspace {
   workingDays: number[];
   /** Quando ligado, mover uma tarefa empurra as sucessoras no Gantt. */
   autoSchedule: boolean;
+  /**
+   * Tema de cor do site neste workspace: uma das cores de projeto (`PROJECT_COLORS`), ou
+   * nulo para a paleta ciano padrão.
+   */
+  color: string | null;
   /** Papel do usuário logado neste workspace. */
   role: MemberRole;
   createdAt: IsoDateTime;

@@ -3,8 +3,9 @@ rules_version = '2';
 // Regras de acesso do modo Firebase. A web roda as regras de negócio (cascata,
 // relatórios, contadores) no navegador; estas regras garantem o que não pode depender
 // do navegador: só membros veem e alteram dados do workspace, só administradores
-// mexem em membros, convites, feriados e configurações, e cada pessoa só altera os
-// próprios apontamentos. Explicação completa em docs/06-dados-e-armazenamento.md.
+// mexem em membros, convites, feriados e configurações (e excluem o workspace), e cada
+// pessoa só altera os próprios apontamentos. Explicação completa em
+// docs/06-dados-e-armazenamento.md.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -112,6 +113,10 @@ service cloud.firestore {
           && request.resource.data.id == wid
           && request.resource.data.createdBy == resource.data.createdBy)
         || joiningWithInvite(wid);
+      // Excluir o workspace (com tudo dentro) é só de administrador. O serviço apaga as
+      // subcoleções antes e o documento do workspace por último, porque as regras delas
+      // consultam memberIds e adminIds dele.
+      allow delete: if signedIn() && uid() in resource.data.adminIds;
 
       match /members/{memberId} {
         allow read: if isMember(wid) || (signedIn() && uid() == memberId);

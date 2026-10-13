@@ -84,8 +84,11 @@ export function createBackend(options: BackendOptions) {
       },
     },
     workspaces: {
-      create: (name: string, options?: { demo?: boolean }) => workspaces.createWorkspace(ctx, { name }, options),
+      create: (name: string, options: { demo?: boolean; color?: string | null } = {}) =>
+        workspaces.createWorkspace(ctx, { name, color: options.color }, { demo: options.demo }),
       update: fn(workspaces.updateWorkspace),
+      /** Só administrador: apaga o workspace e tudo o que está nele. */
+      remove: fn(workspaces.deleteWorkspace),
     },
     members: {
       list: fn(members.listMembers),
