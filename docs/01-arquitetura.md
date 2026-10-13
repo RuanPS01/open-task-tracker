@@ -45,21 +45,22 @@ firebase; `web` importa `shared` e `data`. Nada importa a `web`.
 ```
 open-task-tracker/
   apps/web/
-    index.html               aplica o tema antes do React (sem piscar), manifesto e metas do PWA
+    index.html               aplica o tema e a cor do workspace antes do React (sem piscar), manifesto e metas do PWA
     vite.config.ts           base (subcaminho do Pages), envDir na raiz e o plugin do service worker
     pwa/                     service-worker.js (modelo) e plugin.ts (gera dist/sw.js no build)
     public/                  favicon.svg, manifest.webmanifest e icons/ (ícones do PWA)
     src/
       main.tsx               tela de carregamento, PWA, conecta a camada de dados e monta o React
-      app/                   App (sincronia entre abas), roteador, RootLayout, AuthGate, sessão, tema,
-                             BootScreen e pwa.ts (service worker, versão nova, instalação)
+      app/                   App (sincronia entre abas), roteador, RootLayout, AuthGate, sessão, tema e
+                             cor do workspace (theme.ts), BootScreen e pwa.ts (service worker, versão
+                             nova, instalação)
       data/                  backend.ts (conexão) e hooks do React Query por recurso
       components/            ui/ (kit), pickers/ (seletores), charts/ (gráficos), DataModeNotice
       features/<tela>/       telas e componentes exclusivos de cada tela
       i18n/                  dicionários pt-BR e en
       layout/                AppShell, Sidebar, MobileNav (barra inferior do celular), PageHeader, Logo
       lib/                   formatação, calendário de trabalho, hooks genéricos
-      styles/                tokens.css e base.css
+      styles/                tokens.css (com os temas de cor por workspace gerados no fim) e base.css
   packages/data/
     src/
       backend.ts             fachada usada pela web (createBackend)
@@ -81,13 +82,15 @@ open-task-tracker/
   firebase.json              regras, índices e portas dos emuladores
   .github/workflows/         ci.yml (pull requests) e deploy.yml (GitHub Pages)
   scripts/check-text.mjs     verificação de caracteres proibidos
+  scripts/workspace-themes.mjs  gera (e confere) os temas de cor por workspace do tokens.css
   docs/                      esta documentação
 ```
 
 ## 1.3 Boot da web
 
-1. `index.html` aplica o último tema salvo (`ott.theme`) antes de carregar o React e
-   ajusta a cor da barra do sistema (`theme-color`).
+1. `index.html` aplica o último tema salvo (`ott.theme`) e a cor do último workspace aberto
+   (`ott.accent`, atributo `data-accent`) antes de carregar o React e ajusta a cor da barra
+   do sistema (`theme-color`).
 2. `main.tsx` guarda o convite de instalação do navegador e registra o service worker
    (só no build; seção 1.8), desenha na hora o `BootScreen` (`app/BootScreen.tsx`: logotipo e
    "Carregando...") e chama `connectBackend()` (`apps/web/src/data/backend.ts`), que lê
@@ -99,7 +102,9 @@ open-task-tracker/
    sessão quando o login muda (outra aba, expiração no Firebase) e, no modo local, relê
    os dados quando outra aba grava no `localStorage`.
 4. `RootLayout` lê a sessão, escolhe idioma (preferência do usuário ou do navegador),
-   aplica o tema e fornece i18n, confirmações e avisos.
+   aplica o tema e a cor do workspace atual (paleta padrão sem login; ver
+   [03-identidade-visual.md](03-identidade-visual.md), seção 3.8) e fornece i18n,
+   confirmações e avisos.
 5. `RequireLogin` protege a página de convite (pede login, mas não workspace).
    `AuthGate` protege as rotas internas: sem sessão, redireciona para `/login` guardando
    o destino; com sessão, fornece `SessionProvider` (usuário, workspace atual, lista de

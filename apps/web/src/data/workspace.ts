@@ -34,10 +34,30 @@ export function useUpdateWorkspace() {
 export function useCreateWorkspace() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: ({ name, demo }: { name: string; demo?: boolean }) => backend().workspaces.create(name, { demo }),
+    mutationFn: ({ name, demo, color }: { name: string; demo?: boolean; color?: string | null }) =>
+      backend().workspaces.create(name, { demo, color }),
     onSuccess: async () => {
       client.removeQueries({ queryKey: ['ws'] });
       await client.invalidateQueries({ queryKey: keys.session });
+    },
+  });
+}
+
+/** Exclui o workspace atual com tudo dentro (só administrador); a sessão cai no próximo. */
+export function useDeleteWorkspace() {
+  const client = useQueryClient();
+  const wid = useWorkspaceId();
+  return useMutation({
+    // A sessão nova vem junto: as telas do workspace apagado saem antes de tentar reler dele.
+    mutationFn: async () => {
+      await backend().workspaces.remove(wid);
+      return backend().session.get();
+    },
+    onSuccess: (session) => {
+      client.removeQueries({ queryKey: ['ws'] });
+      client.setQueryData(keys.session, session);
+      // O cronômetro rodando pode ter sido apagado junto.
+      void client.invalidateQueries({ queryKey: keys.timer });
     },
   });
 }

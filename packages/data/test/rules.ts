@@ -6,6 +6,7 @@ import {
   arrayUnion,
   collection,
   connectFirestoreEmulator,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -144,6 +145,29 @@ export function registerRulesSuite(): void {
         }),
       );
       await updateDoc(ref, { projectId: null, updatedAt: new Date().toISOString() });
+    });
+
+    it('só administrador exclui o workspace, e a exclusão não deixa nada para trás', async () => {
+      const wid = ana.workspaceId;
+      const project = await env.backend.projects.create(wid, { name: 'Site', color: '#0b83d9' });
+      await env.backend.tasks.create(wid, { name: 'Layout', projectId: project.id });
+      await env.backend.holidays.create(wid, { date: '2026-12-24', name: 'Véspera' });
+      await env.backend.members.createInvite(wid, {});
+      await denied(deleteDoc(doc(await raw(bruno), 'workspaces', wid)));
+      await denied(deleteDoc(doc(await raw(mallory), 'workspaces', wid)));
+
+      await env.backend.workspaces.remove(wid);
+      // Conferência sem regras (credencial de dono do emulador): nem o documento nem
+      // qualquer subcoleção do workspace sobrou.
+      const firestore = hostPort(process.env.FIRESTORE_EMULATOR_HOST);
+      const projectId = process.env.GCLOUD_PROJECT ?? 'demo-ott';
+      const base = `http://${firestore.host}:${firestore.port}/v1/projects/${projectId}/databases/(default)/documents/workspaces/${wid}`;
+      const headers = { Authorization: 'Bearer owner', 'Content-Type': 'application/json' };
+      expect((await fetch(base, { headers })).status).toBe(404);
+      const listed = (await (await fetch(`${base}:listCollectionIds`, { method: 'POST', headers, body: '{}' })).json()) as {
+        collectionIds?: string[];
+      };
+      expect(listed.collectionIds ?? []).toEqual([]);
     });
   });
 }

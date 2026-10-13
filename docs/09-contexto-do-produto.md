@@ -49,7 +49,7 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 | Calendário de trabalho e feriados | Dias úteis, feriados e importação nacional; tarefa liberada para fins de semana e feriados | `[implementado]` |
 | Importação de tarefas (CSV) | Importação de várias tarefas por JSON, com prompt para IA e revisão antes de gravar | `[implementado]` |
 | Members (convite por e-mail), Clients, Tags | Membros com convite por link, Clientes, Tags | `[implementado]` |
-| Workspaces e troca de workspace | Igual | `[implementado]` |
+| Workspaces e troca de workspace | Igual, com tema de cor por workspace e exclusão do workspace com todos os dados | `[implementado]` |
 | Login com Google | "Continuar com Google" no modo Firebase | `[implementado]` |
 | Apps de celular (iOS e Android) | Site adaptado ao celular e instalável (PWA) | `[implementado]` |
 | Approvals (aprovação de horas) | | `[planejado]` |
@@ -61,13 +61,14 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 Diferenças intencionais em relação ao Toggl: marca e ilustrações próprias; interface em
 português por padrão; feriados nacionais do Brasil; caminho crítico e tipos de
 dependência além do término para início; convite por link em vez de e-mail; modo local
-que funciona sem nenhum serviço externo.
+que funciona sem nenhum serviço externo; tema de cor por workspace.
 
 ## 9.4 Glossário
 
 | Termo na interface | Significado | No código |
 |---|---|---|
 | Workspace | Espaço da equipe; todo dado pertence a um | `Workspace` |
+| Cor do workspace | Tema de cor do site naquele workspace (uma das cores de projeto ou o ciano padrão) | `Workspace.color`, `data-accent` |
 | Convite | Link de uso único para entrar num workspace | `Invite` |
 | Modo local | Dados guardados só no navegador (lowdb), sem Firebase | `mode: 'local'` |
 | Modo Firebase | Dados no Cloud Firestore e login no Firebase Auth | `mode: 'firebase'` |
@@ -117,6 +118,8 @@ afetados.
 | Login com Google (modo Firebase) | `[implementado]` |
 | Plataforma inteira utilizável no celular (barra inferior, gaveta, telas adaptadas) | `[implementado]` |
 | PWA: instalação, abertura sem internet e aviso de versão nova | `[implementado]` |
+| Tema de cor por workspace (as 14 cores de projeto, paleta completa nos dois temas) | `[implementado]` |
+| Excluir workspace com todos os dados (só administrador) | `[implementado]` |
 | Dados do Firestore disponíveis sem internet (cache persistente do SDK) | `[planejado]` |
 | Sincronizar com o Firebase o que foi feito no modo local durante uma queda | `[planejado]` |
 | Registro de auditoria (o Firebase Auth já limita tentativas de login) | `[planejado]` |

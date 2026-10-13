@@ -1,26 +1,3 @@
-.colors {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.swatch {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 2px solid transparent;
-  border-radius: 50%;
-  color: var(--on-color);
-}
-
-.swatchActive {
-  box-shadow:
-    0 0 0 2px var(--bg-elevated),
-    0 0 0 4px var(--text-secondary);
-}
-
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -10,6 +10,7 @@ import {
   MAX_TIME_ENTRY_SECONDS,
   MEMBER_ROLES,
   PRIORITIES,
+  PROJECT_COLORS,
   TASK_STATUSES,
   THEMES,
   TIME_FORMATS,
@@ -75,8 +76,14 @@ export const switchWorkspaceSchema = z.object({ workspaceId: idSchema });
 
 // --- Workspace e membros ---------------------------------------------------
 
-export const createWorkspaceSchema = z.object({ name: z.string().trim().min(1).max(120) });
-export type CreateWorkspaceInput = z.infer<typeof createWorkspaceSchema>;
+/** Tema de cor do workspace: uma das cores de projeto, ou nulo para a paleta padrão. */
+export const workspaceColorSchema = z.string().toLowerCase().pipe(z.enum(PROJECT_COLORS)).nullable();
+
+export const createWorkspaceSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  color: workspaceColorSchema.optional(),
+});
+export type CreateWorkspaceInput = z.input<typeof createWorkspaceSchema>;
 
 export const updateWorkspaceSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
@@ -89,8 +96,9 @@ export const updateWorkspaceSchema = z.object({
     .refine((days) => new Set(days).size === days.length, 'Dias repetidos')
     .optional(),
   autoSchedule: z.boolean().optional(),
+  color: workspaceColorSchema.optional(),
 });
-export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>;
+export type UpdateWorkspaceInput = z.input<typeof updateWorkspaceSchema>;
 
 export const createInviteSchema = z.object({
   email: z.email().max(200).transform((value) => value.toLowerCase()).nullable().optional(),

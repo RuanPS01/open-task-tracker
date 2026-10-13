@@ -1,7 +1,9 @@
 # 3. Identidade visual
 
 > Fonte da verdade: `apps/web/src/styles/tokens.css`. Este documento explica os tokens;
-> se os dois divergirem, o CSS vale e este documento deve ser corrigido.
+> se os dois divergirem, o CSS vale e este documento deve ser corrigido. O trecho final do
+> `tokens.css` (temas de cor por workspace) é gerado por `scripts/workspace-themes.mjs`:
+> não se edita à mão (seção 3.8).
 
 ## 3.1 Princípios
 
@@ -114,7 +116,10 @@ Regras dos gráficos (seguidas em `components/charts/Charts.tsx`):
 
 As cores de projeto (`PROJECT_COLORS` em `packages/shared/src/constants.ts`) são a paleta
 do Toggl e identificam o projeto em todas as telas (calendário, Gantt, Linha do tempo,
-rosca). Elas pertencem ao dado, não ao tema.
+rosca). Elas pertencem ao dado, não ao tema. As mesmas 14 cores também são os temas de
+cor do workspace (seção 3.8). As cores de gráfico desta seção não mudam com o tema do
+workspace: foram validadas como par (faturável e não faturável) e um tema violeta ou azul
+deixaria as duas séries parecidas.
 
 ## 3.4 Tipografia
 
@@ -164,6 +169,9 @@ Alturas padrão: botão 32 px (28 px pequeno), campo 34 px, chip de barra de fer
   marca do Google em tokens próprios, iguais nos dois temas (`--brand-google-blue`,
   `--brand-google-green`, `--brand-google-yellow`, `--brand-google-red`). Não use esses
   tokens em mais nada.
+- Amostra "Ciano (padrão)" do seletor de cor do workspace: `--brand-cyan` (`#00ffff`) e
+  `--brand-cyan-contrast` (`#00292e`), fixos em qualquer tema de workspace, para a amostra
+  mostrar o ciano mesmo quando o workspace aberto usa outra cor.
 
 ## 3.7 Temas
 
@@ -179,3 +187,47 @@ Alturas padrão: botão 32 px (28 px pequeno), campo 34 px, chip de barra de fer
   Mudou o `--bg-app`? Atualize esses três lugares.
 - Feriados aparecem com hachura diagonal em `--warning` sobre `--bg-weekend`; fins de
   semana só com `--bg-weekend`.
+- O tema de cor do workspace é um segundo atributo, `data-accent`, no mesmo `<html>`
+  (seção 3.8); `applyAccent` copia o `--bg-app` resultante para o `theme-color`, como o
+  `applyTheme`.
+
+## 3.8 Temas de cor por workspace
+
+Cada workspace pode trocar a paleta do site por uma das 14 cores de projeto
+(`Workspace.color`; nulo é a paleta ciano padrão). A troca vale para todas as pessoas do
+workspace e se combina com o tema escuro ou claro de cada pessoa, então há 28 paletas além
+da padrão. Elas ficam no fim do `tokens.css`, entre `/* <workspace-themes> */` e
+`/* </workspace-themes> */`, com seletores `:root[data-accent='0b83d9']:not([data-theme='light'])`
+e `:root[data-accent='0b83d9'][data-theme='light']` (a cor sem o `#`).
+
+**Como cada paleta é derivada** (`scripts/workspace-themes.mjs`, mesma lógica da seção 3.2):
+
+- **Neutros** (fundos, bordas, textos, barra lateral do escuro, linhas do Gantt): mesma
+  luminosidade e saturação dos tokens padrão, com a matiz da cor escolhida. Cores pouco
+  saturadas (ardósia, oliva, salmão) deixam os neutros proporcionalmente mais cinza.
+- **Preenchimento** (`--accent`, logotipo, botão principal, cronômetro): a própria cor,
+  clareada até ter contraste de pelo menos 6,5:1 com a tinta escura (`--accent-contrast`),
+  igual nos dois temas, como o ciano.
+- **Tons da marca** (texto e linha em destaque, fundo e borda de item selecionado, barra
+  lateral e texto principal do tema claro, destaque dos avisos, ilustrações): luminosidade
+  de cada papel tirada do ciano e saturação da cor, limitada à do ciano para cores muito
+  vivas não gritarem nos fundos.
+- **Não mudam**: cores de estado (erro, sucesso, aviso, informação), status e prioridade
+  de tarefa (vermelho de urgente não pode virar a cor do tema) e cores de gráfico.
+
+Contrastes conferidos pelo script em toda paleta (ele ajusta a luminosidade até passar e
+falha se não conseguir): tinta sobre o preenchimento 6,5:1; texto de destaque 7:1 no
+escuro e 4,8:1 sobre o branco (4,5:1 sobre o fundo selecionado); linha de destaque 3:1;
+texto principal do claro 12:1; destaque dos avisos 4,5:1.
+
+**Aplicação.** `applyAccent` (`app/theme.ts`) põe ou tira o `data-accent` e guarda a cor
+em `ott.accent`; o `index.html` aplica essa cor antes do React, junto com o tema, para a
+abertura não piscar em ciano. O `RootLayout` aplica a cor do workspace atual (a mesma
+escolha do `AuthGate`) e volta à padrão sem login. A cor se escolhe ao criar o workspace
+(barra lateral e tela sem workspace) e nas configurações do workspace (só administrador),
+pelo seletor `ColorSwatches` com a amostra "Ciano (padrão)".
+
+**Mudou `PROJECT_COLORS` ou a derivação?** Rode `npm run themes`, que regrava o trecho; o
+`npm run check` roda `npm run check:themes` e falha se o `tokens.css` estiver diferente do
+que o script geraria. Mudou um token neutro padrão da seção 3.2? Atualize também a lista
+`NEUTRALS` do script, para os temas acompanharem.

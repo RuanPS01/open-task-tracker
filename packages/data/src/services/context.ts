@@ -29,6 +29,7 @@ export function toWorkspace(doc: WorkspaceDoc, uid: Id): Workspace {
     defaultHourlyRate: doc.defaultHourlyRate,
     workingDays: [...doc.workingDays].sort((a, b) => a - b),
     autoSchedule: doc.autoSchedule,
+    color: doc.color ?? null,
     role: doc.adminIds.includes(uid) ? 'admin' : 'member',
     createdAt: doc.createdAt,
   };

@@ -8,7 +8,7 @@ import { useErrorMessage } from '../lib/format';
 import { useT } from '../i18n';
 import { setErrorNotifier } from './notifier';
 import { usePwa } from './pwa';
-import { applyTheme } from './theme';
+import { applyAccent, applyTheme } from './theme';
 
 function ErrorBridge() {
   const message = useErrorMessage();
@@ -32,9 +32,22 @@ export function RootLayout() {
   const preferences = session?.user.preferences;
   const locale = preferences?.locale ?? guessLocale();
 
+  // Paleta do workspace aberto (o mesmo que o AuthGate escolhe). Sem login, a padrão.
+  const accent =
+    session === undefined
+      ? undefined
+      : session === null
+        ? null
+        : ((session.workspaces.find((w) => w.id === session.user.currentWorkspaceId) ?? session.workspaces[0])?.color ?? null);
+
   useEffect(() => {
     if (preferences) applyTheme(preferences.theme);
   }, [preferences]);
+
+  useEffect(() => {
+    // Enquanto a sessão carrega, fica a cor que o index.html aplicou (sem piscar).
+    if (accent !== undefined) applyAccent(accent);
+  }, [accent]);
 
   useEffect(() => {
     document.documentElement.lang = locale;
