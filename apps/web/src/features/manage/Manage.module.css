@@ -162,7 +162,7 @@
 .renameInput {
   height: 30px;
   padding: 0 8px;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--accent-strong);
   border-radius: var(--radius-sm);
   background: var(--bg-input);
   font-size: 13px;

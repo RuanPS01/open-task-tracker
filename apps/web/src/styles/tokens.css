@@ -1,48 +1,52 @@
 /*
  * Tokens de cor, tipografia e espaçamento. Nenhum componente usa cor literal:
  * sempre var(--token). Tabela completa e regras em docs/03-identidade-visual.md.
- * Valores do tema escuro foram medidos nas telas do Toggl Track.
+ * A cor primária é o ciano puro #00ffff; os demais tons saem dela em OKLCH (mesma
+ * luminosidade dos degraus de antes, matiz do ciano), com os contrastes conferidos.
  */
 :root,
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg-app: #1c1a1d;
-  --bg-elevated: #242126;
-  --bg-hover: #29262b;
-  --bg-active: #322e34;
-  --bg-input: #1c1a1d;
-  --bg-muted: #141315;
-  --bg-weekend: #141315;
+  --bg-app: #181c1c;
+  --bg-elevated: #1d2424;
+  --bg-hover: #222929;
+  --bg-active: #293232;
+  --bg-input: #181c1c;
+  --bg-muted: #111414;
+  --bg-weekend: #111414;
   --bg-overlay: rgba(0, 0, 0, 0.55);
 
   --sidebar-bg: #000000;
-  --sidebar-hover: #17141a;
-  --sidebar-active: #361e34;
-  --sidebar-text: #f3eef4;
-  --sidebar-text-muted: #a8a0ab;
-  --sidebar-section: #8c8490;
-  --sidebar-border: #1b181c;
+  --sidebar-hover: #0f1718;
+  --sidebar-active: #002f32;
+  --sidebar-text: #e9f2f2;
+  --sidebar-text-muted: #97a7a8;
+  --sidebar-section: #7a8b8c;
+  --sidebar-border: #151b1b;
 
-  --border: #373538;
-  --border-subtle: #29272a;
-  --border-strong: #4c484f;
+  --border: #333737;
+  --border-subtle: #252929;
+  --border-strong: #424c4c;
 
-  --text: #f6f3f6;
-  --text-secondary: #c9c3ca;
-  --text-muted: #918a93;
-  --text-faint: #6b656e;
+  --text: #f0f5f5;
+  --text-secondary: #bdc8c8;
+  --text-muted: #839090;
+  --text-faint: #5e6a6b;
 
-  --accent: #c281b9;
-  --accent-hover: #d095c8;
-  --accent-text: #e3a3d9;
-  --accent-contrast: #1d0c1f;
-  --accent-subtle: #361e34;
-  --accent-subtle-border: #5b3156;
+  --accent: #00ffff;
+  --accent-hover: #89ffff;
+  --accent-text: #6cf7f7;
+  --accent-contrast: #00191b;
+  --accent-subtle: #002f32;
+  --accent-subtle-border: #004f54;
+  /* Linhas, bordas e ícones sobre o fundo da página; texto de destaque sobre superfície invertida (avisos). */
+  --accent-strong: #00ffff;
+  --accent-inverse: #007883;
 
   --brand-yellow: #ffde91;
-  --brand-plum: #6b5973;
-  --brand-pink-light: #e5abdb;
+  --brand-deep: #40696b;
+  --brand-light: #72d3d8;
 
   --danger: #f27474;
   --danger-subtle: #3b1d20;
@@ -54,7 +58,7 @@
 
   --priority-urgent: #f27474;
   --priority-high: #f2b14c;
-  --priority-medium: #e3a3d9;
+  --priority-medium: #5ed0d2;
   --priority-low: #8fb3d9;
 
   --status-todo: #9aa3ab;
@@ -62,13 +66,13 @@
   --status-done: #52c28d;
 
   --gantt-critical: #ff6b6b;
-  --gantt-summary: #d8d2da;
-  --gantt-dependency: #8a838c;
-  --now-line: #c281b9;
+  --gantt-summary: #cbd7d8;
+  --gantt-dependency: #7c8989;
+  --now-line: #00ffff;
 
   --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border);
   --shadow-panel: -12px 0 32px rgba(0, 0, 0, 0.45);
-  --focus-ring: 0 0 0 2px rgba(194, 129, 185, 0.55);
+  --focus-ring: 0 0 0 2px rgba(0, 255, 255, 0.5);
 }
 
 :root[data-theme='light'] {
@@ -76,36 +80,38 @@
 
   --bg-app: #ffffff;
   --bg-elevated: #ffffff;
-  --bg-hover: #f7f2f7;
-  --bg-active: #efe5ef;
+  --bg-hover: #eef6f6;
+  --bg-active: #dceced;
   --bg-input: #ffffff;
-  --bg-muted: #faf7fa;
-  --bg-weekend: #f8f4f8;
-  --bg-overlay: rgba(44, 19, 56, 0.35);
+  --bg-muted: #f4f9f9;
+  --bg-weekend: #f1f7f7;
+  --bg-overlay: rgba(0, 41, 46, 0.35);
 
-  --sidebar-bg: #2c1338;
-  --sidebar-hover: #3a1f47;
-  --sidebar-active: #55305f;
-  --sidebar-text: #fbf7fc;
-  --sidebar-text-muted: #cbbad1;
-  --sidebar-section: #a993b1;
-  --sidebar-border: #3a1f47;
+  --sidebar-bg: #00292e;
+  --sidebar-hover: #00373b;
+  --sidebar-active: #004e54;
+  --sidebar-text: #f3fafb;
+  --sidebar-text-muted: #a6c9ca;
+  --sidebar-section: #78a6a8;
+  --sidebar-border: #00373b;
 
-  --border: #e5dde6;
-  --border-subtle: #f0eaf0;
-  --border-strong: #cfc3d1;
+  --border: #d5e3e4;
+  --border-subtle: #e5eeef;
+  --border-strong: #b7cdce;
 
-  --text: #2c1338;
-  --text-secondary: #564a5c;
-  --text-muted: #85798a;
-  --text-faint: #ada3b1;
+  --text: #00292e;
+  --text-secondary: #395556;
+  --text-muted: #64797b;
+  --text-faint: #97acad;
 
-  --accent: #e57cd8;
-  --accent-hover: #d968cb;
-  --accent-text: #a4399a;
-  --accent-contrast: #2c1338;
-  --accent-subtle: #fbe8f8;
-  --accent-subtle-border: #f2c3ec;
+  --accent: #00ffff;
+  --accent-hover: #00eaed;
+  --accent-text: #007883;
+  --accent-contrast: #00292e;
+  --accent-subtle: #d9f5f6;
+  --accent-subtle-border: #98e4e8;
+  --accent-strong: #009aa1;
+  --accent-inverse: #00ffff;
 
   --danger: #d33a3a;
   --danger-subtle: #fdecec;
@@ -117,7 +123,7 @@
 
   --priority-urgent: #d33a3a;
   --priority-high: #d98a00;
-  --priority-medium: #b44fa8;
+  --priority-medium: #0097a4;
   --priority-low: #4f7fb0;
 
   --status-todo: #8a8f96;
@@ -125,13 +131,13 @@
   --status-done: #1e9c61;
 
   --gantt-critical: #d33a3a;
-  --gantt-summary: #3d2a47;
-  --gantt-dependency: #9b8fa0;
-  --now-line: #e57cd8;
+  --gantt-summary: #003b3e;
+  --gantt-dependency: #819a9b;
+  --now-line: #009aa1;
 
-  --shadow-popover: 0 12px 32px rgba(44, 19, 56, 0.16), 0 0 0 1px var(--border);
-  --shadow-panel: -12px 0 32px rgba(44, 19, 56, 0.14);
-  --focus-ring: 0 0 0 2px rgba(229, 124, 216, 0.45);
+  --shadow-popover: 0 12px 32px rgba(0, 41, 46, 0.16), 0 0 0 1px var(--border);
+  --shadow-panel: -12px 0 32px rgba(0, 41, 46, 0.14);
+  --focus-ring: 0 0 0 2px rgba(0, 154, 161, 0.45);
 }
 
 :root {
@@ -194,17 +200,17 @@
  */
 :root,
 :root[data-theme='dark'] {
-  --chart-billable: #d55181;
-  --chart-nonbillable: #3987e5;
-  --chart-single: #d55181;
-  --chart-other: #6f6a72;
-  --chart-grid: #2c2a2e;
+  --chart-billable: #009ba3;
+  --chart-nonbillable: #9085e9;
+  --chart-single: #009ba3;
+  --chart-other: #636f6f;
+  --chart-grid: #272c2c;
 }
 
 :root[data-theme='light'] {
-  --chart-billable: #c2468f;
-  --chart-nonbillable: #2a78d6;
-  --chart-single: #c2468f;
-  --chart-other: #9b949e;
-  --chart-grid: #efeaef;
+  --chart-billable: #0094a2;
+  --chart-nonbillable: #6250d6;
+  --chart-single: #0094a2;
+  --chart-other: #8c9a9b;
+  --chart-grid: #e6eeee;
 }

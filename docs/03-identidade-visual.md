@@ -5,51 +5,76 @@
 
 ## 3.1 Princípios
 
-- **Fidelidade ao Toggl Track, marca própria.** Layout, ritmo, cores de interface e
-  comportamento seguem o Toggl Track (tema escuro com barra lateral preta, rosa como cor
-  de ação, roxo escuro no tema claro). Nome, logotipo e ilustrações são próprios: o
-  produto se chama Open Task Tracker (sigla OTT) e não usa marca, nome ou logotipo do
-  Toggl.
+- **Fidelidade ao Toggl Track, marca própria.** Layout, ritmo e comportamento seguem o
+  Toggl Track (tema escuro com barra lateral preta, barra lateral escura também no tema
+  claro). A cor da marca é própria: **ciano puro `#00ffff`**. Nome, logotipo e ilustrações
+  também são próprios: o produto se chama Open Task Tracker (sigla OTT) e não usa marca,
+  nome ou logotipo do Toggl.
 - **O dado é o que pode chamar atenção.** Interface em tons neutros; cor forte só em ação
-  principal (botão rosa), estado selecionado e cor de projeto.
+  principal (botão ciano), estado selecionado e cor de projeto.
 - **Nenhuma cor literal em componente.** Tudo por `var(--token)`. A cor de projeto vem do
   dado (`project.color`) e entra por variável CSS local (`--bar-color`, `--entry-color`,
   `--project-color`).
 
 ## 3.2 Cores de interface
 
-Os valores do tema escuro foram medidos em capturas do Toggl Track (amostragem de pixel).
+**Como a paleta é derivada.** A cor primária é o ciano puro `#00ffff` (OKLCH L 0,905,
+C 0,155, matiz 195). Os demais tons saem dela em OKLCH: os neutros (fundos, bordas,
+textos e barra lateral) mantêm a luminosidade e a saturação dos degraus anteriores e
+recebem a matiz 200, um cinza levemente puxado para o ciano; os tons da marca (destaques,
+fundos selecionados, tinta escura) são o mesmo ciano em luminosidades diferentes. Cores
+de estado (erro, sucesso, aviso, informação, prioridade urgente e alta, status) não
+seguem a marca e ficam como estão.
+
+O ciano puro é muito claro: preenche botões, bolinhas, a linha de hoje no tema escuro e o
+logotipo, sempre com texto em tinta escura (`--accent-contrast`). Onde o ciano precisa
+aparecer sobre fundo branco (texto, linha, borda, ícone), o tema claro usa um ciano mais
+fundo: `--accent-text` para texto e `--accent-strong` para linhas, bordas e ícones.
+
+Contrastes conferidos (WCAG): texto principal 16,7:1 (escuro) e 14,9:1 (claro); texto de
+apoio 10,6 e 8,0; texto apagado 5,2 e 4,6; `--accent-text` 13,3 e 5,2 sobre o fundo;
+tinta escura sobre o ciano 14,5 e 12,4; `--accent-strong` no claro 3,4 sobre o branco.
 
 | Token | Escuro | Claro | Uso |
 |---|---|---|---|
-| `--bg-app` | `#1c1a1d` | `#ffffff` | Fundo das páginas e painéis |
-| `--bg-elevated` | `#242126` | `#ffffff` | Popover, menu, modal |
-| `--bg-hover` | `#29262b` | `#f7f2f7` | Linha ou item sob o ponteiro |
-| `--bg-active` | `#322e34` | `#efe5ef` | Trilhos e fundos ativos |
-| `--bg-muted` | `#141315` | `#faf7fa` | Faixas de cabeçalho, cartões de apoio |
-| `--bg-weekend` | `#141315` | `#f8f4f8` | Colunas de dia não útil |
-| `--bg-overlay` | preto 55% | roxo 35% | Fundo atrás de modal e painel |
-| `--sidebar-bg` | `#000000` | `#2c1338` | Barra lateral (no claro, roxo do Toggl) |
-| `--sidebar-active` | `#361e34` | `#55305f` | Item de navegação ativo |
-| `--sidebar-text` | `#f3eef4` | `#fbf7fc` | Texto da barra lateral |
-| `--border` | `#373538` | `#e5dde6` | Bordas e linhas de grade principais |
-| `--border-subtle` | `#29272a` | `#f0eaf0` | Divisórias leves |
-| `--text` | `#f6f3f6` | `#2c1338` | Texto principal |
-| `--text-secondary` | `#c9c3ca` | `#564a5c` | Texto de apoio |
-| `--text-muted` | `#918a93` | `#85798a` | Rótulos, metadados |
-| `--text-faint` | `#6b656e` | `#ada3b1` | Placeholder |
-| `--accent` | `#c281b9` | `#e57cd8` | Botão principal, cronômetro, seleção |
-| `--accent-text` | `#e3a3d9` | `#a4399a` | Texto e valor em destaque ("Data" em "Agrupar por: Data") |
-| `--accent-contrast` | `#1d0c1f` | `#2c1338` | Texto sobre o rosa |
-| `--accent-subtle` | `#361e34` | `#fbe8f8` | Fundo de item selecionado |
+| `--bg-app` | `#181c1c` | `#ffffff` | Fundo das páginas e painéis |
+| `--bg-elevated` | `#1d2424` | `#ffffff` | Popover, menu, modal |
+| `--bg-hover` | `#222929` | `#eef6f6` | Linha ou item sob o ponteiro |
+| `--bg-active` | `#293232` | `#dceced` | Trilhos e fundos ativos |
+| `--bg-muted` | `#111414` | `#f4f9f9` | Faixas de cabeçalho, cartões de apoio |
+| `--bg-weekend` | `#111414` | `#f1f7f7` | Colunas de dia não útil |
+| `--bg-overlay` | preto 55% | tinta 35% | Fundo atrás de modal e painel |
+| `--sidebar-bg` | `#000000` | `#00292e` | Barra lateral (no claro, azul-petróleo da marca) |
+| `--sidebar-active` | `#002f32` | `#004e54` | Item de navegação ativo |
+| `--sidebar-text` | `#e9f2f2` | `#f3fafb` | Texto da barra lateral |
+| `--border` | `#333737` | `#d5e3e4` | Bordas e linhas de grade principais |
+| `--border-subtle` | `#252929` | `#e5eeef` | Divisórias leves |
+| `--text` | `#f0f5f5` | `#00292e` | Texto principal |
+| `--text-secondary` | `#bdc8c8` | `#395556` | Texto de apoio |
+| `--text-muted` | `#839090` | `#64797b` | Rótulos, metadados |
+| `--text-faint` | `#5e6a6b` | `#97acad` | Placeholder |
+| `--accent` | `#00ffff` | `#00ffff` | Botão principal, cronômetro, seleção, logotipo |
+| `--accent-hover` | `#89ffff` | `#00eaed` | Botão principal sob o ponteiro |
+| `--accent-text` | `#6cf7f7` | `#007883` | Texto e valor em destaque ("Data" em "Agrupar por: Data") |
+| `--accent-strong` | `#00ffff` | `#009aa1` | Linhas, bordas de foco e ícones em ciano sobre o fundo da página |
+| `--accent-inverse` | `#007883` | `#00ffff` | Destaque sobre superfície invertida (botão de ação dos avisos) |
+| `--accent-contrast` | `#00191b` | `#00292e` | Texto sobre o ciano |
+| `--accent-subtle` | `#002f32` | `#d9f5f6` | Fundo de item selecionado |
+| `--accent-subtle-border` | `#004f54` | `#98e4e8` | Borda de item selecionado |
 | `--danger` | `#f27474` | `#d33a3a` | Erro, atraso, capacidade estourada |
 | `--success` | `#52c28d` | `#1e9c61` | Capacidade livre, concluído |
 | `--warning` | `#f2b14c` | `#c27a00` | Feriados no calendário |
-| `--now-line` | `#c281b9` | `#e57cd8` | Linha de "agora" e de "hoje" |
+| `--now-line` | `#00ffff` | `#009aa1` | Linha de "agora" e de "hoje" |
+| `--focus-ring` | ciano 50% | ciano forte 45% | Anel de foco do teclado |
+
+Regra para cor nova de marca: parta do ciano em OKLCH (matiz 195 a 205), escolha a
+luminosidade pelo papel e confira o contraste. Texto em ciano sobre fundo claro nunca usa
+`--accent`.
 
 Status e prioridade de tarefa têm tokens próprios (`--status-todo`, `--status-progress`,
 `--status-done`, `--priority-low` a `--priority-urgent`) e sempre aparecem com ícone e
-rótulo, nunca só pela cor.
+rótulo, nunca só pela cor. A prioridade média usa o ciano da marca (`#5ed0d2` no escuro,
+`#0097a4` no claro).
 
 Gantt: `--gantt-summary` (barra de grupo), `--gantt-dependency` (setas),
 `--gantt-critical` (contorno de tarefa crítica).
@@ -57,15 +82,22 @@ Gantt: `--gantt-summary` (barra de grupo), `--gantt-dependency` (setas),
 ## 3.3 Cores de gráfico
 
 Validadas com o validador de paleta (separação para daltonismo, faixa de luminosidade,
-saturação mínima e contraste com o fundo) nos dois temas:
+saturação mínima e contraste com o fundo) nos dois temas. O ciano puro é claro demais
+para marca de gráfico (fica fora da faixa de luminosidade), então a série da marca usa o
+ciano mais fundo; a segunda série é violeta, que separa bem do ciano para quem tem
+daltonismo e não se confunde com as cores de alerta (laranja e vermelho):
 
 | Token | Escuro | Claro | Uso |
 |---|---|---|---|
-| `--chart-billable` | `#d55181` | `#c2468f` | Série "Faturável" |
-| `--chart-nonbillable` | `#3987e5` | `#2a78d6` | Série "Não faturável" |
-| `--chart-single` | `#d55181` | `#c2468f` | Gráfico de série única (horas por membro, por tarefa) |
-| `--chart-other` | `#6f6a72` | `#9b949e` | Fatia "Outros" e sem projeto |
-| `--chart-grid` | `#2c2a2e` | `#efeaef` | Linhas de grade |
+| `--chart-billable` | `#009ba3` | `#0094a2` | Série "Faturável" |
+| `--chart-nonbillable` | `#9085e9` | `#6250d6` | Série "Não faturável" |
+| `--chart-single` | `#009ba3` | `#0094a2` | Gráfico de série única (horas por membro, por tarefa) |
+| `--chart-other` | `#636f6f` | `#8c9a9b` | Fatia "Outros" e sem projeto |
+| `--chart-grid` | `#272c2c` | `#e6eeee` | Linhas de grade |
+
+Resultado do validador para o par faturável e não faturável: no escuro (fundo `#181c1c`),
+separação para daltonismo 10,1 e visão normal 17,8; no claro (fundo branco), 16,3 e 21,7.
+Tudo acima do alvo (8 e 15) e com contraste de 3:1 ou mais contra o fundo.
 
 Regras dos gráficos (seguidas em `components/charts/Charts.tsx`):
 
@@ -118,13 +150,15 @@ Alturas padrão: botão 32 px (28 px pequeno), campo 34 px, chip de barra de fer
   `components/pickers/TaskIcons.tsx` (círculo tracejado, meio cheio, cheio com check;
   barras de sinal e quadrado de urgente).
 - Ilustrações de tela vazia (`components/ui/EmptyState.tsx`): formas geométricas com as
-  cores de marca (`--accent`, `--brand-yellow`, `--brand-pink-light`, `--brand-plum`),
+  cores de marca (`--accent`, `--brand-yellow`, `--brand-light` `#72d3d8` e
+  `--brand-deep` `#40696b`, os dois do ciano),
   no espírito das ilustrações do Toggl, com desenho próprio. Variantes: `shapes`,
   `people`, `clock`, `chart`, `folders`.
-- Logotipo (`layout/Logo.tsx` e `public/favicon.svg`): relógio sobre círculo rosa.
+- Logotipo (`layout/Logo.tsx` e `public/favicon.svg`): relógio em tinta escura
+  (`#00292e`) sobre círculo ciano.
 - Ícones do PWA (`public/icons`): `icon-192.png` e `icon-512.png` (o círculo do logotipo
-  com fundo transparente), `icon-maskable-512.png` e `apple-touch-icon.png` (quadrado rosa
-  cheio com o relógio dentro da zona segura de 80%). Foram gerados a partir do desenho
+  com fundo transparente), `icon-maskable-512.png` e `apple-touch-icon.png` (quadrado
+  ciano cheio com o relógio dentro da zona segura de 80%). Foram gerados a partir do desenho
   do `favicon.svg`; mudou o logotipo, gere de novo os quatro arquivos.
 - Botão "Continuar com Google" (`features/auth/GoogleButton.tsx`): o "G" usa as cores da
   marca do Google em tokens próprios, iguais nos dois temas (`--brand-google-blue`,
@@ -139,7 +173,7 @@ Alturas padrão: botão 32 px (28 px pequeno), campo 34 px, chip de barra de fer
 - Todo token existe nos dois temas. Ao criar token novo, defina os dois blocos.
 - Únicas cores fora do `tokens.css`, porque o navegador as lê antes do CSS: a barra do
   sistema (`theme-color` no `index.html` e no `manifest.webmanifest`, com o `--bg-app`
-  escuro `#1c1a1d`; o script do `index.html` usa `#ffffff` no tema claro) e o fundo da
+  escuro `#181c1c`; o script do `index.html` usa `#ffffff` no tema claro) e o fundo da
   abertura do app instalado (`background_color` do manifesto). Depois de carregar,
   `applyTheme` (`app/theme.ts`) copia o `--bg-app` do tema em uso para o `theme-color`.
   Mudou o `--bg-app`? Atualize esses três lugares.

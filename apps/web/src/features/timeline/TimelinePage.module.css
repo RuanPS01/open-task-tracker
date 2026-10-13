@@ -116,7 +116,7 @@
   background: var(--accent-subtle);
   color: var(--accent-text) !important;
   font-weight: 700 !important;
-  border-bottom: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent-strong);
 }
 
 .lane {

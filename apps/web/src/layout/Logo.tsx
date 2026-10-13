@@ -1,4 +1,4 @@
-/** Marca do Open Task Tracker: relógio sobre círculo rosa (não reutiliza a marca do Toggl). */
+/** Marca do Open Task Tracker: relógio sobre círculo ciano (não reutiliza a marca do Toggl). */
 export function LogoMark({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>

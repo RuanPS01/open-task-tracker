@@ -18,7 +18,7 @@
 
 .prompt > svg {
   flex-shrink: 0;
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .prompt p {
@@ -182,7 +182,7 @@
 
 .milestone {
   flex-shrink: 0;
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .name {
