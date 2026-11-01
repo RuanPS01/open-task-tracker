@@ -1,28 +1,124 @@
-// Ícones de status e prioridade das tarefas, desenhados em SVG com tokens.
-import { PRIORITY_KEYS, type Priority, type TaskStatus } from '@ott/shared';
+// Ícones de status e prioridade das tarefas, desenhados em SVG com tokens. Status
+// customizado usa um dos três desenhos padrão ou um ícone do lucide-react, na cor que a
+// equipe escolheu (uma das cores de projeto, que vem do dado).
+import { PRIORITY_KEYS, type CustomStatus, type Priority, type StatusIconKey, type TaskStatus } from '@ott/shared';
+import {
+  Archive,
+  Ban,
+  Bug,
+  Circle,
+  CircleDot,
+  CirclePause,
+  CircleX,
+  Clock,
+  Code,
+  Eye,
+  Flag,
+  Hourglass,
+  Lock,
+  MessageCircle,
+  Package,
+  PenLine,
+  Rocket,
+  Search,
+  Send,
+  Star,
+  TestTube,
+  ThumbsUp,
+  TriangleAlert,
+  Truck,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 
-export function StatusIcon({ status, size = 16 }: { status: TaskStatus; size?: number }) {
-  if (status === 'done') {
+type ShapeKey = Extract<StatusIconKey, 'dashed' | 'half' | 'check'>;
+
+const SHAPE_BY_STATUS: Record<TaskStatus, ShapeKey> = { todo: 'dashed', in_progress: 'half', done: 'check' };
+
+const STATUS_COLORS: Record<TaskStatus, string> = {
+  todo: 'var(--status-todo)',
+  in_progress: 'var(--status-progress)',
+  done: 'var(--status-done)',
+};
+
+// Ícones do lucide-react para os status customizados. O Record obriga a ter um ícone para
+// cada chave de STATUS_ICONS (menos os três desenhos padrão).
+const LUCIDE_ICONS: Record<Exclude<StatusIconKey, ShapeKey>, LucideIcon> = {
+  circle: Circle,
+  dot: CircleDot,
+  pause: CirclePause,
+  x: CircleX,
+  eye: Eye,
+  search: Search,
+  clock: Clock,
+  hourglass: Hourglass,
+  ban: Ban,
+  alert: TriangleAlert,
+  flag: Flag,
+  bug: Bug,
+  code: Code,
+  test: TestTube,
+  pen: PenLine,
+  message: MessageCircle,
+  send: Send,
+  'thumbs-up': ThumbsUp,
+  users: Users,
+  truck: Truck,
+  package: Package,
+  rocket: Rocket,
+  star: Star,
+  archive: Archive,
+  lock: Lock,
+};
+
+const isShape = (icon: StatusIconKey): icon is ShapeKey => icon === 'dashed' || icon === 'half' || icon === 'check';
+
+function StatusShape({ shape, color, size }: { shape: ShapeKey; color: string; size: number }) {
+  if (shape === 'check') {
     return (
       <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden>
-        <circle cx="8" cy="8" r="7" fill="var(--status-done)" />
+        <circle cx="8" cy="8" r="7" fill={color} />
         <path d="M4.8 8.2l2.1 2.1 4.3-4.5" stroke="var(--bg-app)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
-  if (status === 'in_progress') {
+  if (shape === 'half') {
     return (
       <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden>
-        <circle cx="8" cy="8" r="6.3" stroke="var(--status-progress)" strokeWidth="1.5" fill="none" />
-        <path d="M8 3.6a4.4 4.4 0 0 1 0 8.8z" fill="var(--status-progress)" />
+        <circle cx="8" cy="8" r="6.3" stroke={color} strokeWidth="1.5" fill="none" />
+        <path d="M8 3.6a4.4 4.4 0 0 1 0 8.8z" fill={color} />
       </svg>
     );
   }
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden>
-      <circle cx="8" cy="8" r="6.3" stroke="var(--status-todo)" strokeWidth="1.5" strokeDasharray="2.6 2" fill="none" />
+      <circle cx="8" cy="8" r="6.3" stroke={color} strokeWidth="1.5" strokeDasharray="2.6 2" fill="none" />
     </svg>
   );
+}
+
+/**
+ * Ícone do status. Sem `custom`, o desenho padrão da categoria; com ele, o ícone e a cor
+ * do status customizado.
+ */
+export function StatusIcon({
+  status,
+  custom,
+  size = 16,
+}: {
+  status: TaskStatus;
+  custom?: Pick<CustomStatus, 'icon' | 'color'> | null;
+  size?: number;
+}) {
+  if (!custom) return <StatusShape shape={SHAPE_BY_STATUS[status]} color={STATUS_COLORS[status]} size={size} />;
+  return <StatusGlyph icon={custom.icon} color={custom.color} size={size} />;
+}
+
+/** Só o desenho de um ícone de status, em qualquer cor (seletor de ícone do status). */
+export function StatusGlyph({ icon, color, size = 16 }: { icon: StatusIconKey; color: string; size?: number }) {
+  if (isShape(icon)) return <StatusShape shape={icon} color={color} size={size} />;
+  const Icon = LUCIDE_ICONS[icon];
+  return <Icon size={size} color={color} strokeWidth={2.2} aria-hidden />;
 }
 
 const PRIORITY_COLORS: Record<Priority, string> = {

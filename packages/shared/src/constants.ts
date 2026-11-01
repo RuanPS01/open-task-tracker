@@ -1,8 +1,46 @@
 // Valores fixos do domínio, compartilhados pela camada de dados e pela web.
 // Mudou algum valor aqui? Atualize docs/06-dados-e-armazenamento.md.
 
+// Os três status padrão. São também as categorias dos status customizados: todo status
+// criado pela equipe conta como um destes para as regras (concluir, reabrir, tarefa-mãe,
+// capacidade, "mostrar concluídas").
 export const TASK_STATUSES = ['todo', 'in_progress', 'done'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
+
+// Ícones que um status customizado pode usar. Os três primeiros são os desenhos dos status
+// padrão (pontilhado, meio cheio, cheio com check); os demais são ícones do lucide-react,
+// escolhidos na web pelo nome (components/pickers/TaskIcons.tsx).
+export const STATUS_ICONS = [
+  'dashed',
+  'half',
+  'check',
+  'circle',
+  'dot',
+  'pause',
+  'x',
+  'eye',
+  'search',
+  'clock',
+  'hourglass',
+  'ban',
+  'alert',
+  'flag',
+  'bug',
+  'code',
+  'test',
+  'pen',
+  'message',
+  'send',
+  'thumbs-up',
+  'users',
+  'truck',
+  'package',
+  'rocket',
+  'star',
+  'archive',
+  'lock',
+] as const;
+export type StatusIconKey = (typeof STATUS_ICONS)[number];
 
 // A ordem numérica é usada na ordenação por prioridade (maior primeiro).
 export const PRIORITIES = [0, 1, 2, 3, 4] as const;

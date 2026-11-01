@@ -66,9 +66,10 @@ papel, ativação ou remoção, e acrescidos pelo próprio convidado ao aceitar 
 | `invites` | 40 caracteres | `workspaceName`, `email` (só lembrete), `role`, `weeklyCapacityHours`, `hourlyRate`, `createdBy`, `createdAt` |
 | `clients` | gerado | `name` (único no workspace, sem diferenciar maiúsculas), `archived`, `createdAt` |
 | `tags` | gerado | `name` (único no workspace), `createdAt` |
+| `statuses` | gerado | Status customizados: `projectId` (nulo vale para o workspace inteiro), `name` (até 40 caracteres, único entre os status que aparecem juntos: os do workspace com os de qualquer projeto e os de um mesmo projeto), `category` (`todo`, `in_progress` ou `done`: o status padrão que ele conta como), `icon` (uma chave de `STATUS_ICONS`), `color` (uma das `PROJECT_COLORS`), `position` (ordem dentro da categoria), `createdAt`. Os três status padrão não são documentos |
 | `holidays` | a data | `date`, `name` (um feriado por data) |
 | `projects` | gerado | `clientId`, `name`, `color` (`#rrggbb`), `billable`, `estimateSeconds`, `hourlyRate`, `startDate`, `endDate`, `archived`, `trackedSeconds`, `trackerIds`, `createdAt`, `updatedAt` |
-| `tasks` | gerado | `projectId`, `parentId`, `name`, `description`, `notes`, `status` (`todo`, `in_progress`, `done`), `priority` (0 a 4), `startDate`, `dueDate`, `estimateSeconds`, `estimateMode` (`total` ou `per_day`), `progress` (0 a 100), `isMilestone`, `allowNonWorkingDays`, `billable`, `position`, `assigneeIds`, `tagIds`, `trackedSeconds`, `createdBy`, `createdAt`, `updatedAt`, `completedAt` |
+| `tasks` | gerado | `projectId`, `parentId`, `name`, `description`, `notes`, `status` (`todo`, `in_progress`, `done`: a categoria, que as regras consultam), `statusId` (status customizado dentro da categoria, ou nulo para o status padrão; ausente nas tarefas antigas, lido como nulo), `priority` (0 a 4), `startDate`, `dueDate`, `estimateSeconds`, `estimateMode` (`total` ou `per_day`), `progress` (0 a 100), `isMilestone`, `allowNonWorkingDays`, `billable`, `position`, `assigneeIds`, `tagIds`, `trackedSeconds`, `createdBy`, `createdAt`, `updatedAt`, `completedAt` |
 | `dependencies` | gerado | `predecessorId`, `successorId` (par único), `type` (`FS`, `SS`, `FF`, `SF`), `lagDays` (dias úteis, pode ser negativo), `createdAt` |
 | `timeEntries` | gerado | `userId`, `projectId`, `taskId`, `description`, `start`, `stop` (nulo enquanto roda), `billable`, `tagIds`, `createdAt`, `updatedAt` |
 
@@ -79,8 +80,9 @@ dois).
 
 | Exclusão | Efeito (no mesmo lote) |
 |---|---|
-| Workspace (admin) | Apaga todos os documentos das subcoleções (`timeEntries`, `dependencies`, `tasks`, `projects`, `tags`, `clients`, `holidays`, `invites`, `members`) e, por último, o documento do workspace. No perfil de quem exclui: workspace atual passa para o próximo (ou nulo), cronômetro rodando nele e projetos fixados dele saem. Os perfis das outras pessoas não podem ser gravados por ela: a sessão delas troca o workspace atual que sumiu e o cronômetro que rodava nele deixa de aparecer |
-| Projeto (admin) | Exclui as tarefas do projeto e as dependências delas; apontamentos ficam sem projeto e sem tarefa |
+| Workspace (admin) | Apaga todos os documentos das subcoleções (`timeEntries`, `dependencies`, `tasks`, `projects`, `tags`, `statuses`, `clients`, `holidays`, `invites`, `members`) e, por último, o documento do workspace. No perfil de quem exclui: workspace atual passa para o próximo (ou nulo), cronômetro rodando nele e projetos fixados dele saem. Os perfis das outras pessoas não podem ser gravados por ela: a sessão delas troca o workspace atual que sumiu e o cronômetro que rodava nele deixa de aparecer |
+| Projeto (admin) | Exclui as tarefas do projeto, as dependências delas e os status do projeto; apontamentos ficam sem projeto e sem tarefa |
+| Status customizado | As tarefas que o usavam voltam ao status padrão da mesma categoria (`statusId` nulo); a categoria delas não muda |
 | Tarefa | Exclui as subtarefas e as dependências que tocam qualquer uma; apontamentos ficam sem tarefa; recalcula o cronograma |
 | Cliente | Projetos ficam sem cliente |
 | Tag | Sai das tarefas e dos apontamentos (de todas as pessoas) |
@@ -111,6 +113,7 @@ Apontamento rodando não entra em `trackedSeconds`: as horas entram quando ele p
 | `invites/{id}` | qualquer pessoa logada que tenha o id (o link); listar só admin | admin | admin, ou o convidado ao aceitar |
 | `holidays` | membros | admin | admin |
 | `clients`, `tags`, `tasks`, `dependencies` | membros | membros | membros |
+| `statuses` | membros | do workspace (`projectId` nulo): admin; de projeto: membros, sem virar status do workspace (o escopo antes e depois é conferido) | do workspace: admin; de projeto: membros |
 | `projects` | membros | membros | admin |
 | `timeEntries` | membros (relatórios) | criar: o dono, ou admin; alterar: o dono ou admin, e qualquer membro só para soltar tarefa, projeto ou tag | o dono ou admin |
 
@@ -137,7 +140,7 @@ Toda entrada passa pelo esquema zod de `@ott/shared`.
 | `runningTimer` | Cronômetro rodando em qualquer workspace, ou nulo |
 | `startDemo` | Só modo local: entra na conta de demonstração (cria na primeira vez) |
 
-### Workspace (`workspaces`, `members`, `clients`, `tags`, `holidays`)
+### Workspace (`workspaces`, `members`, `clients`, `tags`, `holidays`, `statuses`)
 | Operação | Descrição |
 |---|---|
 | `workspaces.create(name, { demo, color })` | Cria o workspace (quem cria vira admin) com o tema de cor escolhido (padrão nulo); com `demo`, preenche com os dados de exemplo |
@@ -147,13 +150,17 @@ Toda entrada passa pelo esquema zod de `@ott/shared`.
 | `members.createInvite` (admin), `listInvites` (admin), `revokeInvite` (admin) | Convites por link |
 | `members.getInvite`, `acceptInvite` | Lê o convite pelo link e entra no workspace (seção 7.2) |
 | `clients.*`, `tags.*` | Listar, criar, alterar, excluir |
+| `statuses.list` | Status customizados do workspace e de todos os projetos, na ordem de exibição (`compareStatuses`) |
+| `statuses.create` | Nome, categoria, ícone, cor e `projectId` (nulo: workspace, só admin; projeto: qualquer membro). Entra no fim da categoria |
+| `statuses.update` | Nome, ícone, cor e categoria (o escopo não muda). Mudar a categoria leva junto as tarefas que usam o status (concluir marca 100%, reabrir zera o progresso) e recalcula as tarefas-mãe, no mesmo lote |
+| `statuses.remove` | Exclui o status; as tarefas voltam ao status padrão da categoria |
 | `holidays.list`, `create` (admin), `importNational` (admin), `remove` (admin) | Feriados; importar devolve `{ created, holidays }` |
 
 ### Projetos, tarefas e apontamentos
 | Operação | Descrição |
 |---|---|
 | `projects.list`, `create`, `update` (inclui `pinned` e `archived`), `remove` (admin) | Projetos |
-| `tasks.list`, `create`, `update`, `remove` | Tarefas (o workspace inteiro numa leitura) |
+| `tasks.list`, `create`, `update`, `remove` | Tarefas (o workspace inteiro numa leitura). Status: `statusId` define a categoria (`status`) pelo status customizado; só `status` (ou `statusId` nulo) volta ao status padrão. Status de outro projeto dá `INVALID_STATUS`. Mudar a tarefa de projeto (e a árvore dela) devolve ao padrão quem usava status do projeto antigo |
 | `tasks.schedule` | `{ updates: [{ id, startDate, dueDate }] }` do Gantt; devolve `{ tasks }` com tudo que mudou, inclusive pela cascata |
 | `tasks.previewImport(workspaceId, text, { defaultProjectId })` | Lê o JSON de importação e devolve `TaskImportPreview` sem gravar nada (seção abaixo) |
 | `tasks.importJson(workspaceId, text, { defaultProjectId })` | Refaz a mesma análise e grava tudo num lote; devolve `{ created, tasks }` ou `IMPORT_INVALID` |
@@ -200,6 +207,9 @@ e precisa mudar junto com ele.
   objeto também é aceita. Limite de `IMPORT_MAX_TASKS` (500) tarefas contando subtarefas.
 - **Projeto**: subtarefa fica no projeto da mãe; tarefa de primeiro nível usa o
   `project` dela, senão o do arquivo, senão o `defaultProjectId` (o projeto da tela).
+- **Status**: `todo`, `in_progress`, `done` ou o nome de um status customizado que valha
+  para o projeto da tarefa (comparado sem diferenciar maiúsculas nem acentos); a linha da
+  revisão traz `statusId`. Nome desconhecido dá `UNKNOWN_STATUS`.
 - **Nomes**: projeto, membro (e-mail ou nome) e tag são comparados sem diferenciar
   maiúsculas nem acentos. Tag que não existe é criada no mesmo lote.
 - **Dependências**: cada item de `dependsOn` é a `ref` de outra tarefa do arquivo ou o
@@ -222,6 +232,7 @@ das tarefas.
 | `INVALID_JSON`, `EMPTY`, `TOO_MANY` | erro | Texto não é JSON, lista vazia, mais de 500 tarefas |
 | `SCHEMA_REQUIRED`, `SCHEMA_TYPE`, `SCHEMA_RANGE`, `SCHEMA_VALUE`, `SCHEMA_DATE`, `SCHEMA_OTHER` | erro | Campo fora do esquema (com `path`) |
 | `UNKNOWN_PROJECT`, `DUPLICATE_REF`, `INVALID_DATES` | erro | Projeto inexistente, `ref` repetida, início depois da entrega |
+| `UNKNOWN_STATUS` | erro | `status` que não é um padrão nem um status customizado que valha para o projeto da tarefa |
 | `UNKNOWN_DEPENDENCY`, `AMBIGUOUS_DEPENDENCY` | erro | Item de `dependsOn` não encontrado, ou nome de tarefa existente repetido no projeto |
 | `DEPENDENCY_SELF`, `DEPENDENCY_HIERARCHY`, `DEPENDENCY_CYCLE` | erro | Ligação recusada (a ligação invertida de outra do arquivo conta como ciclo) |
 | `UNKNOWN_ASSIGNEE` | aviso | Responsável que não é membro do workspace: ignorado |
@@ -287,6 +298,7 @@ são traduzidos em `packages/data/src/firebase/index.ts`.
 | `VALIDATION` | Entrada fora do esquema (`details` lista os campos) |
 | `EMAIL_TAKEN`, `NAME_TAKEN`, `DATE_TAKEN` | Duplicidade |
 | `INVALID_DATES`, `INVALID_RANGE`, `INVALID_PARENT`, `INVALID_ASSIGNEE`, `INVALID_TIMEZONE` | Regra de dado |
+| `INVALID_STATUS` | Status customizado de outro projeto na tarefa |
 | `DEPENDENCY_SELF`, `DEPENDENCY_HIERARCHY`, `DEPENDENCY_DUPLICATE`, `DEPENDENCY_CYCLE` | Dependência recusada |
 | `LAST_ADMIN`, `REMOVE_SELF`, `ALREADY_MEMBER`, `WRONG_PASSWORD` | Membros e senha |
 | `INVITE_NOT_FOUND` | Convite inexistente, revogado ou já usado |
@@ -320,7 +332,9 @@ são traduzidos em `packages/data/src/firebase/index.ts`.
 `packages/data/src/services/demo.ts` monta tudo em memória, relativo à data de hoje, e
 grava em poucos lotes (no Firestore, criar item por item levaria minutos): três pessoas
 fictícias (Bruno, Carla e Diego, membros sem conta) além de quem pediu, dois clientes,
-cinco tags, quatro projetos com tarefas hierárquicas e 18 dependências, os feriados
+cinco tags, três status customizados ("Em revisão" e "Bloqueada" no workspace,
+"Aguardando cliente" só no Site institucional, cada um usado por uma tarefa), quatro
+projetos com tarefas hierárquicas e 18 dependências, os feriados
 nacionais do ano atual e do seguinte, uma tarefa liberada para o fim de semana e duas
 semanas de apontamentos, com as horas já somadas em tarefas e projetos. As datas das
 tarefas-mãe saem do mesmo `applyScheduling` dos serviços.

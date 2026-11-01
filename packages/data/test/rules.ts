@@ -147,12 +147,39 @@ export function registerRulesSuite(): void {
       await updateDoc(ref, { projectId: null, updatedAt: new Date().toISOString() });
     });
 
+    it('status: membro comum só mexe nos de projeto e não promove um a status do workspace', async () => {
+      const wid = ana.workspaceId;
+      const project = await env.backend.projects.create(wid, { name: 'Site', color: '#0b83d9' });
+      const shared = await env.backend.statuses.create(wid, { name: 'Em revisão', category: 'in_progress', icon: 'eye', color: '#9e5bd9' });
+      const db = await raw(bruno);
+      const status = (id: string, projectId: string | null) => ({
+        id,
+        workspaceId: wid,
+        projectId,
+        name: id,
+        category: 'todo',
+        icon: 'clock',
+        color: '#bf7000',
+        position: 9,
+        createdAt: new Date().toISOString(),
+      });
+      await denied(setDoc(doc(db, `workspaces/${wid}/statuses/geral`), status('geral', null)));
+      await denied(updateDoc(doc(db, `workspaces/${wid}/statuses/${shared.id}`), { name: 'Revisão' }));
+      await denied(deleteDoc(doc(db, `workspaces/${wid}/statuses/${shared.id}`)));
+      await setDoc(doc(db, `workspaces/${wid}/statuses/local`), status('local', project.id));
+      await denied(updateDoc(doc(db, `workspaces/${wid}/statuses/local`), { projectId: null }));
+      await updateDoc(doc(db, `workspaces/${wid}/statuses/local`), { name: 'Aguardando' });
+      await denied(setDoc(doc(await raw(mallory), `workspaces/${wid}/statuses/intrusa`), status('intrusa', project.id)));
+      await deleteDoc(doc(db, `workspaces/${wid}/statuses/local`));
+    });
+
     it('só administrador exclui o workspace, e a exclusão não deixa nada para trás', async () => {
       const wid = ana.workspaceId;
       const project = await env.backend.projects.create(wid, { name: 'Site', color: '#0b83d9' });
       await env.backend.tasks.create(wid, { name: 'Layout', projectId: project.id });
       await env.backend.holidays.create(wid, { date: '2026-12-24', name: 'Véspera' });
       await env.backend.members.createInvite(wid, {});
+      await env.backend.statuses.create(wid, { name: 'Em revisão', category: 'in_progress', icon: 'eye', color: '#9e5bd9' });
       await denied(deleteDoc(doc(await raw(bruno), 'workspaces', wid)));
       await denied(deleteDoc(doc(await raw(mallory), 'workspaces', wid)));
 

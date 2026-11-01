@@ -3,6 +3,7 @@
 // rascunho de tarefa nova quanto à edição com salvamento imediato.
 import {
   PRIORITY_KEYS,
+  statusAppliesTo,
   type EstimateMode,
   type Id,
   type IsoDate,
@@ -24,7 +25,7 @@ import {
   User,
   X,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { useProjectMap } from '../../data/projects';
 import { useMembers, useTags } from '../../data/workspace';
 import { DateRangePicker } from '../../components/pickers/DateRangePicker';
@@ -33,14 +34,19 @@ import pickerStyles from '../../components/pickers/Picker.module.css';
 import { ProjectTaskPicker } from '../../components/pickers/ProjectTaskPicker';
 import { PriorityMenu, StatusMenu } from '../../components/pickers/StatusPriority';
 import { TagPicker } from '../../components/pickers/TagPicker';
-import { PriorityIcon, StatusIcon } from '../../components/pickers/TaskIcons';
+import { PriorityIcon } from '../../components/pickers/TaskIcons';
+import { StatusOptionIcon, statusInput, useStatusCatalog } from '../../components/pickers/TaskStatus';
 import { DurationInput } from '../../components/pickers/TimeInputs';
 import { Avatar } from '../../components/ui/Avatar';
 import { Switch } from '../../components/ui/Field';
 import { ProjectLabel } from '../../components/ui/ProjectLabel';
 import { useT } from '../../i18n';
 import { useFormat } from '../../lib/format';
+import { useIsAdmin } from '../../app/session';
 import styles from './TaskPanel.module.css';
+
+// Criar status pelo menu é raro: o diálogo vem num pedaço separado do build, baixado na hora.
+const StatusDialog = lazy(() => import('../statuses/StatusDialog').then((module) => ({ default: module.StatusDialog })));
 
 export interface TaskDraft {
   name: string;
@@ -56,6 +62,8 @@ export interface TaskDraft {
   tagIds: Id[];
   assigneeIds: Id[];
   status: TaskStatus;
+  /** Status customizado dentro da categoria `status`, ou nulo (status padrão). */
+  statusId: Id | null;
   billable: boolean;
   isMilestone: boolean;
   allowNonWorkingDays: boolean;
@@ -96,7 +104,13 @@ export function TaskFields({
   const projects = useProjectMap();
   const { data: members = [] } = useMembers();
   const { data: tags = [] } = useTags();
+  const catalog = useStatusCatalog();
+  const isAdmin = useIsAdmin();
+  const [creatingStatus, setCreatingStatus] = useState(false);
   const project = values.projectId ? projects.get(values.projectId) : undefined;
+  const status = catalog.forTask(values);
+  // Status novo do menu fica no projeto da tarefa; sem projeto, só administrador cria (do workspace).
+  const canCreateStatus = values.projectId !== null || isAdmin;
   const assignees = members.filter((member) => values.assigneeIds.includes(member.userId));
   const selectedTags = tags.filter((tag) => values.tagIds.includes(tag.id));
 
@@ -114,7 +128,11 @@ export function TaskFields({
         <ProjectTaskPicker
           projectsOnly
           value={{ projectId: values.projectId, taskId: null }}
-          onChange={({ projectId }) => onChange({ projectId })}
+          onChange={({ projectId }) => {
+            // Status de outro projeto não acompanha a tarefa: volta ao padrão da categoria.
+            const custom = values.statusId ? catalog.byId.get(values.statusId) : undefined;
+            onChange({ projectId, ...(custom && !statusAppliesTo(custom, projectId) ? { statusId: null } : {}) });
+          }}
           trigger={({ ref, getProps }) => (
             <button ref={ref} type="button" className={pickerStyles.trigger} disabled={values.parentId !== null} {...getProps()}>
               {project ? <ProjectLabel name={project.name} color={project.color} /> : <Empty />}
@@ -237,15 +255,26 @@ export function TaskFields({
 
       <Row icon={<CircleCheck />} label={t.tasks.status}>
         <StatusMenu
-          value={values.status}
-          onChange={(status) => onChange({ status })}
+          projectId={values.projectId}
+          value={status.key}
+          onChange={(option) => onChange(statusInput(option))}
+          onCreate={canCreateStatus ? () => setCreatingStatus(true) : undefined}
           trigger={({ ref, getProps }) => (
             <button ref={ref} type="button" className={pickerStyles.trigger} {...getProps()}>
-              <StatusIcon status={values.status} />
-              {t.tasks.statusLabels[values.status]}
+              <StatusOptionIcon option={status} />
+              {status.label}
             </button>
           )}
         />
+        {creatingStatus && (
+          <Suspense fallback={null}>
+            <StatusDialog
+              projectId={values.projectId}
+              onClose={() => setCreatingStatus(false)}
+              onSaved={(created) => onChange({ status: created.category, statusId: created.id })}
+            />
+          </Suspense>
+        )}
       </Row>
 
       <Row icon={<Diamond />} label={t.tasks.milestone}>

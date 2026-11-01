@@ -63,6 +63,7 @@ export const en: Messages = {
     INVALID_DATES: 'The start date must be before the due date.',
     INVALID_RANGE: 'The end time must be after the start time.',
     INVALID_PARENT: 'This task cannot be used as a parent task.',
+    INVALID_STATUS: 'This status does not apply to the task project.',
     INVALID_ASSIGNEE: 'The assignee must be a workspace member.',
     DEPENDENCY_SELF: 'A task cannot depend on itself.',
     DEPENDENCY_HIERARCHY: 'A parent task and its subtask cannot be linked.',
@@ -112,6 +113,62 @@ export const en: Messages = {
     '#990099': 'Magenta',
     '#566614': 'Olive',
     '#525266': 'Slate',
+  },
+  statuses: {
+    title: 'Task statuses',
+    workspaceHint:
+      'Todo, In progress and Done are the default statuses and always apply. Create others for your team flow, with a name, icon and color. Each status counts as one of the defaults: that decides completing, reopening, parent tasks and capacity. Statuses created here apply to every project.',
+    projectTitle: 'Project statuses',
+    projectHint:
+      'Statuses created here only show up on tasks of this project, next to the defaults and the workspace statuses. A task that leaves the project goes back to the default status of the same category.',
+    manage: 'Project statuses',
+    create: 'New status',
+    edit: 'Edit status',
+    name: 'Status name',
+    category: 'Counts as',
+    categoryHint: 'Done marks the task as delivered (100%). Todo and In progress keep it open.',
+    icon: 'Icon',
+    color: 'Icon color',
+    preview: 'Preview',
+    defaultTag: 'Default',
+    workspaceTag: 'Workspace',
+    projectTag: 'Project',
+    countsAs: (label: string) => `Counts as ${label}`,
+    created: 'Status created.',
+    deleteTitle: (name: string) => `Delete the status "${name}"?`,
+    deleteText: (fallback: string) => `Tasks with this status move to "${fallback}", the default status of the same category.`,
+    notInProject: 'This status does not apply to the project of this task.',
+    adminOnly: 'Only admins create and change workspace statuses.',
+    icons: {
+      dashed: 'Dashed',
+      half: 'Half full',
+      check: 'Done',
+      circle: 'Circle',
+      dot: 'Dot',
+      pause: 'Pause',
+      x: 'Canceled',
+      eye: 'Review',
+      search: 'Analysis',
+      clock: 'Clock',
+      hourglass: 'Waiting',
+      ban: 'Blocked',
+      alert: 'Alert',
+      flag: 'Flag',
+      bug: 'Bug',
+      code: 'Code',
+      test: 'Test',
+      pen: 'Writing',
+      message: 'Conversation',
+      send: 'Sent',
+      'thumbs-up': 'Approved',
+      users: 'Team',
+      truck: 'Delivery',
+      package: 'Package',
+      rocket: 'Launch',
+      star: 'Highlight',
+      archive: 'Archive',
+      lock: 'Locked',
+    },
   },
   pwa: {
     updateReady: 'A new version of Open Task Tracker is available.',
@@ -425,6 +482,8 @@ export const en: Messages = {
       TOO_MANY: (p: IssueParams) => `The file goes over the limit of ${p.max} tasks.`,
       DUPLICATE_REF: (p: IssueParams) => `The ref "${p.ref}" appears more than once.`,
       UNKNOWN_PROJECT: (p: IssueParams) => `The project "${p.name}" does not exist in this workspace.`,
+      UNKNOWN_STATUS: (p: IssueParams) =>
+        `The status "${p.name}" does not exist for this task. Use todo, in_progress, done or the name of a status of the workspace or of the task project.`,
       SUBTASK_PROJECT_IGNORED: (p: IssueParams) => `A subtask stays in its parent project: "${p.name}" was ignored.`,
       UNKNOWN_ASSIGNEE: (p: IssueParams) => `"${p.name}" is not a workspace member and was ignored.`,
       INVALID_DATES: (p: IssueParams) => `The start (${p.start}) is after the due date (${p.due}).`,
@@ -484,6 +543,10 @@ export const en: Messages = {
 - ${c.currentProject ? `Tasks without "project" go to the "${c.currentProject}" project.` : 'Tasks without "project" stay without a project.'}
 - Members (use the email or the name in "assignees"): ${list(c.members, 'none')}.
 - Existing tags: ${list(c.tags, 'none')}. Tags that do not exist are created during the import.
+- Custom statuses (use the name in "status"; each one counts as one of the default statuses): ${list(
+      c.statuses.map((s) => `${s.name} (counts as ${s.category}${s.project ? `, only in the project "${s.project}"` : ', applies to every project'})`),
+      'none',
+    )}.
 - Tasks that already exist in the project and may appear in "dependsOn" by exact name: ${list(c.existingTasks, 'none')}.
 
 # File format
@@ -492,7 +555,7 @@ An object with "version": 1, "project" (optional, name of an existing project, a
 - "name": task name, up to 200 characters. The only required field.
 - "description": short description. "notes": long notes.
 - "project": name of an existing project. Only on top level tasks: subtasks stay in their parent project.
-- "status": "todo" (default), "in_progress" or "done".
+- "status": "todo" (default), "in_progress", "done" or the name of a custom status listed above that applies to the task project.
 - "priority": "none", "low", "medium", "high" or "urgent" (or a number from 0 to 4).
 - "startDate" and "dueDate": dates as YYYY-MM-DD. A start alone makes a one day task.
 - "durationDays": duration in working days counted from "startDate", instead of "dueDate".

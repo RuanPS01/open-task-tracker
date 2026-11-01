@@ -103,6 +103,7 @@ const WORKSPACE_COLLECTIONS = [
   paths.tasks,
   paths.projects,
   paths.tags,
+  paths.statuses,
   paths.clients,
   paths.holidays,
   paths.invites,

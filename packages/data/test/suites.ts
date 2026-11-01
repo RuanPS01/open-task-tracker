@@ -593,6 +593,126 @@ export function registerSuites(makeEnv: () => Promise<TestEnv>): void {
     });
   });
 
+  describe('status customizados', () => {
+    const review = { name: 'Em revisão', category: 'in_progress', icon: 'eye', color: '#9e5bd9' } as const;
+
+    it('administrador cria status do workspace; membro comum só no projeto', async () => {
+      const site = await api().projects.create(wid(), { name: 'Site', color: '#0b83d9' });
+      const app = await api().projects.create(wid(), { name: 'App', color: '#d94182' });
+      const created = await api().statuses.create(wid(), { ...review, color: '#9E5BD9' });
+      expect(created).toMatchObject({ projectId: null, category: 'in_progress', icon: 'eye', color: '#9e5bd9', position: 1 });
+      // Nome repetido sem diferenciar maiúsculas, acentos e espaços nas pontas.
+      await expectCode(api().statuses.create(wid(), { ...review, name: 'em revisao ' }), 'NAME_TAKEN');
+      await expectCode(api().statuses.create(wid(), { ...review, name: 'EM REVISÃO' }), 'NAME_TAKEN');
+      await expectCode(api().statuses.create(wid(), { ...review, name: '' }), 'VALIDATION');
+      await expectCode(api().statuses.create(wid(), { ...review, name: 'Em revisão', projectId: site.id }), 'NAME_TAKEN');
+      await expectCode(api().statuses.create(wid(), { ...review, name: 'Outro', icon: 'unicornio' as 'eye' }), 'VALIDATION');
+      await expectCode(api().statuses.create(wid(), { ...review, name: 'Outro', color: '#123456' }), 'VALIDATION');
+      await expectCode(api().statuses.create(wid(), { ...review, name: 'Outro', projectId: 'inexistente' }), 'NOT_FOUND');
+
+      const bruno = await join('Bruno');
+      await env.loginAs(bruno);
+      await expectCode(api().statuses.create(wid(), { ...review, name: 'Bloqueada' }), 'FORBIDDEN');
+      await expectCode(api().statuses.update(wid(), created.id, { name: 'Revisão' }), 'FORBIDDEN');
+      await expectCode(api().statuses.remove(wid(), created.id), 'FORBIDDEN');
+      const waiting = await api().statuses.create(wid(), { name: 'Aguardando cliente', category: 'todo', icon: 'hourglass', color: '#bf7000', projectId: site.id });
+      // O mesmo nome pode existir em outro projeto: os dois nunca aparecem juntos.
+      await api().statuses.create(wid(), { name: 'Aguardando cliente', category: 'todo', icon: 'clock', color: '#e36a00', projectId: app.id });
+      expect((await api().statuses.update(wid(), waiting.id, { icon: 'clock' })).icon).toBe('clock');
+      // Ordem: categoria (a fazer antes de em andamento), workspace antes de projeto.
+      expect((await api().statuses.list(wid())).map((status) => [status.name, status.projectId])).toEqual([
+        ['Aguardando cliente', site.id],
+        ['Aguardando cliente', app.id],
+        ['Em revisão', null],
+      ]);
+    });
+
+    it('a categoria vem do status, ele vale só no projeto e a tarefa volta ao padrão ao mudar de projeto', async () => {
+      const site = await api().projects.create(wid(), { name: 'Site', color: '#0b83d9' });
+      const app = await api().projects.create(wid(), { name: 'App', color: '#d94182' });
+      const inReview = await api().statuses.create(wid(), review);
+      const delivered = await api().statuses.create(wid(), { name: 'Entregue', category: 'done', icon: 'check', color: '#2da608', projectId: site.id });
+
+      const task = await api().tasks.create(wid(), { name: 'Layout', projectId: site.id, statusId: delivered.id });
+      expect(task).toMatchObject({ status: 'done', statusId: delivered.id, progress: 100 });
+      expect(task.completedAt).not.toBeNull();
+      await expectCode(api().tasks.create(wid(), { name: 'Fora', projectId: app.id, statusId: delivered.id }), 'INVALID_STATUS');
+      await expectCode(api().tasks.create(wid(), { name: 'Fora', statusId: 'inexistente' }), 'NOT_FOUND');
+
+      // Reabrir por um status de em andamento zera o progresso, como no padrão.
+      let updated = await api().tasks.update(wid(), task.id, { statusId: inReview.id });
+      expect(updated).toMatchObject({ status: 'in_progress', statusId: inReview.id, progress: 0, completedAt: null });
+      // Só a categoria volta ao status padrão dela.
+      updated = await api().tasks.update(wid(), task.id, { status: 'in_progress' });
+      expect(updated).toMatchObject({ status: 'in_progress', statusId: null });
+
+      // Status do workspace acompanha a tarefa; o do projeto, não.
+      await api().tasks.update(wid(), task.id, { statusId: delivered.id });
+      updated = await api().tasks.update(wid(), task.id, { projectId: app.id });
+      expect(updated).toMatchObject({ projectId: app.id, status: 'done', statusId: null });
+      updated = await api().tasks.update(wid(), task.id, { statusId: inReview.id });
+      updated = await api().tasks.update(wid(), task.id, { projectId: null });
+      expect(updated).toMatchObject({ status: 'in_progress', statusId: inReview.id });
+      await expectCode(api().tasks.update(wid(), task.id, { statusId: delivered.id }), 'INVALID_STATUS');
+    });
+
+    it('mudar a categoria leva as tarefas junto; excluir volta ao padrão da categoria', async () => {
+      const waiting = await api().statuses.create(wid(), { name: 'Aguardando', category: 'todo', icon: 'hourglass', color: '#bf7000' });
+      const parent = await api().tasks.create(wid(), { name: 'Fase' });
+      const first = await api().tasks.create(wid(), { name: 'A', parentId: parent.id, statusId: waiting.id, startDate: '2026-10-12' });
+      const second = await api().tasks.create(wid(), { name: 'B', parentId: parent.id, statusId: waiting.id, startDate: '2026-10-13' });
+      const third = await api().tasks.create(wid(), { name: 'C', statusId: waiting.id });
+
+      expect((await api().statuses.update(wid(), waiting.id, { category: 'done' })).category).toBe('done');
+      let tasks = await api().tasks.list(wid());
+      const get = (id: string) => tasks.find((task) => task.id === id)!;
+      expect(get(first.id)).toMatchObject({ status: 'done', statusId: waiting.id, progress: 100 });
+      expect(get(second.id)).toMatchObject({ status: 'done', statusId: waiting.id });
+      // A mãe é calculada: todas as filhas concluídas, concluída.
+      expect(get(parent.id)).toMatchObject({ status: 'done', statusId: null });
+
+      await api().statuses.remove(wid(), waiting.id);
+      tasks = await api().tasks.list(wid());
+      expect(get(third.id)).toMatchObject({ status: 'done', statusId: null });
+      expect(await api().statuses.list(wid())).toEqual([]);
+    });
+
+    it('excluir o projeto apaga os status dele', async () => {
+      const site = await api().projects.create(wid(), { name: 'Site', color: '#0b83d9' });
+      await api().statuses.create(wid(), { name: 'Aguardando cliente', category: 'todo', icon: 'hourglass', color: '#bf7000', projectId: site.id });
+      await api().statuses.create(wid(), review);
+      await api().projects.remove(wid(), site.id);
+      expect((await api().statuses.list(wid())).map((status) => status.name)).toEqual(['Em revisão']);
+    });
+
+    it('importação aceita o nome do status customizado do projeto', async () => {
+      const site = await api().projects.create(wid(), { name: 'Site', color: '#0b83d9' });
+      const inReview = await api().statuses.create(wid(), review);
+      const waiting = await api().statuses.create(wid(), { name: 'Aguardando cliente', category: 'todo', icon: 'hourglass', color: '#bf7000', projectId: site.id });
+      const preview = await api().tasks.previewImport(
+        wid(),
+        JSON.stringify({
+          tasks: [
+            { name: 'A', project: 'Site', status: 'aguardando CLIENTE' },
+            { name: 'B', status: 'em revisao' },
+            { name: 'C', status: 'done' },
+            { name: 'D', status: 'Aguardando cliente' },
+          ],
+        }),
+      );
+      expect(preview.rows.map((row) => [row.name, row.status, row.statusId])).toEqual([
+        ['A', 'todo', waiting.id],
+        ['B', 'in_progress', inReview.id],
+        ['C', 'done', null],
+        ['D', 'todo', null],
+      ]);
+      // D não tem projeto: o status do Site não vale para ela.
+      expect(preview.issues).toEqual([
+        expect.objectContaining({ level: 'error', code: 'UNKNOWN_STATUS', path: 'tasks[3].status', params: { name: 'Aguardando cliente' } }),
+      ]);
+    });
+  });
+
   describe('importação de tarefas por JSON', () => {
     const json = (value: unknown) => JSON.stringify(value);
 

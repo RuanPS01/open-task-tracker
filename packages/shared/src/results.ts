@@ -106,6 +106,8 @@ export interface TaskImportRow {
   estimateMode: EstimateMode;
   priority: Priority;
   status: TaskStatus;
+  /** Status customizado escolhido pelo nome no arquivo, ou nulo (status padrão). */
+  statusId: Id | null;
   progress: number;
   isMilestone: boolean;
   allowNonWorkingDays: boolean;

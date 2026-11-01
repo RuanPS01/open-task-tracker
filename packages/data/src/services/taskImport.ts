@@ -8,6 +8,8 @@ import {
   calendarFor,
   IMPORT_MAX_TASKS,
   PRIORITY_KEYS,
+  statusesFor,
+  TASK_STATUSES,
   taskImportFileSchema,
   validateDependency,
   type DependencyType,
@@ -19,6 +21,7 @@ import {
   type TaskImportPreview,
   type TaskImportResult,
   type TaskImportRow,
+  type TaskStatus,
 } from '@ott/shared';
 import { AppError } from '../errors';
 import { paths, type DependencyDoc, type MemberDoc, type ProjectDoc, type TagDoc, type TaskDoc } from '../store/schema';
@@ -28,6 +31,7 @@ import {
   applyScheduling,
   cloneTasks,
   listDependencyDocs,
+  listStatusDocs,
   listTaskDocs,
   loadCalendar,
   nextPosition,
@@ -115,13 +119,14 @@ async function buildPlan(ctx: Ctx, workspaceId: Id, text: string, options: TaskI
   if (!parsed.success) return emptyPreview(schemaIssues(parsed.error));
   const file = parsed.data;
 
-  const [projects, members, tags, existingTasks, existingDeps, calendar] = await Promise.all([
+  const [projects, members, tags, existingTasks, existingDeps, calendar, statuses] = await Promise.all([
     ctx.store.list<ProjectDoc>(paths.projects(workspaceId)),
     ctx.store.list<MemberDoc>(paths.members(workspaceId)),
     ctx.store.list<TagDoc>(paths.tags(workspaceId)),
     listTaskDocs(ctx, workspaceId),
     listDependencyDocs(ctx, workspaceId),
     loadCalendar(ctx, workspace),
+    listStatusDocs(ctx, workspaceId),
   ]);
   const defaultProjectId = options.defaultProjectId ?? null;
   if (defaultProjectId && !projects.some((project) => project.id === defaultProjectId)) {
@@ -226,7 +231,22 @@ async function buildPlan(ctx: Ctx, workspaceId: Id, text: string, options: TaskI
 
     const priority: Priority =
       typeof node.priority === 'string' ? (PRIORITY_BY_NAME.get(node.priority) ?? 0) : (node.priority ?? 0);
-    const status = node.status ?? 'todo';
+    // Status: a chave de um padrão ou o nome de um status customizado do projeto da tarefa.
+    let status: TaskStatus = 'todo';
+    let statusId: Id | null = null;
+    if (node.status) {
+      if ((TASK_STATUSES as readonly string[]).includes(node.status)) {
+        status = node.status as TaskStatus;
+      } else {
+        const custom = statusesFor(statuses, projectId).find((item) => nameKey(item.name) === nameKey(node.status!));
+        if (custom) {
+          status = custom.category;
+          statusId = custom.id;
+        } else {
+          add('error', 'UNKNOWN_STATUS', item, { name: node.status }, `${item.path}.status`);
+        }
+      }
+    }
     const doc: TaskDoc = {
       id: ctx.store.newId(),
       workspaceId,
@@ -236,6 +256,7 @@ async function buildPlan(ctx: Ctx, workspaceId: Id, text: string, options: TaskI
       description: node.description ?? '',
       notes: node.notes ?? '',
       status,
+      statusId,
       priority,
       startDate,
       dueDate,
@@ -328,6 +349,7 @@ async function buildPlan(ctx: Ctx, workspaceId: Id, text: string, options: TaskI
       estimateMode: doc.estimateMode,
       priority: doc.priority,
       status: doc.status,
+      statusId: doc.statusId,
       progress: doc.progress,
       isMilestone: doc.isMilestone,
       allowNonWorkingDays: doc.allowNonWorkingDays,

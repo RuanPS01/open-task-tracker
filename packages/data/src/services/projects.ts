@@ -14,6 +14,7 @@ import {
   type ClientDoc,
   type DependencyDoc,
   type ProjectDoc,
+  type StatusDoc,
   type TaskDoc,
   type TimeEntryDoc,
   type UserDoc,
@@ -116,19 +117,24 @@ export async function updateProject(ctx: Ctx, workspaceId: Id, id: Id, raw: Upda
   return getProject(ctx, workspaceId, uid, id);
 }
 
-/** Excluir apaga as tarefas do projeto e as dependências delas; os apontamentos ficam sem projeto. */
+/**
+ * Excluir apaga as tarefas do projeto, as dependências delas e os status do projeto; os
+ * apontamentos ficam sem projeto.
+ */
 export async function removeProject(ctx: Ctx, workspaceId: Id, id: Id): Promise<void> {
   await loadAdminWorkspace(ctx, workspaceId);
   if (!(await ctx.store.get<ProjectDoc>(paths.projects(workspaceId), id))) throw notFound('Projeto');
-  const [tasks, dependencies, entries] = await Promise.all([
+  const [tasks, dependencies, entries, statuses] = await Promise.all([
     ctx.store.list<TaskDoc>(paths.tasks(workspaceId), [where('projectId', '==', id)]),
     ctx.store.list<DependencyDoc>(paths.dependencies(workspaceId)),
     ctx.store.list<TimeEntryDoc>(paths.timeEntries(workspaceId), [where('projectId', '==', id)]),
+    ctx.store.list<StatusDoc>(paths.statuses(workspaceId), [where('projectId', '==', id)]),
   ]);
   const removed = new Set(tasks.map((task) => task.id));
   const now = nowIso(ctx);
   const batch = new Batch().delete(paths.projects(workspaceId), id);
   for (const task of tasks) batch.delete(paths.tasks(workspaceId), task.id);
+  for (const status of statuses) batch.delete(paths.statuses(workspaceId), status.id);
   for (const dep of dependencies) {
     if (removed.has(dep.predecessorId) || removed.has(dep.successorId)) batch.delete(paths.dependencies(workspaceId), dep.id);
   }

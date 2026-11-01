@@ -4,8 +4,10 @@
 import {
   addDays,
   addWorkdays,
+  compareStatuses,
   nextWorkday,
   type CalendarInput,
+  type CustomStatus,
   type Holiday,
   type Id,
   type IsoDate,
@@ -37,6 +39,7 @@ export interface PromptSource {
   currentProjectId: Id | null;
   members: readonly Member[];
   tags: readonly Tag[];
+  statuses: readonly CustomStatus[];
   tasks: readonly Task[];
   example: string;
 }
@@ -61,6 +64,12 @@ export function promptContext(source: PromptSource): ImportPromptContext {
     currentProject: current?.name ?? null,
     members: source.members.filter((member) => member.active).map((member) => `${member.name} <${member.email}>`),
     tags: source.tags.map((tag) => tag.name),
+    // Status de projeto arquivado não ajuda a IA: só os do workspace e dos projetos ativos.
+    statuses: [...source.statuses]
+      .sort(compareStatuses)
+      .map((status) => ({ status, project: source.projects.find((project) => project.id === status.projectId) }))
+      .filter(({ status, project }) => status.projectId === null || (project && !project.archived))
+      .map(({ status, project }) => ({ name: status.name, category: status.category, project: project?.name ?? null })),
     existingTasks: existing.slice(0, MAX_PROMPT_TASKS),
     example: source.example,
   };

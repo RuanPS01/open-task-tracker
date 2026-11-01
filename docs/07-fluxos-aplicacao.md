@@ -162,14 +162,16 @@ meia-noite.
   "Criar tarefa" (responsável padrão: quem está criando). Tarefa existente grava cada
   alteração na hora; nome, descrição e notas gravam ao sair do campo.
 - Subtarefa herda o projeto da mãe. Mudar o projeto da mãe leva a árvore junto.
-- Concluir marca progresso 100% e `completedAt`; reabrir volta o progresso a 0.
+- Concluir marca progresso 100% e `completedAt`; reabrir volta o progresso a 0. Vale
+  igual para status customizado: o que conta é a categoria dele (seção 7.12).
 - Datas: só início vira tarefa de um dia; marco tem início igual ao fim; início depois da
   entrega é recusado.
 - Status, datas e progresso da tarefa-mãe vêm das filhas (seção 7.7).
 - A opção **"Fins de semana e feriados"** libera a tarefa para dias não úteis (seção 7.8).
 - Na Lista, o agrupamento por data usa a entrega (ou o início): Atrasadas, Hoje, Amanhã,
-  Esta semana, Próxima semana, Mais adiante, Sem data. No Quadro, arrastar o cartão para
-  outra coluna muda o status.
+  Esta semana, Próxima semana, Mais adiante, Sem data. No Quadro há uma coluna por status
+  (os padrão e os customizados que valem ali) e arrastar o cartão para outra coluna muda
+  o status; coluna de status de outro projeto recusa o cartão com um aviso.
 
 ### Importar tarefas por JSON
 
@@ -194,7 +196,8 @@ sequenceDiagram
 
 - O **prompt para IA** leva hoje e o dia da semana, os dias úteis, os feriados do
   próximo ano, se o agendamento automático está ligado, os projetos ativos, o projeto
-  padrão, os membros ativos (nome e e-mail), as tags e os nomes das tarefas que já
+  padrão, os membros ativos (nome e e-mail), as tags, os status customizados (com a
+  categoria e o projeto de cada um) e os nomes das tarefas que já
   existem no projeto (até 150), além do formato completo e de um exemplo com datas a
   partir do próximo dia útil. Pede que a IA pergunte o que faltar e responda só com o JSON.
 - **Revisar** com texto que nem chega a virar tarefas (JSON quebrado, campo fora do
@@ -245,7 +248,8 @@ cópia em memória de todas as tarefas do workspace:
 1. Cascata de dependências, se o agendamento automático estiver ligado.
 2. Para cada mãe: início = menor início das filhas, fim = maior fim, progresso = média
    ponderada pela duração, status = concluída se todas concluídas, em andamento se alguma
-   começou, a fazer caso contrário.
+   começou, a fazer caso contrário (pela categoria das filhas). Quando a categoria da mãe
+   muda, ela volta ao status padrão (`statusId` nulo).
 
 ## 7.8 Fins de semana e feriados
 
@@ -334,4 +338,33 @@ sequenceDiagram
 - Quem excluiu cai no próximo workspace dele (ou na tela "Novo workspace"). Os outros
   membros, na próxima leitura da sessão, caem no primeiro workspace que ainda têm; um
   cronômetro que rodava no workspace excluído deixa de aparecer e iniciar outro não falha.
+
+## 7.12 Status customizados
+
+Além dos três status padrão (A fazer, Em andamento, Concluída), a equipe cria os seus, com
+nome, ícone e cor do ícone (`services/statuses.ts`; regras de escopo e ordem em
+`packages/shared/src/statuses.ts`).
+
+| Onde se cria | Vale para | Quem |
+|---|---|---|
+| Configurações do workspace, seção "Status das tarefas" | Todas as tarefas do workspace | Administrador |
+| Página do projeto, botão "Status do projeto" no cabeçalho | Só as tarefas daquele projeto | Qualquer membro |
+| Menu de status da tarefa, "Novo status" | O projeto da tarefa (sem projeto: o workspace, só administrador) | Como acima |
+
+- **Categoria ("Conta como").** Todo status customizado conta como um dos padrão. É a
+  categoria que as regras usam: concluir (100% e `completedAt`), reabrir (progresso a 0),
+  resumo da tarefa-mãe, "Mostrar concluídas", tarefas abertas na Linha do tempo e na busca,
+  contagem de concluídas do projeto. A tarefa guarda a categoria em `status` e o status
+  customizado em `statusId`.
+- **Ordem.** Nos menus, no Quadro e no agrupamento por status: cada padrão seguido dos
+  customizados da mesma categoria, os do workspace antes dos do projeto.
+- **Mudar a categoria** de um status leva as tarefas que o usam junto (concluir ou reabrir)
+  e recalcula as mães. **Excluir** um status devolve as tarefas ao padrão da categoria.
+- **Trocar a tarefa de projeto** devolve ao padrão quem usava status do projeto antigo (a
+  árvore de subtarefas vai junto). Excluir o projeto exclui os status dele.
+- **Na tela de Tarefas** (todas as tarefas) o Quadro mostra os status do workspace e os de
+  projeto que alguma tarefa da lista usa; o filtro de status lista todos. Na aba Tarefas do
+  projeto, só os que valem no projeto.
+- **Importação por JSON:** `status` aceita o nome de um status customizado que valha para
+  o projeto da tarefa, e o prompt para IA lista os status com a categoria de cada um.
 
