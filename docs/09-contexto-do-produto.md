@@ -5,7 +5,7 @@
 O **Open Task Tracker (OTT)** é um sistema de tarefas com planejamento de projeto em
 gráfico de Gantt e rastreamento de tempo, feito por engenharia reversa do **Toggl Track**
 (com as funções de planejamento que vieram do Toggl Plan e do Toggl Focus). É de código
-aberto, publicado como site estático (por exemplo no GitHub Pages), guarda os dados no
+aberto, publicado como site estático (no GitHub Pages e no Firebase Hosting), guarda os dados no
 Firebase ou, sem ele, no próprio navegador (lowdb), e funciona em português do Brasil e
 inglês.
 
@@ -99,7 +99,7 @@ que funciona sem nenhum serviço externo; tema de cor por workspace.
    pode ser desligada.
 4. **Fiel ao Toggl onde o Toggl acerta.** Mesma organização de telas, nomes e atalhos
    para quem já conhece.
-5. **Publicação simples.** Site estático no GitHub Pages com Firebase; sem Firebase,
+5. **Publicação simples.** Site estático no GitHub Pages e no Firebase Hosting; sem Firebase,
    continua funcionando no navegador.
 
 ## 9.6 Roteiro
@@ -116,6 +116,7 @@ afetados.
 | Relatórios e CSV | `[implementado]` |
 | Feriados e tarefas em fins de semana e feriados | `[implementado]` |
 | Firebase (Auth e Firestore) com queda para o modo local (lowdb) e publicação no GitHub Pages | `[implementado]` |
+| Publicação também no Firebase Hosting pelo mesmo workflow | `[implementado]` |
 | Importação de tarefas por JSON (Gantt, aba Tarefas do projeto e tela de Tarefas), com prompt para IA e revisão | `[implementado]` |
 | Login com Google (modo Firebase) | `[implementado]` |
 | Plataforma inteira utilizável no celular (barra inferior, gaveta, telas adaptadas) | `[implementado]` |

@@ -61,7 +61,7 @@ esta tabela.
 
 | Ferramenta | Versão | Uso |
 |---|---|---|
-| firebase-tools (via `npx`) | 15.31.0 | Emuladores nos testes e publicação de regras e índices no deploy |
+| firebase-tools (via `npx`) | 15.31.0 | Emuladores nos testes e publicação de regras, índices e do Firebase Hosting no deploy |
 | actions/checkout, actions/setup-node | v5 | Workflows do GitHub Actions |
 | actions/setup-java | v5 | Java 21 para os emuladores no CI |
 | actions/configure-pages, upload-pages-artifact, deploy-pages | v5, v4, v4 | Publicação no GitHub Pages |
@@ -107,7 +107,7 @@ dos secrets (seção 2.6).
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | vazio | Opcional |
 | `VITE_DATA_MODE` | `auto` | `auto`: Firebase se configurado e respondendo, senão local. `firebase`: só Firebase. `local`: sempre local |
 | `VITE_FIREBASE_EMULATOR_HOST` | vazio | Em desenvolvimento, aponta para os emuladores (Auth na 9099, Firestore na 8080) |
-| `VITE_BASE_PATH` | `/` | Subcaminho de publicação; o workflow do Pages preenche sozinho |
+| `VITE_BASE_PATH` | `/` | Subcaminho de publicação; o workflow preenche sozinho (o subcaminho do Pages, ou `/` no build do Firebase Hosting) |
 
 As quatro primeiras são obrigatórias para o modo Firebase; sem qualquer uma delas o app
 usa o modo local. Essa configuração **não é segredo** (vai dentro do JavaScript
@@ -131,12 +131,26 @@ publicado); quem protege os dados é `firestore.rules`.
   `apps/web/pwa/service-worker.js` (JavaScript puro, com as variáveis do service worker
   no ESLint). Detalhes em [01-arquitetura.md](01-arquitetura.md), seção 1.8.
 
-## 2.6 Publicação no GitHub Pages
+## 2.6 Publicação no GitHub Pages e no Firebase Hosting
 
 O workflow `.github/workflows/deploy.yml` roda a cada push na `main` (e pelo botão "Run
-workflow"). Ele faz `npm run check`, gera o build com o subcaminho do Pages e a
-configuração do Firebase, cria o `404.html` para as rotas do React Router, publica no
-Pages e, se houver conta de serviço, publica as regras e os índices do Firestore.
+workflow") e publica o mesmo site em dois lugares:
+
+| Trabalho | O que faz | Precisa de |
+|---|---|---|
+| Verificação e build | `npm run check` e o build com o subcaminho do Pages (`/nome-do-repositorio/`) e a configuração do Firebase; cria o `404.html` para as rotas do React Router | nada (sem os secrets do Firebase, o site sai no modo local) |
+| Publicar | Publica esse build no GitHub Pages | Pages ligado (passo 4) |
+| Regras e índices do Firestore | `firebase deploy --only firestore:rules,firestore:indexes` | `FIREBASE_SERVICE_ACCOUNT` |
+| Firebase Hosting | Depois das regras (a versão nova do app pode depender de uma regra nova), gera outro build na raiz do domínio (`VITE_BASE_PATH=/`) e roda `firebase deploy --only hosting` | `FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID` e o Hosting iniciado no console (passo 5) |
+
+O Firebase Hosting serve o site em `https://projeto.web.app` e
+`https://projeto.firebaseapp.com`. A configuração fica em `firebase.json`, seção
+`hosting`: publica `apps/web/dist`, devolve o `index.html` para qualquer endereço que não
+seja arquivo (rotas do React Router, sem precisar de `404.html`), manda `Cache-Control:
+no-cache` em tudo (o `index.html` e o `sw.js` novos chegam a cada deploy) e cache de um
+ano em `/assets/**` (nomes com hash, que mudam a cada versão). Para conferir antes de
+publicar: `VITE_BASE_PATH=/ npm run build` e
+`npx firebase-tools@15.31.0 emulators:start --only hosting --project demo-ott` (porta 5000).
 
 Passo a passo para ligar:
 
@@ -159,13 +173,21 @@ Passo a passo para ligar:
    | `FIREBASE_APP_ID` | sim | `appId` |
    | `FIREBASE_STORAGE_BUCKET` | não | `storageBucket` |
    | `FIREBASE_MESSAGING_SENDER_ID` | não | `messagingSenderId` |
-   | `FIREBASE_SERVICE_ACCOUNT` | não | JSON de uma conta de serviço com os papéis Firebase Rules Admin e Cloud Datastore Index Admin, para o workflow publicar `firestore.rules` e `firestore.indexes.json` |
+   | `FIREBASE_SERVICE_ACCOUNT` | não | JSON de uma conta de serviço (Google Cloud, IAM, Contas de serviço, Chaves) com os papéis Firebase Rules Admin e Cloud Datastore Index Admin, para o workflow publicar `firestore.rules` e `firestore.indexes.json`, e Firebase Hosting Admin, para publicar no Firebase Hosting. O papel Firebase Admin cobre os três |
 
-   Variável opcional (aba Variables): `DATA_MODE` com `auto`, `firebase` ou `local`.
+   Variáveis opcionais (aba Variables): `DATA_MODE` com `auto`, `firebase` ou `local`;
+   `FIREBASE_HOSTING` com `false` para não publicar no Firebase Hosting (por exemplo,
+   quando a conta de serviço só tem os papéis das regras).
 4. **Pages.** Em Settings, Pages, escolha **Source: GitHub Actions**.
-5. **Publicar.** Faça push na `main` ou rode o workflow manualmente. O endereço aparece
-   no resumo da execução (`https://seu-usuario.github.io/nome-do-repositorio/`).
-6. **Sem conta de serviço**, publique as regras e o índice uma vez à mão:
+5. **Firebase Hosting.** No console do Firebase, abra **Hosting** e clique em **Começar**
+   uma vez (cria o site padrão do projeto; os passos de instalação da CLI que o console
+   mostra podem ser pulados, o workflow faz isso). Os domínios `projeto.web.app` e
+   `projeto.firebaseapp.com` já vêm autorizados no Authentication.
+6. **Publicar.** Faça push na `main` ou rode o workflow manualmente. Os endereços aparecem
+   no resumo da execução (`https://seu-usuario.github.io/nome-do-repositorio/` e
+   `https://projeto.web.app`).
+7. **Sem conta de serviço**, o site sai só no Pages; publique as regras e o índice uma vez
+   à mão:
    `npx firebase-tools@15.31.0 deploy --only firestore:rules,firestore:indexes --project SEU_PROJETO`
    (depois de `npx firebase-tools@15.31.0 login`), ou cole `firestore.rules` no console
    e crie o índice composto de `timeEntries` (`userId` crescente, `start` crescente).
@@ -180,10 +202,12 @@ Sem os secrets do Firebase, o site é publicado assim mesmo e funciona no modo l
 | Erro ao entrar ou criar conta: este jeito de entrar não está ativado | Authentication nunca iniciado ou provedor (E-mail/senha ou Google) desligado | Authentication, Começar, Método de login |
 | "Continuar com Google" diz que o endereço não está autorizado | Domínio do site fora da lista de domínios autorizados | Authentication, Configurações, Domínios autorizados (passo 2) |
 | Aviso "Sem conexão com o Firebase" | Rede, bloqueio do navegador ou configuração errada nos secrets | Confira os secrets `FIREBASE_*` e o console do navegador; rode o workflow de novo depois de corrigir |
-| Tudo funciona sem login pela API, ou o console mostra regras com `request.time <` | Banco criado em modo de teste e `firestore.rules` nunca publicado | Publique as regras (passo 6 ou secret `FIREBASE_SERVICE_ACCOUNT`). As regras de teste deixam o banco aberto a qualquer pessoa e expiram em 30 dias, quando tudo passa a ser recusado |
+| Tudo funciona sem login pela API, ou o console mostra regras com `request.time <` | Banco criado em modo de teste e `firestore.rules` nunca publicado | Publique as regras (passo 7 ou secret `FIREBASE_SERVICE_ACCOUNT`). As regras de teste deixam o banco aberto a qualquer pessoa e expiram em 30 dias, quando tudo passa a ser recusado |
+| Trabalho "Firebase Hosting" falha com permissão negada (403) | Conta de serviço sem o papel Firebase Hosting Admin | Acrescente o papel no IAM do Google Cloud, ou desligue com a variável `FIREBASE_HOSTING=false` |
+| Trabalho "Firebase Hosting" falha dizendo que o site não existe (404) | Hosting nunca iniciado no projeto | Console do Firebase, Hosting, Começar (passo 5) e rode o workflow de novo |
 
 O resumo da execução do workflow mostra um aviso quando falta `FIREBASE_SERVICE_ACCOUNT`
-(as regras não foram publicadas por ele).
+(as regras não foram publicadas e o site não foi para o Firebase Hosting).
 
 ### Login com Google e PWA
 
@@ -191,9 +215,13 @@ O resumo da execução do workflow mostra um aviso quando falta `FIREBASE_SERVIC
   bloqueado, alguns navegadores de celular), segue por redirecionamento. No iPhone com o
   app instalado na tela de início, o Safari pode não devolver o login do redirecionamento
   porque o `authDomain` (`projeto.firebaseapp.com`) é outro domínio; nesse caso entre pelo
-  navegador ou com e-mail e senha.
-- O PWA precisa de HTTPS (o GitHub Pages já serve assim). O navegador baixa a versão nova
-  do `sw.js` a cada deploy e o app mostra "Nova versão disponível".
+  navegador ou com e-mail e senha. Aberto (e instalado) pelo endereço
+  `projeto.firebaseapp.com` do Firebase Hosting, o site fica no mesmo domínio do
+  `authDomain` e esse problema não acontece.
+- O PWA precisa de HTTPS (o GitHub Pages e o Firebase Hosting já servem assim). O
+  navegador baixa a versão nova do `sw.js` a cada deploy e o app mostra "Nova versão
+  disponível". No Hosting, o service worker deixa passar direto para a rede os endereços
+  reservados do Firebase (`/__/auth`, `/__/firebase`).
 - No iPhone a instalação é pelo Safari: Compartilhar, Adicionar à Tela de Início (o
   perfil mostra essa instrução).
 
