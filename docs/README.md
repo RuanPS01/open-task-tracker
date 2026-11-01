@@ -7,7 +7,7 @@ for alterar o código (pessoa ou agente de IA) começa pelo documento 00.
 |---|---|
 | [00-regras-para-ia.md](00-regras-para-ia.md) | **Sempre, antes de qualquer alteração.** Regras obrigatórias, regras do domínio e checklist de fim de tarefa |
 | [01-arquitetura.md](01-arquitetura.md) | Pacotes do monorepo, modo Firebase ou local, camada de dados, boot, fluxo de dados na web, rotas de tela |
-| [02-tecnologias.md](02-tecnologias.md) | Versões, scripts, variáveis de ambiente, build, GitHub Actions e publicação no GitHub Pages |
+| [02-tecnologias.md](02-tecnologias.md) | Versões, scripts, variáveis de ambiente, build, GitHub Actions e publicação no GitHub Pages e no Firebase Hosting |
 | [03-identidade-visual.md](03-identidade-visual.md) | Tokens de cor dos dois temas, cores de gráfico, tipografia, ícones, ilustrações |
 | [04-padrao-ui-e-componentes.md](04-padrao-ui-e-componentes.md) | Anatomia das telas, padrões de interação e inventário de componentes e hooks |
 | [05-padroes-de-codigo-e-nomes.md](05-padroes-de-codigo-e-nomes.md) | Nomes de arquivos, código, coleções, rotas e textos; granularidade; comentários; testes; git |

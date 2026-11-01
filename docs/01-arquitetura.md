@@ -80,8 +80,8 @@ open-task-tracker/
     test/                    testes unitários dos algoritmos
   firestore.rules            regras de acesso do Firestore
   firestore.indexes.json     índice composto usado pelo cronômetro
-  firebase.json              regras, índices e portas dos emuladores
-  .github/workflows/         ci.yml (pull requests) e deploy.yml (GitHub Pages)
+  firebase.json              regras, índices, Firebase Hosting (rotas e cache) e portas dos emuladores
+  .github/workflows/         ci.yml (pull requests) e deploy.yml (GitHub Pages e Firebase Hosting)
   scripts/check-text.mjs     verificação de caracteres proibidos
   scripts/workspace-themes.mjs  gera (e confere) os temas de cor por workspace do tokens.css
   docs/                      esta documentação
@@ -208,12 +208,18 @@ O painel de tarefa (`features/tasks/TaskPanelContext.tsx`) e a busca rápida
 ## 1.8 Publicação
 
 `npm run build` gera um site estático em `apps/web/dist`. O workflow
-`.github/workflows/deploy.yml` publica esse site no **GitHub Pages** a cada push na
-`main`: monta o build com o subcaminho do Pages (`VITE_BASE_PATH`) e a configuração do
-Firebase vinda dos secrets, copia `index.html` para `404.html` (o Pages devolve esse
-arquivo para qualquer rota desconhecida, e o React Router resolve a rota) e, se houver
-conta de serviço, publica `firestore.rules` e `firestore.indexes.json`. Passo a passo em
-[02-tecnologias.md](02-tecnologias.md), seção 2.6.
+`.github/workflows/deploy.yml` publica o site a cada push na `main` em dois lugares:
+
+- **GitHub Pages**: build com o subcaminho do Pages (`VITE_BASE_PATH`) e a configuração
+  do Firebase vinda dos secrets; `index.html` copiado para `404.html` (o Pages devolve
+  esse arquivo para qualquer rota desconhecida, e o React Router resolve a rota).
+- **Firebase Hosting** (com conta de serviço): outro build, na raiz do domínio
+  (`VITE_BASE_PATH=/`), publicado com `firebase deploy --only hosting` depois das regras.
+  O `firebase.json` devolve o `index.html` para as rotas e controla o cache.
+
+Com conta de serviço, o workflow também publica `firestore.rules` e
+`firestore.indexes.json`. Passo a passo em [02-tecnologias.md](02-tecnologias.md),
+seção 2.6.
 
 **PWA.** O site é instalável (manifesto em `public/manifest.webmanifest`, ícones em
 `public/icons`). No fim do build, o plugin `apps/web/pwa/plugin.ts` lista os arquivos

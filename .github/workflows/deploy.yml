@@ -1,9 +1,11 @@
-# Publicação no GitHub Pages a cada push na main (ou manualmente).
+# Publicação a cada push na main (ou manualmente): o mesmo site no GitHub Pages e no
+# Firebase Hosting, mais as regras e os índices do Firestore.
 #
 # A configuração do Firebase vem dos secrets do repositório (Settings > Secrets and
-# variables > Actions). Sem eles, o site é publicado no modo local (lowdb no
-# navegador). Passo a passo em docs/02-tecnologias.md, seção "Publicação".
-name: Publicar no GitHub Pages
+# variables > Actions). Sem eles, o site é publicado no Pages no modo local (lowdb no
+# navegador). O Firebase Hosting e as regras precisam da conta de serviço
+# (FIREBASE_SERVICE_ACCOUNT). Passo a passo em docs/02-tecnologias.md, seção 2.6.
+name: Publicar no GitHub Pages e no Firebase Hosting
 
 on:
   push:
@@ -83,3 +85,57 @@ jobs:
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/conta-de-servico.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/conta-de-servico.json"
           npx --yes firebase-tools@15.31.0 deploy --only firestore:rules,firestore:indexes --project "$FIREBASE_PROJECT_ID" --non-interactive
+
+  hosting:
+    name: Firebase Hosting
+    # As regras vão antes: a versão nova do app pode depender de uma regra nova, e os
+    # dois ficam no mesmo projeto do Firebase.
+    needs: [build, firestore]
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+    steps:
+      - name: Conferir configuração
+        id: gate
+        env:
+          # Variável opcional do repositório: false desliga a publicação no Hosting.
+          HOSTING: ${{ vars.FIREBASE_HOSTING }}
+        run: |
+          if [ "$HOSTING" = "false" ]; then
+            echo "::notice::Firebase Hosting desligado pela variável FIREBASE_HOSTING do repositório."
+          elif [ -z "$FIREBASE_SERVICE_ACCOUNT" ] || [ -z "$FIREBASE_PROJECT_ID" ]; then
+            echo "::warning::Secrets FIREBASE_SERVICE_ACCOUNT ou FIREBASE_PROJECT_ID ausentes, site não publicado no Firebase Hosting (docs/02-tecnologias.md, seção 2.6)."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v5
+        if: steps.gate.outputs.publish == 'true'
+      - uses: actions/setup-node@v5
+        if: steps.gate.outputs.publish == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        if: steps.gate.outputs.publish == 'true'
+      # Build próprio: no Hosting o site fica na raiz do domínio, sem o subcaminho do Pages.
+      - name: Build da web
+        if: steps.gate.outputs.publish == 'true'
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /
+          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          VITE_DATA_MODE: ${{ vars.DATA_MODE || 'auto' }}
+      # Configuração do Hosting (rotas do React Router e cache) em firebase.json.
+      - name: Publicar no Firebase Hosting
+        if: steps.gate.outputs.publish == 'true'
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/conta-de-servico.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/conta-de-servico.json"
+          npx --yes firebase-tools@15.31.0 deploy --only hosting --project "$FIREBASE_PROJECT_ID" --non-interactive --message "Commit ${GITHUB_SHA::7}"
+          echo "Site publicado no Firebase Hosting: https://$FIREBASE_PROJECT_ID.web.app" >> "$GITHUB_STEP_SUMMARY"

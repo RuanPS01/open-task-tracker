@@ -5,7 +5,7 @@ tempo, feito por engenharia reversa do **Toggl Track**. Interface em português 
 (e inglês), temas escuro e claro. Roda inteiro no navegador: os dados ficam no
 **Firebase** (Authentication e Cloud Firestore) e, se o Firebase não estiver configurado
 ou não responder, no próprio navegador com o **lowdb**. Publicação pronta para o
-**GitHub Pages** pelo GitHub Actions.
+**GitHub Pages** e o **Firebase Hosting** pelo GitHub Actions.
 
 ![Cronograma do projeto em Gantt](docs/imagens/gantt.png)
 
@@ -69,19 +69,23 @@ Se o Firebase não responder na abertura, o app cai no modo local e avisa com um
 topo da tela. Para criar dados de exemplo no Firebase, marque "Preencher com dados de
 exemplo" ao criar um workspace.
 
-## Publicação no GitHub Pages
+## Publicação no GitHub Pages e no Firebase Hosting
 
-O workflow `.github/workflows/deploy.yml` publica a cada push na `main`:
+O workflow `.github/workflows/deploy.yml` publica a cada push na `main`, no GitHub Pages e
+no Firebase Hosting (`https://projeto.web.app`):
 
 1. Em **Settings, Pages**, escolha **Source: GitHub Actions**.
 2. Em **Settings, Secrets and variables, Actions**, cadastre os secrets
    `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID` e `FIREBASE_APP_ID`
-   (e, opcionalmente, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_MESSAGING_SENDER_ID` e
-   `FIREBASE_SERVICE_ACCOUNT` para o workflow publicar as regras do Firestore).
-3. No Firebase, acrescente `seu-usuario.github.io` aos domínios autorizados do
-   Authentication.
+   (e, opcionalmente, `FIREBASE_STORAGE_BUCKET` e `FIREBASE_MESSAGING_SENDER_ID`).
+3. Para o Firebase Hosting e as regras do Firestore, cadastre também
+   `FIREBASE_SERVICE_ACCOUNT` (JSON de uma conta de serviço com os papéis Firebase Hosting
+   Admin, Firebase Rules Admin e Cloud Datastore Index Admin, ou só Firebase Admin) e, no
+   console do Firebase, abra **Hosting** e clique em **Começar** uma vez.
+4. No Firebase, acrescente `seu-usuario.github.io` aos domínios autorizados do
+   Authentication (os domínios do Firebase Hosting já vêm autorizados).
 
-Sem os secrets, o site é publicado assim mesmo e funciona no modo local. Detalhes em
+Sem os secrets, o site é publicado só no Pages e funciona no modo local. Detalhes em
 [docs/02-tecnologias.md](docs/02-tecnologias.md), seção 2.6.
 
 ## Comandos
@@ -101,7 +105,7 @@ apps/web         Interface React no estilo do Toggl Track (site estático)
 packages/data    Camada de dados: Firestore ou lowdb, autenticação e regras de negócio
 packages/shared  Tipos, validação e algoritmos (calendário, cascata, caminho crítico, capacidade)
 firestore.rules  Regras de acesso do Firestore
-.github          CI de pull requests e publicação no GitHub Pages
+.github          CI de pull requests e publicação no GitHub Pages e no Firebase Hosting
 docs             10 documentos de referência
 ```
 
