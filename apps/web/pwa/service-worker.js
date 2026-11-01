@@ -32,6 +32,9 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || !url.pathname.startsWith(BASE)) return;
+  // No Firebase Hosting o app fica na raiz, junto dos endereços reservados do Firebase
+  // (/__/auth do login com Google, /__/firebase): esses vão sempre direto para a rede.
+  if (url.pathname.startsWith('/__/')) return;
 
   if (request.mode === 'navigate') {
     // Páginas: rede primeiro (sempre o index.html mais novo); sem rede, o app guardado.

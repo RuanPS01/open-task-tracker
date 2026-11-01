@@ -15,7 +15,7 @@ você vai mexer:
 |---|---|
 | Qualquer coisa | [09-contexto-do-produto.md](09-contexto-do-produto.md) |
 | Pacotes do monorepo, camada de dados, modo Firebase ou local, boot da web, fluxo de dados | [01-arquitetura.md](01-arquitetura.md) |
-| Dependências, versões, scripts, variáveis de ambiente, build, GitHub Actions, GitHub Pages | [02-tecnologias.md](02-tecnologias.md) |
+| Dependências, versões, scripts, variáveis de ambiente, build, GitHub Actions, GitHub Pages, Firebase Hosting | [02-tecnologias.md](02-tecnologias.md) |
 | Cores, fontes, tema, ícones, ilustrações, cores de gráfico | [03-identidade-visual.md](03-identidade-visual.md) |
 | Qualquer tela, painel, modal, seletor ou componente de interface | [04-padrao-ui-e-componentes.md](04-padrao-ui-e-componentes.md) |
 | Nomes de arquivos, componentes, rotas, colunas, chaves de texto, testes | [05-padroes-de-codigo-e-nomes.md](05-padroes-de-codigo-e-nomes.md) |
