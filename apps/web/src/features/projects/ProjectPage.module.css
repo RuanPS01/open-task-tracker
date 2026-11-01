@@ -166,3 +166,10 @@
   color: var(--danger);
   font-size: 12px;
 }
+
+.modalHint {
+  margin: 0 0 14px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}

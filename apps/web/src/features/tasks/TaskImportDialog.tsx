@@ -17,7 +17,8 @@ import { useWorkspace } from '../../app/session';
 import { useProjectMap } from '../../data/projects';
 import { useImportTasks, usePreviewTaskImport, useTasks } from '../../data/tasks';
 import { useHolidays, useMembers, useTags } from '../../data/workspace';
-import { PriorityIcon, StatusIcon } from '../../components/pickers/TaskIcons';
+import { PriorityIcon } from '../../components/pickers/TaskIcons';
+import { TaskStatusIcon, useStatusCatalog } from '../../components/pickers/TaskStatus';
 import { AvatarStack } from '../../components/ui/Avatar';
 import { Button } from '../../components/ui/Button';
 import { TextArea } from '../../components/ui/Field';
@@ -83,6 +84,7 @@ export function TaskImportDialog({ projectId, onClose }: { projectId: Id | null;
   const [inputIssues, setInputIssues] = useState<TaskImportIssue[]>([]);
   const [failure, setFailure] = useState<string | null>(null);
   const issueText = useIssueText(NO_ROWS);
+  const catalog = useStatusCatalog();
 
   const project = projectId ? projects.get(projectId) : undefined;
   const example = () => t.taskImport.example(exampleDates(toIsoDate(new Date()), calendar));
@@ -101,6 +103,7 @@ export function TaskImportDialog({ projectId, onClose }: { projectId: Id | null;
       currentProjectId: projectId,
       members,
       tags,
+      statuses: catalog.statuses,
       tasks,
       example: example(),
     });
@@ -302,7 +305,7 @@ function ImportReview({ preview }: { preview: TaskImportPreview }) {
                     <td>
                       <div className={styles.taskCell} style={{ paddingLeft: row.depth * 20 }}>
                         <span className={styles.key}>{row.key}</span>
-                        {row.isMilestone ? <Diamond size={14} className={styles.milestone} aria-hidden /> : <StatusIcon status={row.status} size={14} />}
+                        {row.isMilestone ? <Diamond size={14} className={styles.milestone} aria-hidden /> : <TaskStatusIcon task={row} size={14} />}
                         <span className={clsx(styles.name, row.parentKey === null && preview.rows.some((r) => r.parentKey === row.key) && styles.parent)}>
                           {row.name}
                         </span>

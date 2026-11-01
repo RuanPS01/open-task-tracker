@@ -13,7 +13,7 @@ O monorepo npm tem três pacotes:
 
 | Pacote | Pasta | Papel |
 |---|---|---|
-| `@ott/shared` | `packages/shared` | Tipos das entidades, esquemas de validação (zod), datas sem fuso, durações e todos os algoritmos de planejamento (calendário, cascata, caminho crítico, resumo, capacidade, feriados). Não depende de nada do projeto. |
+| `@ott/shared` | `packages/shared` | Tipos das entidades, esquemas de validação (zod), datas sem fuso, durações e todos os algoritmos de planejamento (calendário, cascata, caminho crítico, resumo, capacidade, feriados), além das regras dos status customizados (quais valem em cada projeto e em que ordem). Não depende de nada do projeto. |
 | `@ott/data` | `packages/data` | Camada de dados: contrato de armazenamento (`DocStore`) com as implementações Firestore e lowdb, autenticação (Firebase Auth ou contas locais), os serviços com as regras de negócio e a escolha automática do modo. |
 | `@ott/web` | `apps/web` | Aplicação React (Vite) com as telas no estilo do Toggl Track. |
 
@@ -71,11 +71,12 @@ open-task-tracker/
       firebase/index.ts      FirestoreStore, FirebaseAuthGateway, connectFirebase (carregado sob demanda)
       firebase/health.ts     checagem rápida do Firestore pela API REST (banco criado ou não)
       services/              regras de negócio por recurso (sessão, workspaces, membros e convites,
-                             cadastros, projetos, tarefas, apontamentos, relatórios, demonstração)
+                             cadastros, status customizados, projetos, tarefas, apontamentos,
+                             relatórios, demonstração)
     test/                    suites.ts (as mesmas suítes nos dois modos), rules.ts (regras do Firestore)
   packages/shared/
     src/                     constants, entities, results, schemas, dates, duration,
-                             scheduling, capacity, holidays, ids
+                             scheduling, capacity, holidays, statuses, ids
     test/                    testes unitários dos algoritmos
   firestore.rules            regras de acesso do Firestore
   firestore.indexes.json     índice composto usado pelo cronômetro
@@ -149,7 +150,7 @@ de alerta. Veja [07-fluxos-aplicacao.md](07-fluxos-aplicacao.md), seção 7.1.
 
 A web só conhece a fachada `Backend` (`packages/data/src/backend.ts`), agrupada como
 a antiga API HTTP: `session`, `workspaces`, `members`, `clients`, `tags`, `holidays`,
-`projects`, `tasks`, `dependencies`, `timeEntries` e `reports`.
+`statuses`, `projects`, `tasks`, `dependencies`, `timeEntries` e `reports`.
 
 | Parte | Responsabilidade | Pode |
 |---|---|---|

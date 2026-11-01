@@ -9,6 +9,7 @@ import type {
   Locale,
   MemberRole,
   Priority,
+  StatusIconKey,
   TaskStatus,
   Theme,
   TimeFormat,
@@ -120,7 +121,13 @@ export interface Task {
   name: string;
   description: string;
   notes: string;
+  /** Categoria do status (um dos três status padrão): é o que as regras consultam. */
   status: TaskStatus;
+  /**
+   * Status customizado (`CustomStatus.id`) dentro da categoria `status`; nulo é o status
+   * padrão da categoria. Ausente nas tarefas antigas: vale nulo.
+   */
+  statusId: Id | null;
   priority: Priority;
   startDate: IsoDate | null;
   dueDate: IsoDate | null;
@@ -142,6 +149,25 @@ export interface Task {
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
   completedAt: IsoDateTime | null;
+}
+
+/**
+ * Status de tarefa criado pela equipe, além dos três padrão. Pertence a uma categoria
+ * (`todo`, `in_progress` ou `done`), que decide como a tarefa se comporta.
+ */
+export interface CustomStatus {
+  id: Id;
+  workspaceId: Id;
+  /** Projeto em que o status vale; nulo vale para todas as tarefas do workspace. */
+  projectId: Id | null;
+  name: string;
+  category: TaskStatus;
+  icon: StatusIconKey;
+  /** Uma das cores de projeto (`PROJECT_COLORS`): cor do ícone. */
+  color: string;
+  /** Ordem de exibição dentro da categoria. */
+  position: number;
+  createdAt: IsoDateTime;
 }
 
 export interface Holiday {

@@ -149,6 +149,20 @@ service cloud.firestore {
         allow create, update: if isMemberAfter(wid) && validDoc(wid, docId);
       }
 
+      // Status customizados: do workspace (projectId nulo), só administrador cria, altera
+      // e exclui; de um projeto, qualquer membro. Um status de projeto não vira status do
+      // workspace pelas mãos de um membro comum (o escopo antes e depois é conferido).
+      match /statuses/{docId} {
+        allow read: if isMember(wid);
+        allow create: if isMemberAfter(wid)
+          && validDoc(wid, docId)
+          && (request.resource.data.projectId != null || isAdminAfter(wid));
+        allow update: if isMemberAfter(wid)
+          && validDoc(wid, docId)
+          && ((resource.data.projectId != null && request.resource.data.projectId != null) || isAdminAfter(wid));
+        allow delete: if isMember(wid) && (resource.data.projectId != null || isAdmin(wid));
+      }
+
       match /tags/{docId} {
         allow read, delete: if isMember(wid);
         allow create, update: if isMemberAfter(wid) && validDoc(wid, docId);

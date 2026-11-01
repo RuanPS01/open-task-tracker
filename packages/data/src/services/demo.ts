@@ -20,6 +20,7 @@ import {
   type HolidayDoc,
   type MemberDoc,
   type ProjectDoc,
+  type StatusDoc,
   type TagDoc,
   type TaskDoc,
   type TimeEntryDoc,
@@ -45,6 +46,8 @@ interface TaskSpec {
   start?: number;
   end?: number;
   status?: TaskStatus;
+  /** Status customizado da demonstração (a categoria vem dele). */
+  custom?: 'review' | 'blocked' | 'waiting';
   progress?: number;
   priority?: Priority;
   estimateHours?: number;
@@ -171,13 +174,22 @@ export async function seedDemoWorkspace(ctx: Ctx, workspaceId: Id): Promise<void
     suporte: project({ name: 'Suporte', color: '#2da608' }),
   };
 
+  // Status customizados: dois do workspace e um só do site ------------------------
+  const customStatuses: Record<NonNullable<TaskSpec['custom']>, StatusDoc> = {
+    review: { id: id(), workspaceId, projectId: null, name: 'Em revisão', category: 'in_progress', icon: 'eye', color: '#9e5bd9', position: 1, createdAt: now },
+    blocked: { id: id(), workspaceId, projectId: null, name: 'Bloqueada', category: 'in_progress', icon: 'ban', color: '#d92b2b', position: 2, createdAt: now },
+    waiting: { id: id(), workspaceId, projectId: projects.site, name: 'Aguardando cliente', category: 'todo', icon: 'hourglass', color: '#bf7000', position: 1, createdAt: now },
+  };
+  for (const status of Object.values(customStatuses)) batch.set(paths.statuses(workspaceId), status.id, status);
+
   // Tarefas ----------------------------------------------------------------------
   const working = new Map<Id, TaskDoc>();
   const createTasks = (projectId: Id | null, specs: TaskSpec[]) => {
     const ids: Record<string, Id> = {};
     for (const spec of specs) {
       const parentId = spec.parent ? ids[spec.parent]! : null;
-      const status = spec.status ?? 'todo';
+      const custom = spec.custom ? customStatuses[spec.custom] : null;
+      const status = custom?.category ?? spec.status ?? 'todo';
       const isMilestone = spec.milestone ?? false;
       const dates = normalizeDates(
         spec.dueToday ? null : spec.start === undefined ? null : day(spec.start),
@@ -193,6 +205,7 @@ export async function seedDemoWorkspace(ctx: Ctx, workspaceId: Id): Promise<void
         description: spec.description ?? '',
         notes: '',
         status,
+        statusId: custom?.id ?? null,
         priority: spec.priority ?? 0,
         ...dates,
         estimateSeconds: spec.estimateHours ? spec.estimateHours * 3600 : null,
@@ -222,8 +235,8 @@ export async function seedDemoWorkspace(ctx: Ctx, workspaceId: Id): Promise<void
     { key: 'mapa', parent: 'disc', name: 'Mapa do site e conteúdo', start: -11, end: -8, status: 'done', estimateHours: 12, assignees: ['ana', 'carla'] },
     { key: 'design', name: 'Design' },
     { key: 'wire', parent: 'design', name: 'Wireframes', start: -7, end: -3, status: 'done', estimateHours: 16, assignees: ['carla'], tags: ['Design'] },
-    { key: 'visual', parent: 'design', name: 'Identidade visual das páginas', start: -2, end: 2, status: 'in_progress', progress: 60, priority: 3, estimateHours: 20, assignees: ['carla'], tags: ['Design'], description: 'Aplicar a paleta e a tipografia da marca nas páginas principais.' },
-    { key: 'proto', parent: 'design', name: 'Protótipo navegável', start: 3, end: 7, priority: 2, estimateHours: 14, assignees: ['carla', 'ana'], tags: ['Design'] },
+    { key: 'visual', parent: 'design', name: 'Identidade visual das páginas', start: -2, end: 2, custom: 'review', progress: 60, priority: 3, estimateHours: 20, assignees: ['carla'], tags: ['Design'], description: 'Aplicar a paleta e a tipografia da marca nas páginas principais.' },
+    { key: 'proto', parent: 'design', name: 'Protótipo navegável', start: 3, end: 7, custom: 'waiting', priority: 2, estimateHours: 14, assignees: ['carla', 'ana'], tags: ['Design'] },
     { key: 'aprov', parent: 'design', name: 'Aprovação do layout', start: 7, milestone: true, assignees: ['ana'] },
     { key: 'dev', name: 'Desenvolvimento' },
     { key: 'repo', parent: 'dev', name: 'Configurar repositório e deploy', start: 0, end: 1, status: 'in_progress', progress: 50, priority: 2, estimateHours: 6, assignees: ['bruno'], tags: ['Back-end'] },
@@ -237,7 +250,7 @@ export async function seedDemoWorkspace(ctx: Ctx, workspaceId: Id): Promise<void
   ]);
   const app = createTasks(projects.app, [
     { key: 'req', name: 'Levantamento de requisitos', start: -7, end: -3, status: 'done', estimateHours: 16, assignees: ['ana'], tags: ['Reunião'] },
-    { key: 'arq', name: 'Arquitetura e modelo de dados', start: -2, end: 1, status: 'in_progress', progress: 40, priority: 3, estimateHours: 16, assignees: ['bruno'], tags: ['Back-end'] },
+    { key: 'arq', name: 'Arquitetura e modelo de dados', start: -2, end: 1, custom: 'blocked', progress: 40, priority: 3, estimateHours: 16, assignees: ['bruno'], tags: ['Back-end'] },
     { key: 'backend', name: 'Back-end' },
     { key: 'api', parent: 'backend', name: 'API de agenda e horários', start: 2, end: 12, priority: 3, estimateHours: 48, assignees: ['bruno'], tags: ['Back-end'] },
     { key: 'notif', parent: 'backend', name: 'Notificações por WhatsApp', start: 13, end: 19, priority: 2, estimateHours: 24, assignees: ['diego'], tags: ['Back-end'] },

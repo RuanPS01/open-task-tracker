@@ -67,7 +67,9 @@ export function useUpdateTask() {
     onMutate: async ({ id, ...input }) => {
       await client.cancelQueries({ queryKey: keys.tasks(wid) });
       const previous = client.getQueryData<Task[]>(keys.tasks(wid));
-      patchTasks(client, wid, new Map([[id, input as Partial<Task>]]));
+      // Só a categoria volta ao status padrão dela (a camada de dados faz o mesmo).
+      const patch = input.status !== undefined && input.statusId === undefined ? { ...input, statusId: null } : input;
+      patchTasks(client, wid, new Map([[id, patch as Partial<Task>]]));
       return { previous };
     },
     onError: (_error, _input, context) => {

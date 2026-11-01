@@ -76,7 +76,8 @@ luminosidade pelo papel e confira o contraste. Texto em ciano sobre fundo claro 
 Status e prioridade de tarefa têm tokens próprios (`--status-todo`, `--status-progress`,
 `--status-done`, `--priority-low` a `--priority-urgent`) e sempre aparecem com ícone e
 rótulo, nunca só pela cor. A prioridade média usa o ciano da marca (`#5ed0d2` no escuro,
-`#0097a4` no claro).
+`#0097a4` no claro). Status customizado (criado pela equipe) não usa token: a cor do ícone
+é uma das cores de projeto, escolhida no status e guardada no dado, como a cor do projeto.
 
 Gantt: `--gantt-summary` (barra de grupo), `--gantt-dependency` (setas),
 `--gantt-critical` (contorno de tarefa crítica).
@@ -153,7 +154,12 @@ Alturas padrão: botão 32 px (28 px pequeno), campo 34 px, chip de barra de fer
   `ChartGantt`, Membros `Users`, Clientes `Building2`, Tags `Tag`.
 - Ícones de status e prioridade de tarefa são SVG próprios em
   `components/pickers/TaskIcons.tsx` (círculo tracejado, meio cheio, cheio com check;
-  barras de sinal e quadrado de urgente).
+  barras de sinal e quadrado de urgente). Status customizado escolhe um ícone de
+  `STATUS_ICONS` (`packages/shared/src/constants.ts`): um dos três desenhos padrão ou um de
+  25 ícones do lucide-react (revisão, bloqueado, espera, teste, entrega...), na cor que a
+  equipe escolher entre as cores de projeto. Ícone novo entra na lista e no mapa
+  `LUCIDE_ICONS` do `TaskIcons.tsx` (o compilador acusa se faltar) e ganha nome em
+  `statuses.icons` nos dicionários.
 - Ilustrações de tela vazia (`components/ui/EmptyState.tsx`): formas geométricas com as
   cores de marca (`--accent`, `--brand-yellow`, `--brand-light` `#72d3d8` e
   `--brand-deep` `#40696b`, os dois do ciano),

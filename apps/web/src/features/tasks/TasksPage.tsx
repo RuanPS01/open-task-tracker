@@ -4,7 +4,6 @@ import {
   NO_ID,
   PRIORITIES,
   PRIORITY_KEYS,
-  TASK_STATUSES,
   toIsoDate,
   type CreateTaskInput,
   type Id,
@@ -29,7 +28,8 @@ import { useProjectMap } from '../../data/projects';
 import { useCreateTask, useTasks } from '../../data/tasks';
 import { useMembers } from '../../data/workspace';
 import { useCurrentUser, usePreferences } from '../../app/session';
-import { PriorityIcon, StatusIcon } from '../../components/pickers/TaskIcons';
+import { PriorityIcon } from '../../components/pickers/TaskIcons';
+import { StatusOptionIcon, useStatusCatalog, type StatusCatalog } from '../../components/pickers/TaskStatus';
 import { Button, IconButton } from '../../components/ui/Button';
 import { EmptyState, LoadingBlock } from '../../components/ui/EmptyState';
 import { Checkbox } from '../../components/ui/Field';
@@ -44,7 +44,7 @@ import { TaskBoard } from './TaskBoard';
 import { TaskImportButton } from './TaskImportDialog';
 import { useTaskPanel } from './TaskPanelContext';
 import { TaskRow, type TaskRowContext } from './TaskRow';
-import { applyFilters, groupTasks, sortTasks, type GroupBy, type SortBy, type TaskFilters } from './taskGrouping';
+import { applyFilters, groupTasks, sortTasks, statusOrder, type GroupBy, type SortBy, type TaskFilters } from './taskGrouping';
 import styles from './TasksPage.module.css';
 
 export function useTaskRowContext(tasks: Task[]): TaskRowContext {
@@ -68,12 +68,20 @@ export function useTaskRowContext(tasks: Task[]): TaskRowContext {
   }, [tasks, projects, members]);
 }
 
-function groupLabel(t: Messages, groupBy: GroupBy, key: string, context: TaskRowContext): { label: string; icon?: React.ReactNode } {
+function groupLabel(
+  t: Messages,
+  groupBy: GroupBy,
+  key: string,
+  context: TaskRowContext,
+  catalog: StatusCatalog,
+): { label: string; icon?: React.ReactNode } {
   switch (groupBy) {
     case 'date':
       return { label: t.tasks[key as 'overdue'] };
-    case 'status':
-      return { label: t.tasks.statusLabels[key as 'todo'], icon: <StatusIcon status={key as 'todo'} /> };
+    case 'status': {
+      const option = catalog.option(key);
+      return { label: option.label, icon: <StatusOptionIcon option={option} /> };
+    }
     case 'priority':
       return {
         label: t.tasks.priorityLabels[PRIORITY_KEYS[Number(key) as 0]],
@@ -112,8 +120,9 @@ export function TaskListView({
   const panel = useTaskPanel();
   const { weekStart } = usePreferences();
   const createTask = useCreateTask();
+  const catalog = useStatusCatalog();
   const [quickName, setQuickName] = useState('');
-  const groups = groupTasks(sortTasks(tasks, sortBy, descending), groupBy, toIsoDate(new Date()), weekStart);
+  const groups = groupTasks(sortTasks(tasks, sortBy, descending), groupBy, toIsoDate(new Date()), weekStart, catalog.statuses);
 
   const quickAdd = () => {
     const name = quickName.trim();
@@ -135,7 +144,7 @@ export function TaskListView({
         />
       </div>
       {groups.map((group) => {
-        const { label, icon } = groupLabel(t, groupBy, group.key, context);
+        const { label, icon } = groupLabel(t, groupBy, group.key, context, catalog);
         return (
           <section key={group.key} className={styles.group}>
             {groupBy !== 'none' && (
@@ -159,13 +168,22 @@ export function TaskFiltersButton({
   filters,
   onChange,
   showProjects = true,
+  projectId,
 }: {
   filters: TaskFilters;
   onChange: (filters: TaskFilters) => void;
   showProjects?: boolean;
+  /** Projeto aberto: só os status que valem nele. Sem projeto, todos os do workspace. */
+  projectId?: Id;
 }) {
   const t = useT();
   const projects = useProjectMap();
+  const catalog = useStatusCatalog();
+  const statusKeys =
+    projectId === undefined
+      ? // Na tela de Tarefas entram todos os status (cada um conta como em uso).
+        statusOrder(catalog.statuses, catalog.statuses.map((status) => ({ statusId: status.id })))
+      : statusOrder(catalog.statuses, [], projectId);
   const count = filters.statuses.length + filters.projectIds.length + filters.priorities.length;
   const toggle = <T,>(list: T[], value: T) => (list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   return (
@@ -175,14 +193,14 @@ export function TaskFiltersButton({
     >
       <div className={styles.filters}>
         <div className={styles.filterTitle}>{t.tasks.filterStatus}</div>
-        {TASK_STATUSES.map((status) => (
+        {statusKeys.map(catalog.option).map((option) => (
           <Checkbox
-            key={status}
-            checked={filters.statuses.includes(status)}
-            onChange={() => onChange({ ...filters, statuses: toggle(filters.statuses, status) })}
+            key={option.key}
+            checked={filters.statuses.includes(option.key)}
+            onChange={() => onChange({ ...filters, statuses: toggle(filters.statuses, option.key) })}
             label={
               <span className={styles.filterOption}>
-                <StatusIcon status={status} /> {t.tasks.statusLabels[status]}
+                <StatusOptionIcon option={option} /> {option.label}
               </span>
             }
           />
@@ -315,12 +333,14 @@ export function TasksPage() {
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const context = useTaskRowContext(tasks);
+  const { statuses } = useStatusCatalog();
 
   const assigneeId = assignee === 'all' ? null : assignee === 'me' ? user.id : assignee;
   const visible = applyFilters(tasks, filters, {
     assigneeId,
     showCompleted: showCompleted || view === 'board',
     search,
+    statuses,
   });
   const assigneeLabel =
     assignee === 'me' ? t.tasks.myTasks : assignee === 'all' ? t.tasks.allTasks : (members.find((m) => m.userId === assignee)?.name ?? t.tasks.allTasks);

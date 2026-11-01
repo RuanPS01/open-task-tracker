@@ -1,0 +1,144 @@
+/* Lista de status (configurações do workspace e página do projeto). */
+.list {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 6px 0 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.item > svg {
+  flex-shrink: 0;
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.name + .tag {
+  margin-left: auto;
+}
+
+.tag {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 60px;
+  justify-content: flex-end;
+}
+
+.footer {
+  display: flex;
+}
+
+/* Diálogo: grade de ícones e prévia. */
+.icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  gap: 6px;
+}
+
+.iconOption {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+}
+
+.iconOption:hover {
+  background: var(--bg-hover);
+}
+
+.iconSelected {
+  border-color: var(--accent-strong);
+  background: var(--accent-subtle);
+}
+
+.preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+  font-size: 13px;
+}
+
+.previewLabel {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.previewChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.previewCategory {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* No celular a categoria some (está no menu de edição) e o nome quebra linha em vez de
+   ser cortado; a coluna de ações só ocupa espaço quando tem botões. */
+@media (max-width: 760px) {
+  .category {
+    display: none;
+  }
+
+  .name {
+    flex: 1;
+    padding: 8px 0;
+    white-space: normal;
+  }
+
+  .actions {
+    width: auto;
+  }
+}
