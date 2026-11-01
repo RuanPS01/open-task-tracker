@@ -3,7 +3,8 @@ import clsx from 'clsx';
 import { Diamond, GitBranch, Play, Square } from 'lucide-react';
 import { useRunningTimer, useStartTimer, useStopTimer } from '../../data/timeEntries';
 import { useUpdateTask } from '../../data/tasks';
-import { PriorityIcon, StatusIcon } from '../../components/pickers/TaskIcons';
+import { PriorityIcon } from '../../components/pickers/TaskIcons';
+import { TaskStatusIcon } from '../../components/pickers/TaskStatus';
 import { AvatarStack } from '../../components/ui/Avatar';
 import { IconButton } from '../../components/ui/Button';
 import { ProjectLabel } from '../../components/ui/ProjectLabel';
@@ -54,7 +55,7 @@ export function TaskRow({ task, context, onOpen, hideProject = false }: { task: 
         aria-label={task.status === 'done' ? t.tasks.reopen : t.tasks.markDone}
         title={task.status === 'done' ? t.tasks.reopen : t.tasks.markDone}
       >
-        <StatusIcon status={task.status} />
+        <TaskStatusIcon task={task} />
       </button>
       <div className={styles.nameCell}>
         {parent && <span className={styles.parent}>{parent.name} /</span>}

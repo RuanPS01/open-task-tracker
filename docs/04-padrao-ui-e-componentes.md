@@ -112,8 +112,9 @@ Atalhos não disparam com o foco num campo de texto.
 | `ProjectTaskPicker` | `ProjectTaskPicker.tsx` | "Projeto ou tarefa": busca, agrupa por cliente, expande tarefas, cria projeto. `projectsOnly` para escolher só projeto |
 | `TagPicker` | `TagPicker.tsx` | Seleção múltipla de tags com criação pelo Enter |
 | `MemberPicker` | `MemberPicker.tsx` | Seleção de responsáveis (múltipla ou única) |
-| `StatusMenu`, `PriorityMenu` | `StatusPriority.tsx` | Menus de status e prioridade |
-| `StatusIcon`, `PriorityIcon` | `TaskIcons.tsx` | Ícones SVG de status e prioridade |
+| `StatusMenu`, `PriorityMenu` | `StatusPriority.tsx` | Menus de status e prioridade. `StatusMenu` recebe o `projectId` da tarefa e lista os padrão, os do workspace e os do projeto; `onCreate` mostra "Novo status" no fim |
+| `StatusIcon`, `StatusGlyph`, `PriorityIcon` | `TaskIcons.tsx` | Ícones SVG de status e prioridade. `StatusIcon` com `custom` desenha o ícone e a cor do status customizado; `StatusGlyph` desenha qualquer ícone de status em qualquer cor (seletor de ícone) |
+| `useStatusCatalog`, `StatusOptionIcon`, `TaskStatusIcon`, `statusInput` | `TaskStatus.tsx` | Catálogo dos status na web: rótulo traduzido dos padrão, opções de um projeto (`optionsFor`), status de uma tarefa (`forTask`, customizado excluído conta como o padrão), ícone pela tarefa e os valores `{ status, statusId }` para gravar a escolha. Use sempre `TaskStatusIcon` para mostrar o status de uma tarefa |
 | `DateRangePicker` | `DateRangePicker.tsx` | Datas de tarefa e período de projeto (intervalo ou data única) |
 | `ColorSwatches` | `ColorSwatches.tsx` | Amostras das cores de projeto (`PROJECT_COLORS`) com o nome de cada cor. Cor do projeto e tema de cor do workspace; `withDefault` acrescenta a amostra "Ciano (padrão)", que devolve nulo |
 | `TimeInput`, `DurationInput`, `parseClockTime` | `TimeInputs.tsx` | Hora e duração com digitação livre ("930", "1h30") |
@@ -153,6 +154,7 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 | `session.ts` | `useSessionQuery`, `useLogin`, `useGoogleLogin`, `useSignup`, `useStartDemo`, `useLogout`, `useUpdateProfile`, `useChangePassword`, `useSwitchWorkspace` |
 | `workspace.ts` | `useUpdateWorkspace`, `useCreateWorkspace` (nome, cor e dados de exemplo), `useDeleteWorkspace` (devolve a sessão nova e limpa o cache do workspace), membros, convites (`useInvites`, `useCreateInvite`, `useRevokeInvite`, `useInvite`, `useAcceptInvite`), clientes, tags e feriados (`useHolidays`, `useCreateHoliday`, `useImportHolidays`, `useDeleteHoliday`) |
 | `projects.ts` | `useProjects`, `useProjectMap`, `useCreateProject`, `useUpdateProject`, `useDeleteProject` |
+| `statuses.ts` | `useStatuses`, `useCreateStatus`, `useUpdateStatus` (mudou a categoria, relê as tarefas), `useDeleteStatus` |
 | `tasks.ts` | `useTasks`, `useDependencies`, `useCreateTask`, `useUpdateTask`, `useScheduleTasks`, `useDeleteTask`, dependências, `usePreviewTaskImport` (revisão sem gravar) e `useImportTasks` |
 | `timeEntries.ts` | `useRunningTimer`, `useTimeEntries`, `useStartTimer`, `useStopTimer`, criar, editar e excluir apontamento |
 | `reports.ts` | `useSummaryReport`, `useDetailedReport`, `useDownloadCsv` (gera o CSV no navegador e baixa) |
@@ -162,14 +164,15 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 | Tela | Componentes principais |
 |---|---|
 | Cronômetro | `TimerBar` (barra do topo, modo manual, sugestões), `CalendarView` (+ `calendarLayout.ts`), `ListView`, `TimesheetView`, `EntryEditor` |
-| Tarefas | `TasksPage` (exporta `TaskListView`, `TaskFiltersButton`, `GroupSortControls`, `useTaskRowContext`), `TaskRow`, `TaskBoard`, `taskGrouping.ts`, `TaskPanel`, `TaskFields`, `SubtaskSection`, `DependencySection`, `AllocationSection`, `TaskImportDialog` (+ `taskImportModel.ts`: contexto do prompt para IA e datas do exemplo) |
-| Projetos | `ProjectsPage` (exporta `TimeStatus`), `ProjectDialog`, `ProjectPage` (visão geral e aba Tarefas) |
+| Tarefas | `TasksPage` (exporta `TaskListView`, `TaskFiltersButton` (com `projectId`, só os status do projeto), `GroupSortControls`, `useTaskRowContext`), `TaskRow`, `TaskBoard` (uma coluna por status, padrão e customizados, com rolagem horizontal), `taskGrouping.ts` (`statusOrder`: colunas e grupos; `effectiveStatusKey`), `TaskPanel`, `TaskFields`, `SubtaskSection`, `DependencySection`, `AllocationSection`, `TaskImportDialog` (+ `taskImportModel.ts`: contexto do prompt para IA e datas do exemplo) |
+| Projetos | `ProjectsPage` (exporta `TimeStatus`), `ProjectDialog`, `ProjectPage` (visão geral, aba Tarefas e o botão "Status do projeto" no cabeçalho) |
 | Gantt | `ProjectGantt` (barra de ferramentas), `GanttChart`, `ganttModel.ts` |
 | Linha do tempo | `TimelinePage`, `timelineModel.ts` |
 | Relatórios | `ReportsPage` (Resumo, Detalhado, Semanal), `ReportFilters` (`DateRangeControl`, `MultiFilter`, `BillableFilter`), `reportRange.ts` |
 | Gestão | `MembersPage` (membros, `InviteDialog`, `PendingInvites`, `inviteLink`), `ClientsPage`, `TagsPage`, `RenameCell` |
 | Entrada | `AuthPage` (login, cadastro e demonstração local), `GoogleButton` ("Continuar com Google", só no modo Firebase), `InvitePage` (aceitar convite) |
-| Configurações | `ProfileSettingsPage` (conta, preferências, aplicativo e senha), `WorkspaceSettingsPage` (geral, cor do workspace, feriados, agendamento automático), `HolidaysSection`, `DeleteWorkspaceSection` (só administrador; confirma com o nome digitado), `NoWorkspace` |
+| Status | `StatusList` (padrão, do workspace e do projeto; cada escopo edita só os próprios), `StatusDialog` (nome, "Conta como", ícone, cor e prévia). Ficam nas configurações do workspace e no botão "Status do projeto" do cabeçalho do projeto; o diálogo também abre por "Novo status" no menu de status da tarefa. Os dois vêm num pedaço separado do build (`statuses/lazy.ts` e o `lazy` do `TaskFields`), dentro de `Suspense` |
+| Configurações | `ProfileSettingsPage` (conta, preferências, aplicativo e senha), `WorkspaceSettingsPage` (geral, cor do workspace, feriados, agendamento automático, status das tarefas), `HolidaysSection`, `DeleteWorkspaceSection` (só administrador; confirma com o nome digitado), `NoWorkspace` |
 | Busca | `QuickSearch`, `ShortcutsDialog` |
 
 ## 4.7 Desempenho
@@ -184,6 +187,9 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
   à subcoleção `tasks`). `[planejado]`: paginação para workspaces com milhares de
   tarefas.
 - O SDK do Firebase é um pedaço separado do build, baixado só no modo Firebase.
+- Telas de uso raro podem vir em pedaço separado com `React.lazy` e `Suspense` (como a
+  lista e o diálogo de status). O pacote principal está perto do limite de aviso do build
+  (900 kB sem compressão). `[planejado]`: dividir o pacote por rota.
 
 ## 4.8 Acessibilidade
 

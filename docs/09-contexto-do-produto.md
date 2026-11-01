@@ -40,6 +40,7 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 | Projects (lista, cliente, status de tempo, equipe, fixar, arquivar) | Projetos | `[implementado]` |
 | Project dashboard | Visão geral do projeto | `[implementado]` |
 | Tasks (lista agrupada, quadro, "My tasks", filtros, agrupar, ordenar) | Tarefas | `[implementado]` |
+| Status de tarefa personalizados (Toggl Plan) | Status customizados no workspace ou no projeto, com ícone e cor, cada um contando como A fazer, Em andamento ou Concluída | `[implementado]` |
 | Painel lateral de tarefa (projeto, datas, estimativa total ou por dia, prioridade, tags, responsável, status, faturável, subtarefas, alocação, notas) | Painel de tarefa | `[implementado]` |
 | Anexos em tarefa | | `[planejado]` |
 | Tarefa privada (cadeado) | | `[planejado]` |
@@ -76,6 +77,7 @@ que funciona sem nenhum serviço externo; tema de cor por workspace.
 | Apontamento | Registro de tempo (início e fim) | `TimeEntry` |
 | Cronômetro rodando | Apontamento sem fim | `stop = null` |
 | Faturável | Tempo que gera valor para o cliente | `billable` |
+| Status customizado | Status criado pela equipe, no workspace ou num projeto, que conta como um dos três padrão (a categoria) | `CustomStatus`, `Task.statusId` |
 | Tarefa-mãe, subtarefa | Hierarquia de tarefas; a mãe vira barra de grupo no Gantt | `parentId` |
 | Marco | Tarefa de duração zero que marca uma entrega | `isMilestone` |
 | Dependência | Ligação entre duas tarefas com tipo e atraso | `TaskDependency` |
@@ -120,6 +122,8 @@ afetados.
 | PWA: instalação, abertura sem internet e aviso de versão nova | `[implementado]` |
 | Tema de cor por workspace (as 14 cores de projeto, paleta completa nos dois temas) | `[implementado]` |
 | Excluir workspace com todos os dados (só administrador) | `[implementado]` |
+| Status de tarefa customizados (workspace e projeto, ícone e cor) | `[implementado]` |
+| Reordenar status customizados arrastando (hoje entram no fim da categoria) | `[planejado]` |
 | Dados do Firestore disponíveis sem internet (cache persistente do SDK) | `[planejado]` |
 | Sincronizar com o Firebase o que foi feito no modo local durante uma queda | `[planejado]` |
 | Registro de auditoria (o Firebase Auth já limita tentativas de login) | `[planejado]` |

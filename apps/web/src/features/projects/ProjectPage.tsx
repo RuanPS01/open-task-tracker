@@ -1,7 +1,7 @@
 // Página do projeto com abas: Visão geral (painel), Cronograma (Gantt) e Tarefas.
 import { addDays, computeCriticalPath, toIsoDate, type Project, type Task } from '@ott/shared';
-import { ArrowLeft, LayoutList, Pencil, Plus, SquareKanban } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ArrowLeft, CircleDot, LayoutList, Pencil, Plus, SquareKanban } from 'lucide-react';
+import { Suspense, useMemo, useState } from 'react';
 import { Link, NavLink, Navigate, useParams } from 'react-router-dom';
 import { useProjects } from '../../data/projects';
 import { useSummaryReport } from '../../data/reports';
@@ -9,10 +9,11 @@ import { useDependencies, useTasks } from '../../data/tasks';
 import { useClients, useMembers } from '../../data/workspace';
 import { usePreferences } from '../../app/session';
 import { HorizontalBars, StackedMeter, StatTile } from '../../components/charts/Charts';
-import { StatusIcon } from '../../components/pickers/TaskIcons';
+import { TaskStatusIcon } from '../../components/pickers/TaskStatus';
 import { Avatar } from '../../components/ui/Avatar';
 import { Button, IconButton } from '../../components/ui/Button';
 import { EmptyState, LoadingBlock } from '../../components/ui/EmptyState';
+import { Modal } from '../../components/ui/Modal';
 import { ColorDot } from '../../components/ui/ProjectLabel';
 import { Segmented, Toolbar, ToolbarSpacer } from '../../components/ui/Toolbar';
 import { useT } from '../../i18n';
@@ -20,7 +21,9 @@ import { useWorkCalendar } from '../../lib/calendar';
 import { useFormat } from '../../lib/format';
 import { useStoredState } from '../../lib/hooks';
 import { ProjectGantt } from '../gantt/ProjectGantt';
+import { StatusList } from '../statuses/lazy';
 import { TaskImportButton } from '../tasks/TaskImportDialog';
+import { useStatusCatalog } from '../../components/pickers/TaskStatus';
 import { useTaskPanel } from '../tasks/TaskPanelContext';
 import { GroupSortControls, TaskFiltersButton, TaskListView, useTaskRowContext } from '../tasks/TasksPage';
 import { TaskBoard } from '../tasks/TaskBoard';
@@ -38,6 +41,7 @@ export function ProjectPage() {
   const { data: projects, isLoading } = useProjects();
   const { data: clients = [] } = useClients();
   const [editing, setEditing] = useState(false);
+  const [managingStatuses, setManagingStatuses] = useState(false);
   const project = projects?.find((item) => item.id === projectId);
 
   if (!['overview', 'gantt', 'tasks'].includes(tab)) return <Navigate to={`/projects/${projectId}`} replace />;
@@ -57,6 +61,7 @@ export function ProjectPage() {
         <h1 className={styles.title}>{project.name}</h1>
         {client && <span className={styles.client}>{client.name}</span>}
         <IconButton icon={<Pencil />} label={t.projects.edit} size="sm" onClick={() => setEditing(true)} />
+        <IconButton icon={<CircleDot />} label={t.statuses.manage} size="sm" onClick={() => setManagingStatuses(true)} />
         <nav className={styles.tabs}>
           <NavLink end to={`/projects/${project.id}`} className={({ isActive }) => (isActive ? styles.tabActive : styles.tab)}>
             {t.projects.overview}
@@ -75,6 +80,13 @@ export function ProjectPage() {
         {tab === 'tasks' && <ProjectTasks project={project} />}
       </div>
       {editing && <ProjectDialog project={project} onClose={() => setEditing(false)} />}
+      <Modal open={managingStatuses} onClose={() => setManagingStatuses(false)} title={t.statuses.projectTitle} width={560}>
+        <p className={styles.modalHint}>{t.statuses.projectHint}</p>
+        {/* Qualquer membro cria status do projeto; os do workspace ficam nas configurações. */}
+        <Suspense fallback={<LoadingBlock />}>
+          <StatusList projectId={project.id} canEdit />
+        </Suspense>
+      </Modal>
     </>
   );
 }
@@ -90,12 +102,13 @@ function ProjectTasks({ project }: { project: Project }) {
   const [sortBy, setSortBy] = useStoredState<SortBy>('ott.projectTasksSort', 'dueDate');
   const [descending, setDescending] = useStoredState('ott.projectTasksDesc', false);
   const [filters, setFilters] = useState<TaskFilters>({ statuses: [], projectIds: [], priorities: [] });
-  const visible = applyFilters(tasks, filters, { assigneeId: null, showCompleted: true, search: '' });
+  const { statuses } = useStatusCatalog();
+  const visible = applyFilters(tasks, filters, { assigneeId: null, showCompleted: true, search: '', statuses });
 
   return (
     <>
       <Toolbar>
-        <TaskFiltersButton filters={filters} onChange={setFilters} showProjects={false} />
+        <TaskFiltersButton filters={filters} onChange={setFilters} showProjects={false} projectId={project.id} />
         {view === 'list' && (
           <GroupSortControls
             groupBy={groupBy}
@@ -267,7 +280,7 @@ function ProjectOverview({ project }: { project: Project }) {
               {upcoming.map((task) => (
                 <li key={task.id}>
                   <button type="button" onClick={() => panel.openTask(task.id)}>
-                    <StatusIcon status={task.status} />
+                    <TaskStatusIcon task={task} />
                     <span className={styles.upcomingName}>{task.name}</span>
                     <span className={task.dueDate < today ? styles.overdue : styles.upcomingDate}>
                       {task.dueDate === today ? t.common.today : format.dayMonth(task.dueDate)}

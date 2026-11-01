@@ -4,6 +4,7 @@
 import type {
   Client,
   Currency,
+  CustomStatus,
   Holiday,
   Id,
   Invite,
@@ -25,6 +26,7 @@ export const paths = {
   clients: (wid: Id) => `workspaces/${wid}/clients`,
   tags: (wid: Id) => `workspaces/${wid}/tags`,
   holidays: (wid: Id) => `workspaces/${wid}/holidays`,
+  statuses: (wid: Id) => `workspaces/${wid}/statuses`,
   projects: (wid: Id) => `workspaces/${wid}/projects`,
   tasks: (wid: Id) => `workspaces/${wid}/tasks`,
   dependencies: (wid: Id) => `workspaces/${wid}/dependencies`,
@@ -80,6 +82,8 @@ export type ProjectDoc = Omit<Project, 'pinned' | 'taskCount' | 'doneTaskCount' 
   updatedAt: IsoDateTime;
 };
 
+/** `statusId` falta nas tarefas antigas: `listTaskDocs` lê como nulo. */
 export type TaskDoc = Task;
+export type StatusDoc = CustomStatus;
 export type DependencyDoc = TaskDependency & { createdAt: IsoDateTime };
 export type TimeEntryDoc = Omit<TimeEntry, 'duration'>;

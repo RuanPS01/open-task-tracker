@@ -10,6 +10,7 @@ import * as members from './services/members';
 import * as projects from './services/projects';
 import * as reports from './services/reports';
 import * as session from './services/session';
+import * as statuses from './services/statuses';
 import * as taskImport from './services/taskImport';
 import * as tasks from './services/tasks';
 import * as timeEntries from './services/timeEntries';
@@ -117,6 +118,13 @@ export function createBackend(options: BackendOptions) {
       create: fn(catalog.createHoliday),
       importNational: fn(catalog.importHolidays),
       remove: fn(catalog.removeHoliday),
+    },
+    /** Status customizados (os três padrão não são documentos). */
+    statuses: {
+      list: fn(statuses.listStatuses),
+      create: fn(statuses.createStatus),
+      update: fn(statuses.updateStatus),
+      remove: fn(statuses.removeStatus),
     },
     projects: {
       list: fn(projects.listProjects),

@@ -1,15 +1,17 @@
 import { CURRENCIES, type Currency } from '@ott/shared';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useUpdateWorkspace } from '../../data/workspace';
 import { useIsAdmin, useWorkspace } from '../../app/session';
 import { ColorSwatches } from '../../components/pickers/ColorSwatches';
 import { Button } from '../../components/ui/Button';
+import { LoadingBlock } from '../../components/ui/EmptyState';
 import { Field, Input, Select, Switch } from '../../components/ui/Field';
 import { toast } from '../../components/ui/Toast';
 import { useT } from '../../i18n';
 import { PageHeader } from '../../layout/PageHeader';
 import { useFormat } from '../../lib/format';
+import { StatusList } from '../statuses/lazy';
 import { DeleteWorkspaceSection } from './DeleteWorkspaceSection';
 import { HolidaysSection } from './HolidaysSection';
 import styles from './Settings.module.css';
@@ -122,6 +124,14 @@ export function WorkspaceSettingsPage() {
             </div>
           </section>
         </fieldset>
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>{t.statuses.title}</h2>
+          <p className={styles.sectionHint}>{t.statuses.workspaceHint}</p>
+          {!isAdmin && <p className={styles.sectionHint}>{t.statuses.adminOnly}</p>}
+          <Suspense fallback={<LoadingBlock />}>
+            <StatusList projectId={null} canEdit={isAdmin} />
+          </Suspense>
+        </section>
         {isAdmin && <DeleteWorkspaceSection />}
       </div>
     </>

@@ -1,4 +1,4 @@
-import type { Holiday, Member, Project, Task } from '@ott/shared';
+import type { CustomStatus, Holiday, Member, Project, Task } from '@ott/shared';
 import { describe, expect, it } from 'vitest';
 import { exampleDates, promptContext } from './taskImportModel';
 
@@ -17,7 +17,7 @@ describe('contexto do prompt', () => {
   const project = (id: string, name: string, archived = false) => ({ id, name, archived }) as Project;
   const task = (name: string, projectId: string) => ({ name, projectId }) as Task;
 
-  it('leva dias úteis, feriados futuros, projetos ativos e as tarefas do projeto atual', () => {
+  it('leva dias úteis, feriados futuros, projetos ativos, status e as tarefas do projeto atual', () => {
     const context = promptContext({
       today: '2026-10-14',
       weekdayName,
@@ -34,6 +34,11 @@ describe('contexto do prompt', () => {
         { name: 'Bia', email: 'bia@exemplo.com', active: false },
       ] as Member[],
       tags: [],
+      statuses: [
+        { id: 's3', name: 'Velho', category: 'todo', projectId: 'p2', position: 1 },
+        { id: 's2', name: 'Aguardando cliente', category: 'todo', projectId: 'p1', position: 1 },
+        { id: 's1', name: 'Em revisão', category: 'in_progress', projectId: null, position: 1 },
+      ] as CustomStatus[],
       tasks: [task('Layout', 'p1'), task('Layout', 'p1'), task('Outro', 'p2')],
       example: '{}',
     });
@@ -45,6 +50,11 @@ describe('contexto do prompt', () => {
       currentProject: 'Site',
       members: ['Ana <ana@exemplo.com>'],
       existingTasks: ['Layout'],
+      // Status de projeto arquivado fica de fora.
+      statuses: [
+        { name: 'Aguardando cliente', category: 'todo', project: 'Site' },
+        { name: 'Em revisão', category: 'in_progress', project: null },
+      ],
     });
   });
 });

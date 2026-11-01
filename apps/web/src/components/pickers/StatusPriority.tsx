@@ -1,33 +1,39 @@
-import { PRIORITIES, PRIORITY_KEYS, TASK_STATUSES, type Priority, type TaskStatus } from '@ott/shared';
+import { PRIORITIES, PRIORITY_KEYS, type Id, type Priority } from '@ott/shared';
+import { Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useT } from '../../i18n';
-import { Menu } from '../ui/Menu';
+import { Menu, type MenuEntry } from '../ui/Menu';
 import type { PopoverTriggerProps } from '../ui/Popover';
-import { PriorityIcon, StatusIcon } from './TaskIcons';
+import { PriorityIcon } from './TaskIcons';
+import { StatusOptionIcon, useStatusCatalog, type StatusOption } from './TaskStatus';
 
+/** Status disponíveis para uma tarefa do projeto: os padrão, os do workspace e os do projeto. */
 export function StatusMenu({
+  projectId,
   value,
   onChange,
+  onCreate,
   trigger,
 }: {
-  value: TaskStatus;
-  onChange: (value: TaskStatus) => void;
+  projectId: Id | null;
+  /** Chave do status atual: a categoria ou o id do status customizado. */
+  value: string;
+  onChange: (option: StatusOption) => void;
+  /** Mostra "Novo status" no fim do menu. */
+  onCreate?: () => void;
   trigger: (props: PopoverTriggerProps) => ReactNode;
 }) {
   const t = useT();
-  return (
-    <Menu
-      trigger={trigger}
-      width={200}
-      items={TASK_STATUSES.map((status) => ({
-        key: status,
-        label: t.tasks.statusLabels[status],
-        icon: <StatusIcon status={status} />,
-        checked: status === value,
-        onSelect: () => onChange(status),
-      }))}
-    />
-  );
+  const catalog = useStatusCatalog();
+  const items: MenuEntry[] = catalog.optionsFor(projectId).map((option) => ({
+    key: option.key,
+    label: option.label,
+    icon: <StatusOptionIcon option={option} />,
+    checked: option.key === value,
+    onSelect: () => onChange(option),
+  }));
+  if (onCreate) items.push('separator', { key: 'new-status', label: t.statuses.create, icon: <Plus />, onSelect: onCreate });
+  return <Menu trigger={trigger} width={220} items={items} />;
 }
 
 export function PriorityMenu({

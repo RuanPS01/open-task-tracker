@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useCreateTask, useDeleteTask, useTasks, useUpdateTask } from '../../data/tasks';
 import { useRunningTimer, useStartTimer, useStopTimer } from '../../data/timeEntries';
 import { useCurrentUser } from '../../app/session';
-import { StatusIcon } from '../../components/pickers/TaskIcons';
+import { TaskStatusIcon } from '../../components/pickers/TaskStatus';
 import { Button, IconButton } from '../../components/ui/Button';
 import { useConfirm } from '../../components/ui/Confirm';
 import { LoadingBlock } from '../../components/ui/EmptyState';
@@ -37,6 +37,7 @@ function draftFrom(task: Task): TaskDraft {
     tagIds: task.tagIds,
     assigneeIds: task.assigneeIds,
     status: task.status,
+    statusId: task.statusId,
     billable: task.billable,
     isMilestone: task.isMilestone,
     allowNonWorkingDays: task.allowNonWorkingDays,
@@ -131,6 +132,7 @@ function NewTask({ defaults, onClose }: { defaults: Partial<TaskDraft>; onClose:
     tagIds: [],
     assigneeIds: [user.id],
     status: 'todo',
+    statusId: null,
     billable: false,
     isMilestone: false,
     allowNonWorkingDays: false,
@@ -154,7 +156,7 @@ function NewTask({ defaults, onClose }: { defaults: Partial<TaskDraft>; onClose:
   return (
     <>
       <header className={styles.header}>
-        <StatusIcon status={draft.status} size={18} />
+        <TaskStatusIcon task={draft} size={18} />
         <span className={styles.headerTitle}>{t.tasks.newTask}</span>
         <IconButton icon={<X />} label={t.common.close} size="sm" onClick={onClose} />
       </header>
@@ -237,7 +239,7 @@ function EditTask({ task, tasks, onClose }: { task: Task; tasks: Task[]; onClose
 
   const duplicate = () =>
     createTask.mutate(
-      { ...draftFrom(task), name: `${task.name} (2)`, status: 'todo', progress: 0 },
+      { ...draftFrom(task), name: `${task.name} (2)`, status: 'todo', statusId: null, progress: 0 },
       { onSuccess: () => toast.success(t.common.duplicate) },
     );
 
@@ -253,7 +255,7 @@ function EditTask({ task, tasks, onClose }: { task: Task; tasks: Task[]; onClose
           aria-label={task.status === 'done' ? t.tasks.reopen : t.tasks.markDone}
           title={task.status === 'done' ? t.tasks.reopen : t.tasks.markDone}
         >
-          <StatusIcon status={task.status} size={18} />
+          <TaskStatusIcon task={task} size={18} />
         </button>
         <span className={styles.headerTitle}>
           {parent ? (

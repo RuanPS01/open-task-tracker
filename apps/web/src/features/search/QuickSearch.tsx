@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjects } from '../../data/projects';
 import { useTasks } from '../../data/tasks';
-import { StatusIcon } from '../../components/pickers/TaskIcons';
+import { TaskStatusIcon } from '../../components/pickers/TaskStatus';
 import { Modal } from '../../components/ui/Modal';
 import { ColorDot } from '../../components/ui/ProjectLabel';
 import { useT } from '../../i18n';
@@ -66,7 +66,7 @@ export function QuickSearch({ open, onClose }: { open: boolean; onClose: () => v
             key: `t-${task.id}`,
             group: t.search.tasks,
             label: task.name,
-            icon: <StatusIcon status={task.status} />,
+            icon: <TaskStatusIcon task={task} />,
             run: () => panel.openTask(task.id),
           }))
       : [];

@@ -121,7 +121,9 @@ publicado); quem protege os dados é `firestore.rules`.
   aponta para `src/index.ts`); o Vite compila junto com a web.
 - O módulo `packages/data/src/firebase` é carregado por import dinâmico, então o build
   gera um pedaço separado com o SDK do Firebase (cerca de 165 kB comprimido) que só é
-  baixado quando o modo Firebase é tentado.
+  baixado quando o modo Firebase é tentado. A lista e o diálogo de status customizados
+  também vêm em pedaços separados (`React.lazy`). O aviso de pedaço grande do Vite está em
+  900 kB (`chunkSizeWarningLimit`) e o pacote principal está logo abaixo disso.
 - A web usa CSS Modules (`*.module.css`) mais os tokens globais.
 - PWA sem dependência extra: o plugin `apps/web/pwa/plugin.ts` (registrado no
   `vite.config.ts`, só no build) grava `dist/sw.js` com a lista de arquivos publicados e

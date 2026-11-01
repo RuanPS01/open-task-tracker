@@ -14,6 +14,8 @@ export interface ImportPromptContext {
   currentProject: string | null;
   members: string[];
   tags: string[];
+  /** Status customizados: nome, categoria (chave do status padrão) e projeto, se for de um só. */
+  statuses: { name: string; category: string; project: string | null }[];
   existingTasks: string[];
   example: string;
 }
@@ -85,6 +87,7 @@ export const ptBR = {
     INVALID_DATES: 'A data de início precisa ser antes da data de entrega.',
     INVALID_RANGE: 'O horário de fim precisa ser depois do início.',
     INVALID_PARENT: 'Essa tarefa não pode ser usada como tarefa-mãe.',
+    INVALID_STATUS: 'Esse status não vale para o projeto da tarefa.',
     INVALID_ASSIGNEE: 'O responsável precisa ser membro do workspace.',
     DEPENDENCY_SELF: 'Uma tarefa não pode depender dela mesma.',
     DEPENDENCY_HIERARCHY: 'Tarefa-mãe e subtarefa não podem ser ligadas.',
@@ -135,6 +138,62 @@ export const ptBR = {
     '#990099': 'Magenta',
     '#566614': 'Oliva',
     '#525266': 'Ardósia',
+  },
+  statuses: {
+    title: 'Status das tarefas',
+    workspaceHint:
+      'A fazer, Em andamento e Concluída são os status padrão e valem sempre. Crie outros para o fluxo da equipe, com nome, ícone e cor. Cada status conta como um dos padrão: é isso que decide concluir, reabrir, a tarefa-mãe e a capacidade. Os status criados aqui valem para todos os projetos.',
+    projectTitle: 'Status do projeto',
+    projectHint:
+      'Os status criados aqui só aparecem nas tarefas deste projeto, junto com os padrão e os status do workspace. Tarefa que sai do projeto volta ao status padrão da mesma categoria.',
+    manage: 'Status do projeto',
+    create: 'Novo status',
+    edit: 'Editar status',
+    name: 'Nome do status',
+    category: 'Conta como',
+    categoryHint: 'Concluída marca a tarefa como entregue (100%). A fazer e Em andamento a deixam aberta.',
+    icon: 'Ícone',
+    color: 'Cor do ícone',
+    preview: 'Prévia',
+    defaultTag: 'Padrão',
+    workspaceTag: 'Workspace',
+    projectTag: 'Projeto',
+    countsAs: (label: string) => `Conta como ${label}`,
+    created: 'Status criado.',
+    deleteTitle: (name: string) => `Excluir o status "${name}"?`,
+    deleteText: (fallback: string) => `As tarefas com este status passam para "${fallback}", o status padrão da mesma categoria.`,
+    notInProject: 'Esse status não vale para o projeto desta tarefa.',
+    adminOnly: 'Só administradores criam e alteram os status do workspace.',
+    icons: {
+      dashed: 'Pontilhado',
+      half: 'Meio cheio',
+      check: 'Concluído',
+      circle: 'Círculo',
+      dot: 'Ponto',
+      pause: 'Pausa',
+      x: 'Cancelado',
+      eye: 'Revisão',
+      search: 'Análise',
+      clock: 'Relógio',
+      hourglass: 'Espera',
+      ban: 'Bloqueado',
+      alert: 'Alerta',
+      flag: 'Bandeira',
+      bug: 'Defeito',
+      code: 'Código',
+      test: 'Teste',
+      pen: 'Escrita',
+      message: 'Conversa',
+      send: 'Enviado',
+      'thumbs-up': 'Aprovado',
+      users: 'Equipe',
+      truck: 'Entrega',
+      package: 'Pacote',
+      rocket: 'Lançamento',
+      star: 'Destaque',
+      archive: 'Arquivo',
+      lock: 'Travado',
+    },
   },
   pwa: {
     updateReady: 'Nova versão do Open Task Tracker disponível.',
@@ -448,6 +507,8 @@ export const ptBR = {
       TOO_MANY: (p: IssueParams) => `O arquivo passa do limite de ${p.max} tarefas.`,
       DUPLICATE_REF: (p: IssueParams) => `A ref "${p.ref}" aparece mais de uma vez.`,
       UNKNOWN_PROJECT: (p: IssueParams) => `O projeto "${p.name}" não existe neste workspace.`,
+      UNKNOWN_STATUS: (p: IssueParams) =>
+        `O status "${p.name}" não existe para esta tarefa. Use todo, in_progress, done ou o nome de um status do workspace ou do projeto da tarefa.`,
       SUBTASK_PROJECT_IGNORED: (p: IssueParams) => `Subtarefa fica no projeto da mãe: "${p.name}" foi ignorado.`,
       UNKNOWN_ASSIGNEE: (p: IssueParams) => `"${p.name}" não é membro do workspace e foi ignorado.`,
       INVALID_DATES: (p: IssueParams) => `O início (${p.start}) é depois da entrega (${p.due}).`,
@@ -507,6 +568,10 @@ export const ptBR = {
 - ${c.currentProject ? `Tarefas sem "project" entram no projeto "${c.currentProject}".` : 'Tarefas sem "project" ficam sem projeto.'}
 - Membros (use o e-mail ou o nome em "assignees"): ${list(c.members, 'nenhum')}.
 - Tags existentes: ${list(c.tags, 'nenhuma')}. Tags que não existem são criadas na importação.
+- Status customizados (use o nome em "status"; cada um conta como um dos status padrão): ${list(
+      c.statuses.map((s) => `${s.name} (conta como ${s.category}${s.project ? `, só no projeto "${s.project}"` : ', vale para todos os projetos'})`),
+      'nenhum',
+    )}.
 - Tarefas que já existem no projeto e podem aparecer em "dependsOn" pelo nome exato: ${list(c.existingTasks, 'nenhuma')}.
 
 # Formato do arquivo
@@ -515,7 +580,7 @@ Um objeto com "version": 1, "project" (opcional, nome de um projeto existente, v
 - "name": nome da tarefa, até 200 caracteres. Único campo obrigatório.
 - "description": descrição curta. "notes": anotações longas.
 - "project": nome de um projeto existente. Só nas tarefas de primeiro nível: subtarefas ficam no projeto da mãe.
-- "status": "todo" (padrão), "in_progress" ou "done".
+- "status": "todo" (padrão), "in_progress", "done" ou o nome de um status customizado listado acima que valha para o projeto da tarefa.
 - "priority": "none", "low", "medium", "high" ou "urgent" (ou um número de 0 a 4).
 - "startDate" e "dueDate": datas no formato AAAA-MM-DD. Só o início vira tarefa de um dia.
 - "durationDays": duração em dias úteis contada a partir de "startDate", no lugar de "dueDate".

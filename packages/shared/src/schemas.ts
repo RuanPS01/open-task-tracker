@@ -11,6 +11,7 @@ import {
   MEMBER_ROLES,
   PRIORITIES,
   PROJECT_COLORS,
+  STATUS_ICONS,
   TASK_STATUSES,
   THEMES,
   TIME_FORMATS,
@@ -171,6 +172,8 @@ const taskFields = {
   description: z.string().max(10_000).optional(),
   notes: z.string().max(50_000).optional(),
   status: z.enum(TASK_STATUSES).optional(),
+  /** Status customizado; quando vem, a categoria (`status`) passa a ser a dele. */
+  statusId: idSchema.nullable().optional(),
   priority: z.literal(PRIORITIES).optional(),
   startDate: isoDateSchema.nullable().optional(),
   dueDate: isoDateSchema.nullable().optional(),
@@ -190,6 +193,22 @@ export type CreateTaskInput = z.input<typeof createTaskSchema>;
 
 export const updateTaskSchema = z.object(taskFields).partial();
 export type UpdateTaskInput = z.input<typeof updateTaskSchema>;
+
+// --- Status customizados ----------------------------------------------------
+
+export const createStatusSchema = z.object({
+  name: z.string().trim().min(1).max(40),
+  category: z.enum(TASK_STATUSES),
+  icon: z.enum(STATUS_ICONS),
+  color: z.string().toLowerCase().pipe(z.enum(PROJECT_COLORS)),
+  /** Projeto em que o status vale; nulo (ou ausente) vale para o workspace inteiro. */
+  projectId: idSchema.nullable().optional(),
+});
+export type CreateStatusInput = z.input<typeof createStatusSchema>;
+
+/** O escopo (workspace ou projeto) não muda depois de criado. */
+export const updateStatusSchema = createStatusSchema.omit({ projectId: true }).partial();
+export type UpdateStatusInput = z.input<typeof updateStatusSchema>;
 
 export const scheduleTasksSchema = z.object({
   updates: z
@@ -298,7 +317,8 @@ export const importTaskSchema = z.object({
   description: z.string().max(10_000).nullish(),
   notes: z.string().max(50_000).nullish(),
   project: importText(200).nullish(),
-  status: z.enum(TASK_STATUSES).nullish(),
+  /** `todo`, `in_progress`, `done` ou o nome de um status customizado do projeto da tarefa. */
+  status: importText(40).nullish(),
   priority: z.union([z.literal(PRIORITIES), z.enum(['none', 'low', 'medium', 'high', 'urgent'])]).nullish(),
   startDate: isoDateSchema.nullish(),
   dueDate: isoDateSchema.nullish(),

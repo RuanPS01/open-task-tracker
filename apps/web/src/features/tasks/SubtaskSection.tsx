@@ -2,7 +2,7 @@ import type { Task } from '@ott/shared';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useCreateTask, useUpdateTask } from '../../data/tasks';
-import { StatusIcon } from '../../components/pickers/TaskIcons';
+import { TaskStatusIcon } from '../../components/pickers/TaskStatus';
 import { useT } from '../../i18n';
 import { useFormat } from '../../lib/format';
 import { Section } from './TaskPanel';
@@ -36,7 +36,7 @@ export function SubtaskSection({ task, subtasks }: { task: Task; subtasks: Task[
               onClick={() => updateTask.mutate({ id: subtask.id, status: subtask.status === 'done' ? 'todo' : 'done' })}
               aria-label={subtask.status === 'done' ? t.tasks.reopen : t.tasks.markDone}
             >
-              <StatusIcon status={subtask.status} />
+              <TaskStatusIcon task={subtask} />
             </button>
             <button type="button" className={styles.subtaskName} data-done={subtask.status === 'done'} onClick={() => panel.openTask(subtask.id)}>
               {subtask.name}

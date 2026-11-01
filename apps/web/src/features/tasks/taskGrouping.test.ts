@@ -1,6 +1,6 @@
-import { NO_ID, type Task } from '@ott/shared';
+import { NO_ID, type CustomStatus, type Task } from '@ott/shared';
 import { describe, expect, it } from 'vitest';
-import { applyFilters, dateBucket, groupTasks, sortTasks } from './taskGrouping';
+import { applyFilters, dateBucket, groupTasks, sortTasks, statusOrder } from './taskGrouping';
 
 const TODAY = '2026-10-14'; // quarta-feira
 
@@ -14,6 +14,7 @@ function task(n: number, extra: Partial<Task> = {}): Task {
     description: '',
     notes: '',
     status: 'todo',
+    statusId: null,
     priority: 0,
     startDate: null,
     dueDate: null,
@@ -73,5 +74,40 @@ describe('ordenação e agrupamento', () => {
     const base = { statuses: [], projectIds: [], priorities: [] };
     expect(applyFilters(tasks, base, { assigneeId: '5', showCompleted: false, search: '' }).map((t) => t.id)).toEqual(['1']);
     expect(applyFilters(tasks, base, { assigneeId: null, showCompleted: true, search: 'lay' }).map((t) => t.id)).toEqual(['3']);
+  });
+});
+
+describe('status customizados no quadro, nos grupos e nos filtros', () => {
+  const custom = (id: string, category: CustomStatus['category'], projectId: string | null): CustomStatus => ({
+    id,
+    workspaceId: 'w1',
+    projectId,
+    name: id,
+    category,
+    icon: 'eye',
+    color: '#9e5bd9',
+    position: 1,
+    createdAt: '2026-10-01T00:00:00.000Z',
+  });
+  const statuses = [custom('revisao', 'in_progress', null), custom('cliente', 'todo', 'p1'), custom('outro', 'todo', 'p2')];
+
+  it('colunas: padrões, os do workspace, os do projeto aberto e os de outros projetos em uso', () => {
+    expect(statusOrder(statuses, [], 'p1')).toEqual(['todo', 'cliente', 'in_progress', 'revisao', 'done']);
+    expect(statusOrder(statuses, [])).toEqual(['todo', 'in_progress', 'revisao', 'done']);
+    expect(statusOrder(statuses, [task(1, { statusId: 'outro' })])).toEqual(['todo', 'outro', 'in_progress', 'revisao', 'done']);
+  });
+
+  it('agrupa e filtra pelo status customizado; status que sumiu conta como o padrão', () => {
+    const tasks = [
+      task(1, { status: 'in_progress', statusId: 'revisao' }),
+      task(2, { status: 'in_progress' }),
+      task(3, { status: 'in_progress', statusId: 'excluido' }),
+    ];
+    expect(groupTasks(tasks, 'status', TODAY, 1, statuses).map((g) => [g.key, g.tasks.map((t) => t.id)])).toEqual([
+      ['in_progress', ['2', '3']],
+      ['revisao', ['1']],
+    ]);
+    const filters = { statuses: ['revisao'], projectIds: [], priorities: [] };
+    expect(applyFilters(tasks, filters, { assigneeId: null, showCompleted: true, search: '', statuses }).map((t) => t.id)).toEqual(['1']);
   });
 });

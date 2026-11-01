@@ -1,10 +1,14 @@
+/* Uma coluna por status: com status customizados passam de três, e o quadro rola na
+   horizontal dentro da própria área em vez de espremer as colunas. */
 .board {
   display: grid;
-  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(260px, 1fr);
   gap: 12px;
   padding: 16px;
   min-height: 100%;
   align-items: start;
+  overflow-x: auto;
 }
 
 .column {

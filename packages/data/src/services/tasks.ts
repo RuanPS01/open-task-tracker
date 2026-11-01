@@ -8,6 +8,7 @@ import {
   descendantIds,
   rollupSummaries,
   scheduleTasksSchema,
+  statusAppliesTo,
   updateDependencySchema,
   updateTaskSchema,
   validateDependency,
@@ -31,6 +32,7 @@ import {
   type HolidayDoc,
   type MemberDoc,
   type ProjectDoc,
+  type StatusDoc,
   type TagDoc,
   type TaskDoc,
   type TimeEntryDoc,
@@ -53,7 +55,50 @@ const byPosition = (a: TaskDoc, b: TaskDoc) => a.position - b.position || (a.id 
 const unique = <T>(values: readonly T[]) => [...new Set(values)];
 
 export async function listTaskDocs(ctx: Ctx, workspaceId: Id): Promise<TaskDoc[]> {
-  return (await ctx.store.list<TaskDoc>(paths.tasks(workspaceId))).sort(byPosition);
+  const docs = await ctx.store.list<TaskDoc>(paths.tasks(workspaceId));
+  // Tarefas gravadas antes dos status customizados não têm statusId: status padrão.
+  return docs.map((doc) => (doc.statusId === undefined ? { ...doc, statusId: null } : doc)).sort(byPosition);
+}
+
+export async function listStatusDocs(ctx: Ctx, workspaceId: Id): Promise<StatusDoc[]> {
+  return ctx.store.list<StatusDoc>(paths.statuses(workspaceId));
+}
+
+/**
+ * Status de uma tarefa a partir da entrada. O customizado (`statusId`) define a
+ * categoria; só a categoria (ou `statusId` nulo) volta ao status padrão. Status de outro
+ * projeto é recusado. Sem nada de status na entrada, devolve undefined.
+ */
+export function resolveStatus(
+  statuses: readonly StatusDoc[],
+  projectId: Id | null,
+  input: { status?: TaskStatus; statusId?: Id | null },
+  fallback: TaskStatus,
+): { status: TaskStatus; statusId: Id | null } | undefined {
+  if (input.statusId) {
+    const custom = statuses.find((status) => status.id === input.statusId);
+    if (!custom) throw notFound('Status');
+    if (!statusAppliesTo(custom, projectId)) {
+      throw badRequest('INVALID_STATUS', 'Este status não vale para o projeto da tarefa');
+    }
+    return { status: custom.category, statusId: custom.id };
+  }
+  if (input.status !== undefined || input.statusId === null) return { status: input.status ?? fallback, statusId: null };
+  return undefined;
+}
+
+/** Troca a categoria do status: concluir marca 100% e a data; reabrir volta o progresso a 0. */
+export function setCategory(task: TaskDoc, status: TaskStatus, now: string, keepProgress = false): void {
+  const wasDone = task.status === 'done';
+  task.status = status;
+  if (status === 'done') {
+    task.completedAt = now;
+    task.progress = 100;
+  } else {
+    task.completedAt = null;
+    // Reabrir uma tarefa concluída não pode deixar a barra do Gantt cheia.
+    if (wasDone && !keepProgress) task.progress = 0;
+  }
 }
 
 export async function listDependencyDocs(ctx: Ctx, workspaceId: Id): Promise<DependencyDoc[]> {
@@ -110,6 +155,8 @@ export function applyScheduling(
         : 'todo';
     if (statuses.length > 0 && derived !== task.status) {
       task.status = derived;
+      // Status customizado de outra categoria não vale mais: volta ao padrão da nova.
+      task.statusId = null;
       task.completedAt = derived === 'done' ? now : null;
     }
     if (summary.startDate && summary.dueDate) {
@@ -246,7 +293,8 @@ export async function createTask(ctx: Ctx, workspaceId: Id, raw: CreateTaskInput
   }
   const isMilestone = input.isMilestone ?? false;
   const dates = normalizeDates(input.startDate ?? null, input.dueDate ?? null, isMilestone);
-  const status = input.status ?? 'todo';
+  const statuses = input.statusId ? await listStatusDocs(ctx, workspaceId) : [];
+  const { status, statusId } = resolveStatus(statuses, projectId, input, 'todo') ?? { status: 'todo', statusId: null };
   const now = nowIso(ctx);
   const task: TaskDoc = {
     id: ctx.store.newId(),
@@ -257,6 +305,7 @@ export async function createTask(ctx: Ctx, workspaceId: Id, raw: CreateTaskInput
     description: input.description ?? '',
     notes: input.notes ?? '',
     status,
+    statusId,
     priority: input.priority ?? 0,
     ...dates,
     estimateSeconds: input.estimateSeconds ?? null,
@@ -349,24 +398,26 @@ export async function updateTask(ctx: Ctx, workspaceId: Id, id: Id, raw: UpdateT
   }
 
   const now = nowIso(ctx);
-  if (input.status !== undefined && input.status !== current.status) {
-    task.status = input.status;
-    touchesSchedule = true;
-    if (input.status === 'done') {
-      task.completedAt = now;
-      task.progress = 100;
-    } else {
-      task.completedAt = null;
-      // Reabrir uma tarefa concluída não pode deixar a barra do Gantt cheia.
-      if (current.status === 'done' && input.progress === undefined) task.progress = 0;
+  const projectChanged = projectId !== current.projectId;
+  const statuses = input.statusId || projectChanged ? await listStatusDocs(ctx, workspaceId) : [];
+  const next = resolveStatus(statuses, projectId, input, current.status);
+  if (next) {
+    task.statusId = next.statusId;
+    if (next.status !== current.status) {
+      setCategory(task, next.status, now, input.progress !== undefined);
+      touchesSchedule = true;
     }
   }
 
-  if (projectId !== current.projectId) {
-    // Subtarefas herdam o projeto da mãe: mover a mãe de projeto leva a árvore junto.
-    task.projectId = projectId;
-    for (const childId of descendantIds([...working.values()].map(toSchedulable), id)) {
-      working.get(childId)!.projectId = projectId;
+  if (projectChanged) {
+    // Subtarefas herdam o projeto da mãe: mover a mãe de projeto leva a árvore junto. O
+    // status do projeto antigo não vale no novo: a tarefa volta ao padrão da categoria.
+    const statusById = new Map(statuses.map((status) => [status.id, status]));
+    const moved = [task, ...descendantIds([...working.values()].map(toSchedulable), id).map((childId) => working.get(childId)!)];
+    for (const item of moved) {
+      item.projectId = projectId;
+      const custom = item.statusId ? statusById.get(item.statusId) : undefined;
+      if (item.statusId && (!custom || !statusAppliesTo(custom, projectId))) item.statusId = null;
     }
   }
   if (input.assigneeIds) task.assigneeIds = unique(input.assigneeIds);

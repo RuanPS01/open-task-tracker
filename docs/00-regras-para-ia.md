@@ -133,7 +133,13 @@ questão de estilo.
    `toUser` faz com as preferências); renomear ou remover campo exige converter os
    documentos existentes. Campo usado pelas regras (`memberIds`, `adminIds`, `userId`,
    `workspaceId`, `id`) só muda junto com `firestore.rules` e os testes de regras.
-8. **Segurança.** No modo Firebase a senha fica só no Firebase Auth. A configuração do
+8. **Status de tarefa: a categoria decide.** `Task.status` é sempre um dos três padrão e é
+   o que toda regra consulta (concluir, reabrir, tarefa-mãe, capacidade, filtros de
+   concluídas). O status customizado (`Task.statusId`) é a variação que a equipe criou
+   dentro da categoria. Nunca compare `statusId` numa regra; para mostrar o status de uma
+   tarefa use `TaskStatusIcon` e `useStatusCatalog`. Ver
+   [07-fluxos-aplicacao.md](07-fluxos-aplicacao.md), seção 7.12.
+9. **Segurança.** No modo Firebase a senha fica só no Firebase Auth. A configuração do
    app web (`VITE_FIREBASE_*`) não é segredo: vai no pacote publicado. Quem protege os
    dados é `firestore.rules`; nunca afrouxe uma regra para uma tela funcionar, ajuste o
    serviço. No modo local a senha é guardada com PBKDF2 e os dados ficam só no

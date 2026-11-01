@@ -12,6 +12,7 @@ export const keys = {
   clients: (wid: Id) => ['ws', wid, 'clients'] as const,
   tags: (wid: Id) => ['ws', wid, 'tags'] as const,
   holidays: (wid: Id) => ['ws', wid, 'holidays'] as const,
+  statuses: (wid: Id) => ['ws', wid, 'statuses'] as const,
   projects: (wid: Id) => ['ws', wid, 'projects'] as const,
   tasks: (wid: Id) => ['ws', wid, 'tasks'] as const,
   dependencies: (wid: Id) => ['ws', wid, 'dependencies'] as const,
