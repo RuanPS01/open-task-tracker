@@ -1,6 +1,6 @@
 // Regras de negócio testadas pela fachada (as mesmas chamadas que a web faz).
 // Registradas uma vez e executadas em cada ambiente (local e, se houver, Firebase).
-import { NO_ID, type Task } from '@ott/shared';
+import { compareBoardCards, NO_ID, type Task } from '@ott/shared';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { expectCode, type Person, type TestEnv } from './env';
 
@@ -328,6 +328,90 @@ export function registerSuites(makeEnv: () => Promise<TestEnv>): void {
       expect(await api().dependencies.list(wid())).toEqual([]);
       const [kept] = await api().timeEntries.list(wid(), '2026-10-12T00:00:00.000Z', '2026-10-13T00:00:00.000Z');
       expect(kept).toMatchObject({ id: entry.id, taskId: null, projectId });
+    });
+
+    describe('ordem no quadro', () => {
+      const column = async (key: string) =>
+        (await api().tasks.list(wid()))
+          .filter((task) => (task.statusId ?? task.status) === key)
+          .sort(compareBoardCards)
+          .map((task) => task.name);
+
+      it('tarefa nova entra no fim da coluna e arrastar reordena gravando só o necessário', async () => {
+        const a = await create({ name: 'A' });
+        const b = await create({ name: 'B' });
+        const c = await create({ name: 'C' });
+        expect(a.boardPosition).toBeNull();
+        expect(await column('todo')).toEqual(['A', 'B', 'C']);
+
+        const moved = await api().tasks.move(wid(), c.id, { afterId: null });
+        expect(moved.tasks.map((task) => task.id)).toEqual([c.id]);
+        expect(await column('todo')).toEqual(['C', 'A', 'B']);
+
+        // Depois de B (sem posição ainda): A e B ganham posição para ficar acima.
+        const second = await api().tasks.move(wid(), c.id, { afterId: b.id });
+        expect(second.tasks.map((task) => task.id).sort()).toEqual([a.id, b.id, c.id].sort());
+        expect(await column('todo')).toEqual(['A', 'B', 'C']);
+
+        await api().tasks.move(wid(), c.id, { afterId: a.id });
+        expect(await column('todo')).toEqual(['A', 'C', 'B']);
+        const d = await create({ name: 'D' });
+        expect(d.boardPosition).toBeNull();
+        expect(await column('todo')).toEqual(['A', 'C', 'B', 'D']);
+        await expectCode(api().tasks.move(wid(), 'inexistente', { afterId: null }), 'NOT_FOUND');
+      });
+
+      it('soltar em outra coluna muda o status como na edição', async () => {
+        const a = await create({ name: 'A', progress: 30 });
+        const b = await create({ name: 'B', status: 'done' });
+        const { tasks } = await api().tasks.move(wid(), a.id, { afterId: b.id, status: 'done' });
+        expect(tasks.find((task) => task.id === a.id)).toMatchObject({ status: 'done', statusId: null, progress: 100 });
+        expect((await get(a.id)).completedAt).not.toBeNull();
+        expect(await column('done')).toEqual(['B', 'A']);
+        await api().tasks.move(wid(), a.id, { afterId: null, status: 'todo' });
+        expect(await get(a.id)).toMatchObject({ status: 'todo', progress: 0, completedAt: null });
+      });
+
+      it('status customizado de outro projeto é recusado', async () => {
+        const other = await api().projects.create(wid(), { name: 'Outro', color: '#9e5bd9' });
+        const waiting = await api().statuses.create(wid(), { name: 'Aguardando', category: 'todo', icon: 'hourglass', color: '#bf7000', projectId: other.id });
+        const review = await api().statuses.create(wid(), { name: 'Em revisão', category: 'in_progress', icon: 'eye', color: '#9e5bd9' });
+        const a = await create({ name: 'A' });
+        await expectCode(api().tasks.move(wid(), a.id, { afterId: null, statusId: waiting.id }), 'INVALID_STATUS');
+        await api().tasks.move(wid(), a.id, { afterId: null, status: 'in_progress', statusId: review.id });
+        expect(await get(a.id)).toMatchObject({ status: 'in_progress', statusId: review.id });
+        expect(await column(review.id)).toEqual(['A']);
+      });
+
+      it('mudar o status fora do quadro leva o cartão para o fim da coluna nova', async () => {
+        const a = await create({ name: 'A' });
+        const b = await create({ name: 'B', status: 'in_progress' });
+        await api().tasks.move(wid(), b.id, { afterId: null });
+        await api().tasks.move(wid(), a.id, { afterId: null });
+        expect((await get(a.id)).boardPosition).not.toBeNull();
+        const updated = await api().tasks.update(wid(), a.id, { status: 'in_progress' });
+        expect(updated.boardPosition).toBeNull();
+        expect(await column('in_progress')).toEqual(['B', 'A']);
+        // Mudar outro campo não mexe na ordem.
+        await api().tasks.move(wid(), a.id, { afterId: null });
+        expect((await api().tasks.update(wid(), a.id, { priority: 2 })).boardPosition).not.toBeNull();
+      });
+
+      it('trocar de projeto e perder o status do projeto antigo também leva ao fim da coluna', async () => {
+        const other = await api().projects.create(wid(), { name: 'Outro', color: '#9e5bd9' });
+        const waiting = await api().statuses.create(wid(), { name: 'Aguardando', category: 'todo', icon: 'hourglass', color: '#bf7000', projectId });
+        const a = await create({ name: 'A', statusId: waiting.id });
+        await api().tasks.move(wid(), a.id, { afterId: null });
+        expect((await get(a.id)).boardPosition).not.toBeNull();
+        expect(await api().tasks.update(wid(), a.id, { projectId: other.id })).toMatchObject({ statusId: null, boardPosition: null });
+      });
+
+      it('tarefa-mãe arrastada para outra categoria volta ao status das filhas', async () => {
+        const parent = await create({ name: 'Mãe' });
+        await create({ name: 'Filha', parentId: parent.id });
+        await api().tasks.move(wid(), parent.id, { afterId: null, status: 'done' });
+        expect(await get(parent.id)).toMatchObject({ status: 'todo', completedAt: null });
+      });
     });
 
     it('excluir projeto remove as tarefas (só administrador)', async () => {

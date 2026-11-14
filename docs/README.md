@@ -24,14 +24,18 @@ for alterar o código (pessoa ou agente de IA) começa pelo documento 00.
 
 ## Telas
 
-| Cronômetro (calendário semanal) | Tarefas e painel lateral |
+| Tarefas no Quadro (subtarefas dentro dos cartões) | Painel da tarefa com a barra de salvar |
 |---|---|
-| ![Cronômetro](imagens/cronometro.png) | ![Tarefas](imagens/tarefas.png) |
+| ![Quadro](imagens/quadro.png) | ![Tarefas](imagens/tarefas.png) |
 
-| Cronograma (Gantt) | Linha do tempo (capacidade) |
+| Cronômetro (calendário semanal) | Cronograma (Gantt) |
 |---|---|
-| ![Gantt](imagens/gantt.png) | ![Linha do tempo](imagens/linha-do-tempo.png) |
+| ![Cronômetro](imagens/cronometro.png) | ![Gantt](imagens/gantt.png) |
 
-| Relatórios | Feriados nas configurações |
+| Linha do tempo (capacidade) | Relatórios |
 |---|---|
-| ![Relatórios](imagens/relatorios.png) | ![Feriados](imagens/feriados.png) |
+| ![Linha do tempo](imagens/linha-do-tempo.png) | ![Relatórios](imagens/relatorios.png) |
+
+| Feriados nas configurações |
+|---|
+| ![Feriados](imagens/feriados.png) |

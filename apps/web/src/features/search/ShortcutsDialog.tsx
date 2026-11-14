@@ -5,6 +5,8 @@ const ROWS = [
   { keys: ['S'], label: 'startStop' },
   { keys: ['N'], label: 'newTask' },
   { keys: ['Ctrl', 'K'], label: 'search' },
+  { keys: ['Ctrl', 'Enter'], label: 'saveTask' },
+  { keys: ['Alt', 'arrows'], label: 'moveCard' },
   { keys: ['?'], label: 'help' },
 ] as const;
 
@@ -31,7 +33,7 @@ export function ShortcutsDialog({ open, onClose }: { open: boolean; onClose: () 
                       fontSize: 12,
                     }}
                   >
-                    {key}
+                    {key === 'arrows' ? t.shortcuts.arrowKeys : key}
                   </kbd>
                 ))}
               </td>

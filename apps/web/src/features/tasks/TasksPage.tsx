@@ -1,5 +1,6 @@
-// Tela Tarefas (Toggl "Tasks"): Lista agrupada ou Quadro, com "Minhas tarefas",
-// filtros, agrupar por, ordenar por, busca e mostrar concluídas.
+// Tela Tarefas (Toggl "Tasks"): Quadro (a visão padrão, no estilo do Trello) ou Lista
+// agrupada, com "Minhas tarefas", filtros, agrupar por, ordenar por, busca e mostrar
+// concluídas.
 import {
   NO_ID,
   PRIORITIES,
@@ -41,7 +42,7 @@ import { useT, type Messages } from '../../i18n';
 import { PageHeader } from '../../layout/PageHeader';
 import { useStoredState } from '../../lib/hooks';
 import { TaskBoard } from './TaskBoard';
-import { TaskImportButton } from './TaskImportDialog';
+import { TaskImportButton } from './TaskImportButton';
 import { useTaskPanel } from './TaskPanelContext';
 import { TaskRow, type TaskRowContext } from './TaskRow';
 import { applyFilters, groupTasks, sortTasks, statusOrder, type GroupBy, type SortBy, type TaskFilters } from './taskGrouping';
@@ -323,7 +324,7 @@ export function TasksPage() {
   const panel = useTaskPanel();
   const { data: tasks = [], isLoading } = useTasks();
   const { data: members = [] } = useMembers();
-  const [view, setView] = useStoredState<'list' | 'board'>('ott.tasksView', 'list');
+  const [view, setView] = useStoredState<'list' | 'board'>('ott.tasksView', 'board');
   const [assignee, setAssignee] = useStoredState<Id | 'all' | 'me'>('ott.tasksAssignee', 'me');
   const [groupBy, setGroupBy] = useStoredState<GroupBy>('ott.tasksGroup', 'date');
   const [sortBy, setSortBy] = useStoredState<SortBy>('ott.tasksSort', 'priority');
@@ -406,8 +407,8 @@ export function TasksPage() {
           value={view}
           onChange={setView}
           options={[
-            { value: 'list', label: '', icon: <LayoutList />, title: t.tasks.list },
             { value: 'board', label: '', icon: <SquareKanban />, title: t.tasks.board },
+            { value: 'list', label: '', icon: <LayoutList />, title: t.tasks.list },
           ]}
         />
         <IconButton icon={<Search />} label={t.tasks.search} active={searchOpen} onClick={() => setSearchOpen(!searchOpen)} />
@@ -434,7 +435,7 @@ export function TasksPage() {
             }
           />
         ) : view === 'board' ? (
-          <TaskBoard tasks={visible} context={context} />
+          <TaskBoard tasks={visible} context={context} defaults={assigneeId ? { assigneeIds: [assigneeId] } : {}} />
         ) : visible.length === 0 ? (
           <EmptyState compact title={t.tasks.emptyFiltered} illustration="shapes" />
         ) : (

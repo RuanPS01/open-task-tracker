@@ -3,6 +3,7 @@ import {
   addDays,
   compareIds,
   compareStatuses,
+  effectiveStatusKey,
   NO_ID,
   startOfWeekIso,
   TASK_STATUSES,
@@ -49,14 +50,6 @@ export function sortTasks(tasks: Task[], sortBy: SortBy, descending: boolean): T
     created: (a, b) => a.createdAt.localeCompare(b.createdAt),
   };
   return [...tasks].sort((a, b) => compare[sortBy](a, b) * direction || compareIds(a.id, b.id));
-}
-
-/**
- * Chave do status da tarefa para agrupar, filtrar e montar o quadro. Status customizado
- * que não existe mais (excluído em outra aba) conta como o padrão da categoria.
- */
-export function effectiveStatusKey(task: Pick<Task, 'status' | 'statusId'>, known: ReadonlySet<Id>): string {
-  return task.statusId !== null && known.has(task.statusId) ? task.statusId : task.status;
 }
 
 /**

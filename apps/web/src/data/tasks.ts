@@ -1,12 +1,16 @@
-import type {
-  CreateDependencyInput,
-  CreateTaskInput,
-  Id,
-  ScheduleTasksInput,
-  Task,
-  TaskDependency,
-  UpdateDependencyInput,
-  UpdateTaskInput,
+import {
+  effectiveStatusKey,
+  planBoardMove,
+  type CreateDependencyInput,
+  type CreateTaskInput,
+  type CustomStatus,
+  type Id,
+  type MoveTaskInput,
+  type ScheduleTasksInput,
+  type Task,
+  type TaskDependency,
+  type UpdateDependencyInput,
+  type UpdateTaskInput,
 } from '@ott/shared';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useWorkspaceId } from '../app/session';
@@ -68,8 +72,14 @@ export function useUpdateTask() {
       await client.cancelQueries({ queryKey: keys.tasks(wid) });
       const previous = client.getQueryData<Task[]>(keys.tasks(wid));
       // Só a categoria volta ao status padrão dela (a camada de dados faz o mesmo).
-      const patch = input.status !== undefined && input.statusId === undefined ? { ...input, statusId: null } : input;
-      patchTasks(client, wid, new Map([[id, patch as Partial<Task>]]));
+      const patch: Partial<Task> = input.status !== undefined && input.statusId === undefined ? { ...input, statusId: null } : { ...input };
+      // Status trocado fora do Quadro leva o cartão para o fim da coluna nova (como no serviço).
+      const current = previous?.find((task) => task.id === id);
+      if (current && (input.status !== undefined || input.statusId !== undefined)) {
+        const nextKey = patch.statusId ?? patch.status ?? current.status;
+        if (nextKey !== (current.statusId ?? current.status)) patch.boardPosition = null;
+      }
+      patchTasks(client, wid, new Map([[id, patch]]));
       return { previous };
     },
     onError: (_error, _input, context) => {
@@ -89,6 +99,45 @@ export function useScheduleTasks() {
       await client.cancelQueries({ queryKey: keys.tasks(wid) });
       const previous = client.getQueryData<Task[]>(keys.tasks(wid));
       patchTasks(client, wid, new Map(input.updates.map(({ id, ...dates }) => [id, dates])));
+      return { previous };
+    },
+    onSuccess: ({ tasks }) => patchTasks(client, wid, new Map(tasks.map((task) => [task.id, task]))),
+    onError: (_error, _input, context) => {
+      if (context?.previous) client.setQueryData(keys.tasks(wid), context.previous);
+    },
+    onSettled: () => invalidateTaskData(client, wid),
+  });
+}
+
+/**
+ * Arraste de cartão no Quadro. A prévia otimista usa o mesmo `planBoardMove` da camada de
+ * dados, então o cartão já fica no lugar certo antes da resposta; a resposta traz o que
+ * mudou de fato (vizinhos que ganharam posição, status da tarefa-mãe).
+ */
+export function useMoveTask() {
+  const client = useQueryClient();
+  const wid = useWorkspaceId();
+  return useMutation({
+    mutationFn: ({ id, ...input }: MoveTaskInput & { id: Id }) => backend().tasks.move(wid, id, input),
+    onMutate: async ({ id, afterId, status, statusId }) => {
+      await client.cancelQueries({ queryKey: keys.tasks(wid) });
+      const previous = client.getQueryData<Task[]>(keys.tasks(wid));
+      const task = previous?.find((item) => item.id === id);
+      if (!previous || !task) return { previous };
+      const statuses = client.getQueryData<CustomStatus[]>(keys.statuses(wid)) ?? [];
+      const custom = statusId ? statuses.find((item) => item.id === statusId) : undefined;
+      const moved: Task = custom
+        ? { ...task, status: custom.category, statusId: custom.id }
+        : status !== undefined || statusId === null
+          ? { ...task, status: status ?? task.status, statusId: null }
+          : task;
+      const known = new Set(statuses.map((item) => item.id));
+      const key = effectiveStatusKey(moved, known);
+      const column = previous.filter((item) => item.id !== id && effectiveStatusKey(item, known) === key);
+      const changes = new Map<Id, Partial<Task>>();
+      for (const [taskId, boardPosition] of planBoardMove(column, id, afterId)) changes.set(taskId, { boardPosition });
+      changes.set(id, { ...changes.get(id), status: moved.status, statusId: moved.statusId });
+      patchTasks(client, wid, changes);
       return { previous };
     },
     onSuccess: ({ tasks }) => patchTasks(client, wid, new Map(tasks.map((task) => [task.id, task]))),

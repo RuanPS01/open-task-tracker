@@ -12,7 +12,7 @@ Toda tela interna segue a mesma estrutura do Toggl Track:
 | Barra lateral | PageHeader: "Tarefas · Lista"    [Ação ciano]  |
 | (Sidebar)     |------------------------------------------------|
 |               | Toolbar: [Minhas tarefas] [Filtros] [Agrupar]  |
-|               |          ...espaço...   [Lista|Quadro] [busca] |
+|               |          ...espaço...   [Quadro|Lista] [busca] |
 |               |------------------------------------------------|
 |               | Corpo com rolagem própria                      |
 +---------------------------------------------------------------+
@@ -25,8 +25,10 @@ Toda tela interna segue a mesma estrutura do Toggl Track:
   um cartão.
 - Corpo: o próprio componente da página define `flex: 1; overflow: auto`.
 
-Telas com interação de arrastar (Cronômetro, Gantt, Linha do tempo) usam eventos de
-ponteiro próprios, com limiar de 3 a 4 px para separar clique de arraste.
+Telas com interação de arrastar (Cronômetro, Gantt, Linha do tempo, Quadro) usam eventos
+de ponteiro próprios, com limiar de 3 a 4 px para separar clique de arraste. Nunca use o
+arrastar nativo do HTML (`draggable`): ele não rola áreas com rolagem própria, não desenha
+o destino e não funciona no toque.
 
 ### Celular (até 760 px)
 
@@ -61,9 +63,11 @@ sem rolagem horizontal da página.
 - Gráficos de tempo: o Gantt mostra só a coluna do nome (150 px) e a Linha do tempo usa
   a coluna das pessoas com 140 px; o calendário do cronômetro mostra um dia por vez.
 - Toque: o dedo rola o calendário do cronômetro (arrastar para criar e mover fica para
-  mouse e caneta) e um toque abre o apontamento. Nada pode depender de passar o mouse:
-  o que aparece no `:hover` fica sempre visível no celular (botão de iniciar cronômetro
-  das linhas).
+  mouse e caneta) e um toque abre o apontamento. No Quadro o dedo rola o quadro e as
+  colunas; pressão longa (250 ms) num cartão começa o arraste. Nada pode depender de
+  passar o mouse: o que aparece no `:hover` fica sempre visível no celular (botão de
+  iniciar cronômetro das linhas, botão de acrescentar subtarefa do cartão).
+- Quadro: colunas com 84% da largura da tela, lado a lado, rolando na horizontal.
 - Margens laterais de 8 a 12 px e `env(safe-area-inset-*)` onde a tela encosta nas bordas
   do aparelho (barra inferior, login, rodapé dos modais).
 
@@ -82,11 +86,15 @@ sem rolagem horizontal da página.
 | Tela sem dados | `EmptyState` com ilustração, título, texto e ação | Tarefas vazias |
 | Carregando | `LoadingBlock` na primeira carga; esmaecer na recarga | Relatórios |
 | Edição na própria linha | Campo que grava ao sair (blur) ou Enter, Esc cancela | Descrição na Lista do cronômetro |
-| Salvamento | Painel de tarefa existente grava cada campo na hora; criação usa botão | Painel de tarefa |
+| Salvamento | Painel de tarefa trabalha num rascunho, nova ou existente: "Criar tarefa" ou "Salvar" (Ctrl+Enter) grava. Na existente a barra do rodapé mostra "Tudo salvo" ou "Alterações não salvas" com Descartar; fechar ou abrir outra tarefa com alterações pendentes faz a barra perguntar (Continuar editando, Descartar, Salvar) em vez de abrir outro diálogo. Listas de outros registros (subtarefas, dependências) e ações rápidas (concluir no cabeçalho, cronômetro) gravam na hora | Painel de tarefa |
+| Arrastar para ordenar | Eventos de ponteiro com cartão fantasma seguindo o ponteiro, espaço reservado no destino e rolagem automática nos dois eixos perto das bordas (`useBoardDrag`); Esc cancela; destino que recusa fica com borda vermelha; Alt + setas faz o mesmo pelo teclado | Cartões do Quadro |
+| Criar no lugar | Botão no pé da lista abre um campo; Enter cria e mantém aberto para a próxima, Esc fecha, botão de expandir leva o texto para o painel | "Adicionar tarefa" nas colunas do Quadro |
 
 Atalhos globais (`layout/AppShell.tsx`): `S` inicia ou para o cronômetro, `N` nova
 tarefa, `Ctrl K` busca rápida, `T` vai para o Cronômetro, `?` mostra os atalhos.
-Atalhos não disparam com o foco num campo de texto.
+Atalhos não disparam com o foco num campo de texto. Atalhos locais: `Ctrl Enter` (ou
+`Ctrl S`) salva a tarefa aberta no painel, inclusive com o foco num campo; `Alt` + setas
+move o cartão em foco no Quadro. Os dois aparecem na lista do `?`.
 
 ## 4.3 Inventário: kit de interface (`apps/web/src/components/ui`)
 
@@ -142,8 +150,9 @@ Estilos compartilhados dos seletores: `Picker.module.css` (`trigger`, `dashed`,
 | `useNow`, `useStoredState`, `useHotkey`, `useIsMobile`, `MOBILE_MEDIA` | `lib/hooks.ts` | Relógio, estado salvo no navegador, atalhos, tela de celular (até 760 px) |
 | `useSession`, `useWorkspace`, `useWorkspaceId`, `useCurrentUser`, `usePreferences`, `useIsAdmin` | `app/session.tsx` | Dados da sessão dentro das rotas internas |
 | `useT`, `useLocale`, `I18nProvider` | `i18n/index.tsx` | Textos traduzidos |
-| `useTaskPanel` | `features/tasks/TaskPanelContext.tsx` | Abrir o painel de tarefa de qualquer tela (`openTask`, `openNew`) |
-| `TaskImportButton`, `TaskImportDialog` | `features/tasks/TaskImportDialog.tsx` | Importar várias tarefas por JSON: botão "Importar JSON", prompt para IA, revisão e confirmação. Recebe o projeto padrão (`projectId`) e fica no Gantt, na aba Tarefas do projeto e na tela de Tarefas |
+| `useTaskPanel` | `features/tasks/TaskPanelContext.tsx` | Abrir o painel de tarefa de qualquer tela (`openTask`, `openNew`, `close`). Toda abertura e fechamento passa pela guarda que o painel de edição registra (`setGuard`): com alterações não salvas a ação fica segurada até a pessoa escolher |
+| `SubtaskChecklist` | `features/tasks/SubtaskChecklist.tsx` | Lista de subtarefas com menu de status completo (padrão e customizados do projeto) em cada uma, nome que abre o painel e campo para acrescentar. `compact` é a versão do cartão do Quadro, com barra de progresso. Usada no painel (`SubtaskSection`) e no `BoardCard` |
+| `TaskImportButton` | `features/tasks/TaskImportButton.tsx` | Botão "Importar JSON". Recebe o projeto padrão (`projectId`) e fica no Gantt, na aba Tarefas do projeto e na tela de Tarefas. Abre o `TaskImportDialog` (`TaskImportDialog.tsx`: prompt para IA, revisão e confirmação), que vem num pedaço separado do build |
 
 Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backend()`
 (`data/backend.ts`), a camada de dados conectada na abertura:
@@ -155,7 +164,7 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 | `workspace.ts` | `useUpdateWorkspace`, `useCreateWorkspace` (nome, cor e dados de exemplo), `useDeleteWorkspace` (devolve a sessão nova e limpa o cache do workspace), membros, convites (`useInvites`, `useCreateInvite`, `useRevokeInvite`, `useInvite`, `useAcceptInvite`), clientes, tags e feriados (`useHolidays`, `useCreateHoliday`, `useImportHolidays`, `useDeleteHoliday`) |
 | `projects.ts` | `useProjects`, `useProjectMap`, `useCreateProject`, `useUpdateProject`, `useDeleteProject` |
 | `statuses.ts` | `useStatuses`, `useCreateStatus`, `useUpdateStatus` (mudou a categoria, relê as tarefas), `useDeleteStatus` |
-| `tasks.ts` | `useTasks`, `useDependencies`, `useCreateTask`, `useUpdateTask`, `useScheduleTasks`, `useDeleteTask`, dependências, `usePreviewTaskImport` (revisão sem gravar) e `useImportTasks` |
+| `tasks.ts` | `useTasks`, `useDependencies`, `useCreateTask`, `useUpdateTask`, `useScheduleTasks`, `useMoveTask` (arraste no Quadro, otimista com `planBoardMove`), `useDeleteTask`, dependências, `usePreviewTaskImport` (revisão sem gravar) e `useImportTasks` |
 | `timeEntries.ts` | `useRunningTimer`, `useTimeEntries`, `useStartTimer`, `useStopTimer`, criar, editar e excluir apontamento |
 | `reports.ts` | `useSummaryReport`, `useDetailedReport`, `useDownloadCsv` (gera o CSV no navegador e baixa) |
 
@@ -164,7 +173,7 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 | Tela | Componentes principais |
 |---|---|
 | Cronômetro | `TimerBar` (barra do topo, modo manual, sugestões), `CalendarView` (+ `calendarLayout.ts`), `ListView`, `TimesheetView`, `EntryEditor` |
-| Tarefas | `TasksPage` (exporta `TaskListView`, `TaskFiltersButton` (com `projectId`, só os status do projeto), `GroupSortControls`, `useTaskRowContext`), `TaskRow`, `TaskBoard` (uma coluna por status, padrão e customizados, com rolagem horizontal), `taskGrouping.ts` (`statusOrder`: colunas e grupos; `effectiveStatusKey`), `TaskPanel`, `TaskFields`, `SubtaskSection`, `DependencySection`, `AllocationSection`, `TaskImportDialog` (+ `taskImportModel.ts`: contexto do prompt para IA e datas do exemplo) |
+| Tarefas | `TasksPage` (exporta `TaskListView`, `TaskFiltersButton` (com `projectId`, só os status do projeto), `GroupSortControls`, `useTaskRowContext`), `TaskRow`, `TaskBoard` (Quadro no estilo do Trello: uma coluna por status, padrão e customizados, cada uma rolando os próprios cartões; arraste, "Adicionar tarefa" no pé da coluna (`ColumnComposer`) e Alt + setas; recebe `defaults` para as tarefas criadas e `hideProject` na aba do projeto), `BoardCard` (cartão: projeto, nome, selos de prioridade, entrega, tempo, descrição, subtarefas e cronômetro, pessoas; lista de subtarefas dentro do cartão), `boardModel.ts` (`buildBoard`: cartões por coluna e subtarefas; `dropIndex`, `afterIdAt`, `isSamePlace`, `edgeSpeed`), `useBoardDrag.ts` (arraste por ponteiro, fantasma, espaço reservado, rolagem automática, pressão longa no toque), `taskGrouping.ts` (`statusOrder`: colunas e grupos), `TaskPanel` (barra de salvar), `taskDraft.ts` (rascunho da edição: `draftFrom`, `mergeChanges`, `withoutSaved`), `TaskFields`, `SubtaskSection`, `DependencySection`, `AllocationSection`, `TaskImportDialog` (+ `taskImportModel.ts`: contexto do prompt para IA e datas do exemplo) |
 | Projetos | `ProjectsPage` (exporta `TimeStatus`), `ProjectDialog`, `ProjectPage` (visão geral, aba Tarefas e o botão "Status do projeto" no cabeçalho) |
 | Gantt | `ProjectGantt` (barra de ferramentas), `GanttChart`, `ganttModel.ts` |
 | Linha do tempo | `TimelinePage`, `timelineModel.ts` |
@@ -188,8 +197,13 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
   tarefas.
 - O SDK do Firebase é um pedaço separado do build, baixado só no modo Firebase.
 - Telas de uso raro podem vir em pedaço separado com `React.lazy` e `Suspense` (como a
-  lista e o diálogo de status). O pacote principal está perto do limite de aviso do build
-  (900 kB sem compressão). `[planejado]`: dividir o pacote por rota.
+  lista e o diálogo de status e o diálogo de importação por JSON). Relatórios, Gestão e
+  Configurações já vêm por rota (`page()` em `app/router.tsx`). O pacote principal tem
+  cerca de 870 kB, perto do limite de aviso do build (900 kB sem compressão).
+  `[em andamento]`: dividir o resto do pacote por rota (Gantt, Linha do tempo).
+- No arraste do Quadro o fantasma anda pelo estilo direto (sem renderizar o quadro) e o
+  quadro só renderiza quando o destino muda de coluna ou de posição. A rolagem automática
+  roda num `requestAnimationFrame` só enquanto há arraste.
 
 ## 4.8 Acessibilidade
 
@@ -197,6 +211,8 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 - Popovers, menus, modais e painel prendem e devolvem o foco e fecham com Esc.
 - Status, prioridade, faturável e capacidade nunca dependem só de cor: há ícone, rótulo
   ou texto ("6h acima").
+- Todo arraste tem alternativa pelo teclado ou por menu: no Quadro, Alt + setas no cartão
+  em foco (Enter abre o painel); o status também muda pelo painel e pelo menu de status.
 - Gráficos têm tabela equivalente na mesma tela.
 - Testar as telas em 1366x768 e 1920x1080 e num celular (412x915), nos dois temas.
 - Alvos de toque no celular com pelo menos 30 px; a barra inferior tem 58 px de altura.

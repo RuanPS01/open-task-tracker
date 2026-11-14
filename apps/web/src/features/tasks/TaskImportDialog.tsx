@@ -11,7 +11,7 @@ import {
   type TaskImportRow,
 } from '@ott/shared';
 import clsx from 'clsx';
-import { CalendarClock, CircleAlert, Diamond, FileBraces, Sparkles, TriangleAlert, Upload } from 'lucide-react';
+import { CalendarClock, CircleAlert, Diamond, Sparkles, TriangleAlert, Upload } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useWorkspace } from '../../app/session';
 import { useProjectMap } from '../../data/projects';
@@ -49,19 +49,6 @@ async function copyText(text: string): Promise<void> {
   const ok = document.execCommand('copy');
   area.remove();
   if (!ok) throw new Error('copy');
-}
-
-export function TaskImportButton({ projectId = null, size = 'md' }: { projectId?: Id | null; size?: 'sm' | 'md' }) {
-  const t = useT();
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <Button size={size} icon={<FileBraces />} onClick={() => setOpen(true)} mobileIconOnly>
-        {t.taskImport.button}
-      </Button>
-      {open && <TaskImportDialog projectId={projectId} onClose={() => setOpen(false)} />}
-    </>
-  );
 }
 
 export function TaskImportDialog({ projectId, onClose }: { projectId: Id | null; onClose: () => void }) {
