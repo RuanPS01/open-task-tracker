@@ -76,7 +76,8 @@ open-task-tracker/
     test/                    suites.ts (as mesmas suítes nos dois modos), rules.ts (regras do Firestore)
   packages/shared/
     src/                     constants, entities, results, schemas, dates, duration,
-                             scheduling, capacity, holidays, statuses, ids
+                             scheduling, capacity, holidays, statuses, board (ordem dos
+                             cartões do Quadro), ids
     test/                    testes unitários dos algoritmos
   firestore.rules            regras de acesso do Firestore
   firestore.indexes.json     índice composto usado pelo cronômetro
@@ -174,9 +175,10 @@ nunca fica pela metade.
   Linha do tempo, painel e busca leem a mesma lista, então nunca mostram versões
   diferentes da mesma tarefa.
 - **Atualização otimista** nos pontos de arrastar: datas no Gantt e na Linha do tempo
-  (`useScheduleTasks`), status e campos de tarefa (`useUpdateTask`) e horários no
-  calendário do cronômetro (`useUpdateTimeEntry`). Em erro, o cache volta ao estado
-  anterior e o aviso aparece.
+  (`useScheduleTasks`), ordem e status dos cartões no Quadro (`useMoveTask`, com o mesmo
+  `planBoardMove` da camada de dados), status e campos de tarefa (`useUpdateTask`) e
+  horários no calendário do cronômetro (`useUpdateTimeEntry`). Em erro, o cache volta ao
+  estado anterior e o aviso aparece.
 - **Invalidação por efeito colateral.** Exemplo: parar o cronômetro invalida cronômetro,
   apontamentos, tarefas (tempo registrado), projetos e relatórios
   (`invalidateTracking` em `data/timeEntries.ts`).
@@ -196,14 +198,19 @@ nunca fica pela metade.
 | `/projects` | Lista de projetos | `features/projects` |
 | `/projects/:id` | Visão geral do projeto | `features/projects` |
 | `/projects/:id/gantt` | Cronograma (Gantt) | `features/gantt` |
-| `/projects/:id/tasks` | Tarefas do projeto (Lista e Quadro) | `features/projects`, `features/tasks` |
-| `/tasks` | Tarefas (Lista e Quadro) | `features/tasks` |
+| `/projects/:id/tasks` | Tarefas do projeto (Quadro, a visão padrão, e Lista) | `features/projects`, `features/tasks` |
+| `/tasks` | Tarefas (Quadro, a visão padrão, e Lista) | `features/tasks` |
 | `/timeline` | Linha do tempo (capacidade) | `features/timeline` |
 | `/members`, `/clients`, `/tags` | Gestão (membros e convites, clientes, tags) | `features/manage` |
 | `/settings/profile`, `/settings/workspace` | Configurações | `features/settings` |
 
 O painel de tarefa (`features/tasks/TaskPanelContext.tsx`) e a busca rápida
 (`features/search`) são globais e abrem por cima de qualquer tela.
+
+Relatórios, Membros, Clientes, Tags e as duas telas de Configurações vêm em pedaços
+separados do build (`page()` com `React.lazy` em `app/router.tsx`), baixados ao abrir a
+rota, com "Carregando..." (`LoadingBlock`) enquanto chegam. As demais telas ficam no
+pacote principal.
 
 ## 1.8 Publicação
 

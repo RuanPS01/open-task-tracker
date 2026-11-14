@@ -139,8 +139,14 @@ export interface Task {
   /** Liberada para fins de semana e feriados: usa todos os dias do calendário. */
   allowNonWorkingDays: boolean;
   billable: boolean;
-  /** Ordem manual dentro do mesmo pai (Gantt e quadro). */
+  /** Ordem manual dentro do mesmo pai (Gantt, lista de subtarefas e checklist do cartão). */
   position: number;
+  /**
+   * Ordem do cartão na coluna do Quadro (só compara cartões do mesmo status). Nulo: o
+   * cartão nunca foi arrastado e fica no fim da coluna, pela data de criação. Ausente
+   * nas tarefas antigas: vale nulo.
+   */
+  boardPosition: number | null;
   assigneeIds: Id[];
   tagIds: Id[];
   /** Soma dos apontamentos encerrados ligados à tarefa. */

@@ -137,6 +137,8 @@ export function createBackend(options: BackendOptions) {
       create: fn(tasks.createTask),
       update: fn(tasks.updateTask),
       schedule: fn(tasks.scheduleTasks),
+      /** Arraste de cartão no Quadro (ordem na coluna e status). */
+      move: fn(tasks.moveTask),
       remove: fn(tasks.removeTask),
       /** Revisão da importação por JSON (não grava nada). */
       previewImport: fn(taskImport.previewTaskImport),

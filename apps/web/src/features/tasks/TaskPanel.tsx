@@ -1,8 +1,12 @@
 // Painel lateral de tarefa. Tarefa nova trabalha num rascunho e só grava ao clicar em
-// "Criar tarefa"; tarefa existente grava cada alteração na hora (como no Toggl).
+// "Criar tarefa". Tarefa existente também: nome, descrição, propriedades e notas ficam
+// num rascunho até "Salvar" (ou Ctrl+Enter), e fechar com alterações pendentes pergunta
+// antes. Subtarefas, dependências, cronômetro e o botão de concluir agem na hora, porque
+// são outros registros ou ações rápidas.
 import type { Task } from '@ott/shared';
+import clsx from 'clsx';
 import { ChevronDown, ChevronRight, Copy, MoreHorizontal, NotebookPen, Play, Square, Trash2, X } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useCreateTask, useDeleteTask, useTasks, useUpdateTask } from '../../data/tasks';
 import { useRunningTimer, useStartTimer, useStopTimer } from '../../data/timeEntries';
 import { useCurrentUser } from '../../app/session';
@@ -19,31 +23,9 @@ import { AllocationSection } from './AllocationSection';
 import { DependencySection } from './DependencySection';
 import { SubtaskSection } from './SubtaskSection';
 import { TaskFields, type TaskDraft } from './TaskFields';
+import { draftFrom, hasChanges, mergeChanges, withoutSaved, withoutStatus } from './taskDraft';
 import { useTaskPanel, type TaskPanelState } from './TaskPanelContext';
 import styles from './TaskPanel.module.css';
-
-function draftFrom(task: Task): TaskDraft {
-  return {
-    name: task.name,
-    description: task.description,
-    notes: task.notes,
-    projectId: task.projectId,
-    parentId: task.parentId,
-    startDate: task.startDate,
-    dueDate: task.dueDate,
-    estimateSeconds: task.estimateSeconds,
-    estimateMode: task.estimateMode,
-    priority: task.priority,
-    tagIds: task.tagIds,
-    assigneeIds: task.assigneeIds,
-    status: task.status,
-    statusId: task.statusId,
-    billable: task.billable,
-    isMilestone: task.isMilestone,
-    allowNonWorkingDays: task.allowNonWorkingDays,
-    progress: task.progress,
-  };
-}
 
 /** Textarea que cresce com o conteúdo. */
 function AutoTextArea({
@@ -199,6 +181,9 @@ function NewTask({ defaults, onClose }: { defaults: Partial<TaskDraft>; onClose:
   );
 }
 
+/** Mac usa Cmd no lugar de Ctrl nos atalhos. */
+const MOD_KEY = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? 'Cmd' : 'Ctrl';
+
 function EditTask({ task, tasks, onClose }: { task: Task; tasks: Task[]; onClose: () => void }) {
   const t = useT();
   const format = useFormat();
@@ -210,21 +195,89 @@ function EditTask({ task, tasks, onClose }: { task: Task; tasks: Task[]; onClose
   const startTimer = useStartTimer();
   const stopTimer = useStopTimer();
   const panel = useTaskPanel();
-  const [name, setName] = useState(task.name);
-  const [description, setDescription] = useState(task.description);
-  const [notes, setNotes] = useState(task.notes);
+  const [changes, setChanges] = useState<Partial<TaskDraft>>({});
   const [showNotes, setShowNotes] = useState(false);
+  /** Ação (fechar, abrir outra tarefa) segurada até a pessoa decidir o que fazer com o rascunho. */
+  const [leaving, setLeaving] = useState<(() => void) | null>(null);
 
-  useEffect(() => setName(task.name), [task.name]);
-  useEffect(() => setDescription(task.description), [task.description]);
-  useEffect(() => setNotes(task.notes), [task.notes]);
+  const base = draftFrom(task);
+  const values: TaskDraft = { ...base, ...changes };
+  const dirty = hasChanges(changes);
+  const nameMissing = !values.name.trim();
 
   const children = tasks.filter((item) => item.parentId === task.id);
   const isSummary = children.length > 0;
   const parent = task.parentId ? tasks.find((item) => item.id === task.parentId) : undefined;
   const timerHere = running?.taskId === task.id;
 
-  const save = (change: Partial<TaskDraft>) => updateTask.mutate({ id: task.id, ...change });
+  const edit = (change: Partial<TaskDraft>) => setChanges((current) => mergeChanges(draftFrom(task), current, change));
+
+  const save = (after?: () => void) => {
+    if (!dirty || nameMissing) return;
+    const saved = { ...changes, ...(changes.name !== undefined ? { name: changes.name.trim() } : {}) };
+    updateTask.mutate(
+      { id: task.id, ...saved },
+      {
+        onSuccess: () => {
+          setChanges((current) => withoutSaved(current, { ...saved, ...(changes.name !== undefined ? { name: changes.name } : {}) }));
+          toast.success(t.common.saved);
+          after?.();
+        },
+      },
+    );
+  };
+
+  const discard = () => setChanges({});
+
+  // A guarda vê sempre o rascunho atual sem ser registrada de novo a cada tecla.
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  useEffect(() => {
+    panel.setGuard((proceed) => {
+      if (!dirtyRef.current) return true;
+      setLeaving(() => proceed);
+      return false;
+    });
+    return () => panel.setGuard(null);
+  }, [panel]);
+
+  // Fechar a aba do navegador com alterações pendentes também avisa.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
+
+  const leave = (choice: 'save' | 'discard' | 'stay') => {
+    const proceed = leaving;
+    setLeaving(null);
+    if (choice === 'stay' || !proceed) return;
+    if (choice === 'discard') {
+      dirtyRef.current = false;
+      discard();
+      proceed();
+      return;
+    }
+    save(() => {
+      dirtyRef.current = false;
+      proceed();
+    });
+  };
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const mod = event.ctrlKey || event.metaKey;
+    if (mod && (event.key === 'Enter' || event.key.toLowerCase() === 's')) {
+      event.preventDefault();
+      save();
+    }
+  };
+
+  const toggleDone = () => {
+    // Ação rápida: grava na hora e tira do rascunho qualquer status escolhido antes.
+    setChanges((current) => withoutStatus(current));
+    updateTask.mutate({ id: task.id, status: task.status === 'done' ? 'todo' : 'done' });
+  };
 
   const remove = async () => {
     const ok = await confirm({ title: t.tasks.deleteTitle, text: t.tasks.deleteText, confirmLabel: t.common.delete, danger: true });
@@ -232,6 +285,7 @@ function EditTask({ task, tasks, onClose }: { task: Task; tasks: Task[]; onClose
     deleteTask.mutate(task.id, {
       onSuccess: () => {
         toast.success(t.tasks.deleted);
+        panel.setGuard(null);
         onClose();
       },
     });
@@ -239,23 +293,23 @@ function EditTask({ task, tasks, onClose }: { task: Task; tasks: Task[]; onClose
 
   const duplicate = () =>
     createTask.mutate(
-      { ...draftFrom(task), name: `${task.name} (2)`, status: 'todo', statusId: null, progress: 0 },
+      { ...values, name: `${values.name.trim() || task.name} (2)`, status: 'todo', statusId: null, progress: 0 },
       { onSuccess: () => toast.success(t.common.duplicate) },
     );
 
   const trackedRatio = task.estimateSeconds ? Math.min(1, task.trackedSeconds / task.estimateSeconds) : 0;
 
   return (
-    <>
+    <div className={styles.editor} onKeyDown={onKeyDown}>
       <header className={styles.header}>
         <button
           type="button"
           className={styles.check}
-          onClick={() => save({ status: task.status === 'done' ? 'todo' : 'done' })}
+          onClick={toggleDone}
           aria-label={task.status === 'done' ? t.tasks.reopen : t.tasks.markDone}
           title={task.status === 'done' ? t.tasks.reopen : t.tasks.markDone}
         >
-          <TaskStatusIcon task={task} size={18} />
+          <TaskStatusIcon task={values} size={18} />
         </button>
         <span className={styles.headerTitle}>
           {parent ? (
@@ -276,22 +330,20 @@ function EditTask({ task, tasks, onClose }: { task: Task; tasks: Task[]; onClose
             { key: 'del', label: t.tasks.deleteTask, icon: <Trash2 />, danger: true, onSelect: () => void remove() },
           ]}
         />
-        <IconButton icon={<X />} label={t.common.close} size="sm" onClick={onClose} />
+        <IconButton icon={<X />} label={t.common.close} size="sm" onClick={() => panel.close()} />
       </header>
       <div className={styles.body}>
         <AutoTextArea
           className={styles.name}
-          value={name}
+          value={values.name}
           placeholder={t.tasks.namePlaceholder}
-          onChange={(value) => setName(value.replace(/\n/g, ' '))}
-          onBlur={() => name.trim() && name !== task.name && save({ name: name.trim() })}
+          onChange={(value) => edit({ name: value.replace(/\n/g, ' ') })}
         />
         <AutoTextArea
           className={styles.description}
-          value={description}
+          value={values.description}
           placeholder={t.tasks.descriptionPlaceholder}
-          onChange={setDescription}
-          onBlur={() => description !== task.description && save({ description })}
+          onChange={(description) => edit({ description })}
         />
 
         <div className={styles.tracked}>
@@ -327,20 +379,19 @@ function EditTask({ task, tasks, onClose }: { task: Task; tasks: Task[]; onClose
           )}
         </div>
 
-        <TaskFields values={draftFrom(task)} onChange={save} isSummary={isSummary} showProgress />
+        <TaskFields values={values} onChange={edit} isSummary={isSummary} showProgress />
 
         <SubtaskSection task={task} subtasks={children} />
         <DependencySection task={task} tasks={tasks} />
         <AllocationSection task={task} tasks={tasks} />
 
-        {showNotes || task.notes ? (
+        {showNotes || values.notes || task.notes ? (
           <Section title={t.tasks.notes}>
             <AutoTextArea
               className={styles.notes}
-              value={notes}
+              value={values.notes}
               placeholder={t.tasks.notesPlaceholder}
-              onChange={setNotes}
-              onBlur={() => notes !== task.notes && save({ notes })}
+              onChange={(notes) => edit({ notes })}
               autoFocus={showNotes && !task.notes}
             />
           </Section>
@@ -352,6 +403,39 @@ function EditTask({ task, tasks, onClose }: { task: Task; tasks: Task[]; onClose
           </div>
         )}
       </div>
-    </>
+      <footer className={clsx(styles.footer, styles.saveBar, leaving && styles.saveBarAsk)} aria-live="polite">
+        {leaving ? (
+          <>
+            <span className={styles.saveState} data-tone="warning">
+              <span className={styles.saveLabel}>{t.tasks.unsavedTitle}</span>
+            </span>
+            <Button size="sm" variant="ghost" onClick={() => leave('stay')}>
+              {t.tasks.keepEditing}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => leave('discard')}>
+              {t.tasks.discard}
+            </Button>
+            <Button size="sm" variant="primary" onClick={() => leave('save')} disabled={nameMissing} loading={updateTask.isPending} autoFocus>
+              {t.common.save}
+            </Button>
+          </>
+        ) : (
+          <>
+            <span className={styles.saveState} data-tone={nameMissing ? 'danger' : dirty ? 'warning' : undefined}>
+              <span className={styles.saveLabel}>{nameMissing ? t.tasks.nameRequired : dirty ? t.tasks.unsaved : t.tasks.allSaved}</span>
+              {dirty && !nameMissing && <span className={styles.saveHint}>{t.tasks.saveShortcut(MOD_KEY)}</span>}
+            </span>
+            {dirty && (
+              <Button variant="ghost" onClick={discard}>
+                {t.tasks.discard}
+              </Button>
+            )}
+            <Button variant="primary" onClick={() => save()} disabled={!dirty || nameMissing} loading={updateTask.isPending}>
+              {t.common.save}
+            </Button>
+          </>
+        )}
+      </footer>
+    </div>
   );
 }

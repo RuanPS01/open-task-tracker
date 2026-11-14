@@ -159,8 +159,18 @@ meia-noite.
 ## 7.5 Tarefas
 
 - Painel lateral global (`useTaskPanel`). Tarefa nova trabalha em rascunho e só grava em
-  "Criar tarefa" (responsável padrão: quem está criando). Tarefa existente grava cada
-  alteração na hora; nome, descrição e notas gravam ao sair do campo.
+  "Criar tarefa" (responsável padrão: quem está criando).
+- **Tarefa existente também trabalha em rascunho** (`taskDraft.ts`): nome, descrição,
+  propriedades e notas só gravam no botão **Salvar** do rodapé (ou `Ctrl Enter`), tudo num
+  `tasks.update`. O rodapé diz "Tudo salvo", "Alterações não salvas" (com Descartar) ou
+  pede o nome. O rascunho guarda só os campos alterados: o resto acompanha o que muda fora
+  do painel (cascata, status da mãe, outra aba).
+- **Sair com alterações pendentes** (Esc, X, clique fora, abrir outra tarefa, busca
+  rápida, `N`): o painel fica aberto e a barra pergunta "Salvar as alterações?" com
+  Continuar editando, Descartar e Salvar; a ação pedida segue depois da escolha. Fechar a
+  aba do navegador pede confirmação do próprio navegador.
+- Gravam na hora, fora do rascunho: concluir ou reabrir pelo botão do cabeçalho, as
+  subtarefas (cada uma é uma tarefa), dependências, cronômetro, duplicar e excluir.
 - Subtarefa herda o projeto da mãe. Mudar o projeto da mãe leva a árvore junto.
 - Concluir marca progresso 100% e `completedAt`; reabrir volta o progresso a 0. Vale
   igual para status customizado: o que conta é a categoria dele (seção 7.12).
@@ -169,9 +179,40 @@ meia-noite.
 - Status, datas e progresso da tarefa-mãe vêm das filhas (seção 7.7).
 - A opção **"Fins de semana e feriados"** libera a tarefa para dias não úteis (seção 7.8).
 - Na Lista, o agrupamento por data usa a entrega (ou o início): Atrasadas, Hoje, Amanhã,
-  Esta semana, Próxima semana, Mais adiante, Sem data. No Quadro há uma coluna por status
-  (os padrão e os customizados que valem ali) e arrastar o cartão para outra coluna muda
-  o status; coluna de status de outro projeto recusa o cartão com um aviso.
+  Esta semana, Próxima semana, Mais adiante, Sem data.
+
+### Quadro (kanban)
+
+O Quadro é a visão padrão da tela de Tarefas e da aba Tarefas do projeto (a escolha de
+cada pessoa fica em `ott.tasksView` e `ott.projectTasksView`). Funciona como o Trello:
+
+- **Colunas**: uma por status (os padrão e os customizados que valem ali, na ordem da
+  seção 7.12), cada uma rolando os próprios cartões; o quadro rola na horizontal.
+- **Ordem manual**: os cartões ficam na ordem em que a pessoa os deixou, igual para
+  todos (`boardPosition`, seção 8.12). Tarefa nova entra no fim da coluna.
+- **Arrastar** um cartão reordena na coluna ou leva para outra (muda o status, como no
+  painel). Com mouse, o arraste começa depois de 4 px; no toque, com pressão longa de
+  250 ms (antes disso o dedo rola a tela). O cartão segue o ponteiro inclinado, o destino
+  mostra um espaço reservado e, perto das bordas do quadro ou da coluna, a tela rola
+  sozinha, mais rápido quanto mais perto da borda. Esc cancela. Grava por `tasks.move`,
+  com prévia otimista.
+- **Recusas** (coluna com borda vermelha e aviso ao soltar): status de outro projeto, e
+  tarefa-mãe em coluna de outra categoria (o status da mãe vem das filhas; dentro da mesma
+  categoria, por exemplo "Em andamento" para "Em revisão", pode).
+- **Teclado**: com o cartão em foco, `Alt` + setas para cima e para baixo reordena e para
+  os lados leva para a coluna vizinha; Enter abre o painel.
+- **Subtarefas dentro do cartão**: uma subtarefa cuja mãe está no quadro não vira cartão
+  próprio; aparece na lista do cartão da mãe. O selo "2/5" abre e fecha a lista (barra de
+  progresso, status e nome de cada subtarefa, entrega). O ícone de status abre o menu com
+  todos os status que valem no projeto e grava na hora; a mãe recalcula o próprio status e
+  muda de coluna se a categoria mudar. O botão de acrescentar subtarefa (no canto do
+  cartão) abre a lista com o campo em foco. Subtarefa cuja mãe ficou de fora pelos filtros
+  ("Minhas tarefas", por exemplo) aparece como cartão, com o nome da mãe em cima.
+- **Adicionar tarefa** no pé da coluna abre um campo: Enter cria já com o status da coluna
+  (e o projeto da aba, ou o responsável do filtro "Minhas tarefas") e mantém o campo
+  aberto; o botão de expandir leva o nome para o painel completo.
+- Selos do cartão: prioridade, entrega (vermelha quando atrasada), tempo registrado sobre
+  a estimativa, descrição, subtarefas e cronômetro rodando; pessoas à direita.
 
 ### Importar tarefas por JSON
 
@@ -356,7 +397,7 @@ nome, ícone e cor do ícone (`services/statuses.ts`; regras de escopo e ordem e
   resumo da tarefa-mãe, "Mostrar concluídas", tarefas abertas na Linha do tempo e na busca,
   contagem de concluídas do projeto. A tarefa guarda a categoria em `status` e o status
   customizado em `statusId`.
-- **Ordem.** Nos menus, no Quadro e no agrupamento por status: cada padrão seguido dos
+- **Ordem.** Nos menus, nas colunas do Quadro e no agrupamento por status: cada padrão seguido dos
   customizados da mesma categoria, os do workspace antes dos do projeto.
 - **Mudar a categoria** de um status leva as tarefas que o usam junto (concluir ou reabrir)
   e recalcula as mães. **Excluir** um status devolve as tarefas ao padrão da categoria.

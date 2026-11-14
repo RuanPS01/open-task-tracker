@@ -215,6 +215,7 @@ export async function seedDemoWorkspace(ctx: Ctx, workspaceId: Id): Promise<void
         allowNonWorkingDays: spec.allowNonWorkingDays ?? false,
         billable: false,
         position: nextPosition(working.values(), parentId),
+        boardPosition: null,
         assigneeIds: (spec.assignees ?? []).map((key) => people[key]),
         tagIds: (spec.tags ?? []).map((name) => tags[name]!),
         trackedSeconds: 0,

@@ -36,6 +36,15 @@ export function statusesFor<T extends Sortable>(statuses: readonly T[], projectI
  */
 export const statusKey = (task: Pick<Task, 'status' | 'statusId'>): string => task.statusId ?? task.status;
 
+/**
+ * Chave do status para agrupar, filtrar e montar as colunas do quadro. Status customizado
+ * que não existe mais (excluído em outra aba, ou documento antigo) conta como o padrão da
+ * categoria. A camada de dados usa a mesma regra para saber em que coluna o cartão está.
+ */
+export function effectiveStatusKey(task: Pick<Task, 'status' | 'statusId'>, known: ReadonlySet<Id>): string {
+  return task.statusId !== null && known.has(task.statusId) ? task.statusId : task.status;
+}
+
 /** Chaves disponíveis para um projeto, na ordem: cada padrão seguido dos customizados da categoria. */
 export function statusKeysFor(statuses: readonly Sortable[], projectId: Id | null): string[] {
   const available = statusesFor(statuses, projectId);

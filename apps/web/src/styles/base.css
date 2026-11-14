@@ -58,6 +58,14 @@ a:hover {
   background: var(--accent-subtle);
 }
 
+/* Arrastando um cartão do Quadro (useBoardDrag): a mão fechada vale na tela inteira,
+   inclusive fora do quadro, e nada vira seleção de texto. */
+:root[data-board-dragging],
+:root[data-board-dragging] * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
 /* Barras de rolagem discretas, no estilo do Toggl. */
 * {
   scrollbar-width: thin;

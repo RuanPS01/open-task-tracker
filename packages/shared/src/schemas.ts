@@ -194,6 +194,17 @@ export type CreateTaskInput = z.input<typeof createTaskSchema>;
 export const updateTaskSchema = z.object(taskFields).partial();
 export type UpdateTaskInput = z.input<typeof updateTaskSchema>;
 
+/**
+ * Arraste de cartão no Quadro: põe a tarefa logo depois de `afterId` (nulo: no topo) na
+ * coluna do status pedido. Sem `status` nem `statusId`, a coluna é a atual.
+ */
+export const moveTaskSchema = z.object({
+  afterId: idSchema.nullable(),
+  status: z.enum(TASK_STATUSES).optional(),
+  statusId: idSchema.nullable().optional(),
+});
+export type MoveTaskInput = z.input<typeof moveTaskSchema>;
+
 // --- Status customizados ----------------------------------------------------
 
 export const createStatusSchema = z.object({

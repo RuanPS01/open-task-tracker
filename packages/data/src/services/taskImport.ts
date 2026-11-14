@@ -267,6 +267,7 @@ async function buildPlan(ctx: Ctx, workspaceId: Id, text: string, options: TaskI
       allowNonWorkingDays,
       billable: node.billable ?? false,
       position: parent ? Number(entry.key.split('.').pop()) : (rootPosition += 1),
+      boardPosition: null,
       assigneeIds,
       tagIds,
       trackedSeconds: 0,

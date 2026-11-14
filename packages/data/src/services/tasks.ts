@@ -6,6 +6,9 @@ import {
   createDependencySchema,
   createTaskSchema,
   descendantIds,
+  effectiveStatusKey,
+  moveTaskSchema,
+  planBoardMove,
   rollupSummaries,
   scheduleTasksSchema,
   statusAppliesTo,
@@ -15,6 +18,7 @@ import {
   type CreateDependencyInput,
   type CreateTaskInput,
   type Id,
+  type MoveTaskInput,
   type SchedulableDependency,
   type SchedulableTask,
   type ScheduleTasksInput,
@@ -56,8 +60,15 @@ const unique = <T>(values: readonly T[]) => [...new Set(values)];
 
 export async function listTaskDocs(ctx: Ctx, workspaceId: Id): Promise<TaskDoc[]> {
   const docs = await ctx.store.list<TaskDoc>(paths.tasks(workspaceId));
-  // Tarefas gravadas antes dos status customizados não têm statusId: status padrão.
-  return docs.map((doc) => (doc.statusId === undefined ? { ...doc, statusId: null } : doc)).sort(byPosition);
+  // Tarefas gravadas antes dos status customizados não têm statusId (status padrão), e as
+  // de antes da ordem manual do Quadro não têm boardPosition (fim da coluna).
+  return docs
+    .map((doc) =>
+      doc.statusId === undefined || doc.boardPosition === undefined
+        ? { ...doc, statusId: doc.statusId ?? null, boardPosition: doc.boardPosition ?? null }
+        : doc,
+    )
+    .sort(byPosition);
 }
 
 export async function listStatusDocs(ctx: Ctx, workspaceId: Id): Promise<StatusDoc[]> {
@@ -155,8 +166,10 @@ export function applyScheduling(
         : 'todo';
     if (statuses.length > 0 && derived !== task.status) {
       task.status = derived;
-      // Status customizado de outra categoria não vale mais: volta ao padrão da nova.
+      // Status customizado de outra categoria não vale mais: volta ao padrão da nova. O
+      // cartão muda de coluna no Quadro e vai para o fim dela.
       task.statusId = null;
+      task.boardPosition = null;
       task.completedAt = derived === 'done' ? now : null;
     }
     if (summary.startDate && summary.dueDate) {
@@ -315,6 +328,8 @@ export async function createTask(ctx: Ctx, workspaceId: Id, raw: CreateTaskInput
     allowNonWorkingDays: input.allowNonWorkingDays ?? false,
     billable: input.billable ?? false,
     position: input.position ?? nextPosition(tasks, parentId),
+    // Sem posição no Quadro: o cartão novo entra no fim da coluna.
+    boardPosition: null,
     assigneeIds: unique(input.assigneeIds ?? []),
     tagIds: unique(input.tagIds ?? []),
     trackedSeconds: 0,
@@ -403,6 +418,8 @@ export async function updateTask(ctx: Ctx, workspaceId: Id, id: Id, raw: UpdateT
   const next = resolveStatus(statuses, projectId, input, current.status);
   if (next) {
     task.statusId = next.statusId;
+    // Status trocado fora do Quadro (painel, lista): o cartão vai para o fim da coluna nova.
+    if ((next.statusId ?? next.status) !== (current.statusId ?? current.status)) task.boardPosition = null;
     if (next.status !== current.status) {
       setCategory(task, next.status, now, input.progress !== undefined);
       touchesSchedule = true;
@@ -417,7 +434,10 @@ export async function updateTask(ctx: Ctx, workspaceId: Id, id: Id, raw: UpdateT
     for (const item of moved) {
       item.projectId = projectId;
       const custom = item.statusId ? statusById.get(item.statusId) : undefined;
-      if (item.statusId && (!custom || !statusAppliesTo(custom, projectId))) item.statusId = null;
+      if (item.statusId && (!custom || !statusAppliesTo(custom, projectId))) {
+        item.statusId = null;
+        item.boardPosition = null;
+      }
     }
   }
   if (input.assigneeIds) task.assigneeIds = unique(input.assigneeIds);
@@ -443,6 +463,46 @@ export async function scheduleTasks(ctx: Ctx, workspaceId: Id, raw: ScheduleTask
   }
   const now = nowIso(ctx);
   applyScheduling(working, dependencies, calendar, access.doc.autoSchedule, now);
+  const batch = new Batch();
+  const changed = writeChanges(batch, workspaceId, original, working, now);
+  await ctx.store.commit(batch.ops);
+  return { tasks: changed };
+}
+
+/**
+ * Arraste de cartão no Quadro: muda o status (se a coluna for outra) e põe a tarefa logo
+ * depois de `afterId` na coluna, com `planBoardMove`. Grava o cartão, os vizinhos que
+ * precisaram de posição e o que o cronograma mudou (status da mãe). Devolve tudo que mudou.
+ */
+export async function moveTask(ctx: Ctx, workspaceId: Id, id: Id, raw: MoveTaskInput): Promise<{ tasks: Task[] }> {
+  const input = parse(moveTaskSchema, raw);
+  const { access, tasks, dependencies, calendar } = await loadSnapshot(ctx, workspaceId);
+  const original = new Map(tasks.map((task) => [task.id, task]));
+  const current = original.get(id);
+  if (!current) throw notFound('Tarefa');
+  const statuses = await listStatusDocs(ctx, workspaceId);
+  const working = cloneTasks(tasks);
+  const task = working.get(id)!;
+  const now = nowIso(ctx);
+
+  let touchesSchedule = false;
+  const next = resolveStatus(statuses, current.projectId, input, current.status);
+  if (next) {
+    task.statusId = next.statusId;
+    if (next.status !== current.status) {
+      setCategory(task, next.status, now);
+      touchesSchedule = true;
+    }
+  }
+
+  const known = new Set(statuses.map((status) => status.id));
+  const key = effectiveStatusKey(task, known);
+  const column = [...working.values()].filter((item) => item.id !== id && effectiveStatusKey(item, known) === key);
+  for (const [taskId, value] of planBoardMove(column, id, input.afterId)) working.get(taskId)!.boardPosition = value;
+
+  // Tarefa-mãe tem o status calculado pelas filhas: soltar numa coluna de outra categoria
+  // é desfeito aqui e o cartão volta para a coluna dela.
+  if (touchesSchedule) applyScheduling(working, dependencies, calendar, access.doc.autoSchedule, now);
   const batch = new Batch();
   const changed = writeChanges(batch, workspaceId, original, working, now);
   await ctx.store.commit(batch.ops);

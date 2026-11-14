@@ -22,7 +22,7 @@ import { useFormat } from '../../lib/format';
 import { useStoredState } from '../../lib/hooks';
 import { ProjectGantt } from '../gantt/ProjectGantt';
 import { StatusList } from '../statuses/lazy';
-import { TaskImportButton } from '../tasks/TaskImportDialog';
+import { TaskImportButton } from '../tasks/TaskImportButton';
 import { useStatusCatalog } from '../../components/pickers/TaskStatus';
 import { useTaskPanel } from '../tasks/TaskPanelContext';
 import { GroupSortControls, TaskFiltersButton, TaskListView, useTaskRowContext } from '../tasks/TasksPage';
@@ -97,7 +97,7 @@ function ProjectTasks({ project }: { project: Project }) {
   const { data: allTasks = [] } = useTasks();
   const tasks = useMemo(() => allTasks.filter((task) => task.projectId === project.id), [allTasks, project.id]);
   const context = useTaskRowContext(allTasks);
-  const [view, setView] = useStoredState<'list' | 'board'>('ott.projectTasksView', 'list');
+  const [view, setView] = useStoredState<'list' | 'board'>('ott.projectTasksView', 'board');
   const [groupBy, setGroupBy] = useStoredState<GroupBy>('ott.projectTasksGroup', 'status');
   const [sortBy, setSortBy] = useStoredState<SortBy>('ott.projectTasksSort', 'dueDate');
   const [descending, setDescending] = useStoredState('ott.projectTasksDesc', false);
@@ -126,8 +126,8 @@ function ProjectTasks({ project }: { project: Project }) {
           value={view}
           onChange={setView}
           options={[
-            { value: 'list', label: '', icon: <LayoutList />, title: t.tasks.list },
             { value: 'board', label: '', icon: <SquareKanban />, title: t.tasks.board },
+            { value: 'list', label: '', icon: <LayoutList />, title: t.tasks.list },
           ]}
         />
         <TaskImportButton projectId={project.id} size="sm" />
@@ -147,7 +147,7 @@ function ProjectTasks({ project }: { project: Project }) {
             }
           />
         ) : view === 'board' ? (
-          <TaskBoard tasks={visible} context={context} defaults={{ projectId: project.id }} />
+          <TaskBoard tasks={visible} context={context} defaults={{ projectId: project.id }} hideProject />
         ) : (
           <TaskListView
             tasks={visible}
