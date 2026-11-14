@@ -158,15 +158,20 @@ meia-noite.
 
 ## 7.5 Tarefas
 
-- Painel lateral global (`useTaskPanel`). Tarefa nova trabalha em rascunho e só grava em
+- Janela da tarefa global (`useTaskPanel`): um modal centralizado, como o cartão aberto do
+  Trello, com nome, descrição, tempo, subtarefas, dependências, alocação e notas à esquerda
+  e as propriedades numa coluna à direita (em telas estreitas, uma coluna só, com as
+  propriedades logo depois da descrição). Clicar fora fecha a de edição (passando pela
+  guarda abaixo); a de tarefa nova só fecha pelos botões ou Esc. Tarefa nova trabalha em
+  rascunho e só grava em
   "Criar tarefa" (responsável padrão: quem está criando).
 - **Tarefa existente também trabalha em rascunho** (`taskDraft.ts`): nome, descrição,
   propriedades e notas só gravam no botão **Salvar** do rodapé (ou `Ctrl Enter`), tudo num
   `tasks.update`. O rodapé diz "Tudo salvo", "Alterações não salvas" (com Descartar) ou
   pede o nome. O rascunho guarda só os campos alterados: o resto acompanha o que muda fora
-  do painel (cascata, status da mãe, outra aba).
+  da janela (cascata, status da mãe, outra aba).
 - **Sair com alterações pendentes** (Esc, X, clique fora, abrir outra tarefa, busca
-  rápida, `N`): o painel fica aberto e a barra pergunta "Salvar as alterações?" com
+  rápida, `N`): a janela fica aberta e a barra pergunta "Salvar as alterações?" com
   Continuar editando, Descartar e Salvar; a ação pedida segue depois da escolha. Fechar a
   aba do navegador pede confirmação do próprio navegador.
 - Gravam na hora, fora do rascunho: concluir ou reabrir pelo botão do cabeçalho, as
@@ -190,8 +195,8 @@ cada pessoa fica em `ott.tasksView` e `ott.projectTasksView`). Funciona como o T
   seção 7.12), cada uma rolando os próprios cartões; o quadro rola na horizontal.
 - **Ordem manual**: os cartões ficam na ordem em que a pessoa os deixou, igual para
   todos (`boardPosition`, seção 8.12). Tarefa nova entra no fim da coluna.
-- **Arrastar** um cartão reordena na coluna ou leva para outra (muda o status, como no
-  painel). Com mouse, o arraste começa depois de 4 px; no toque, com pressão longa de
+- **Arrastar** um cartão reordena na coluna ou leva para outra (muda o status, como na
+  janela da tarefa). Com mouse, o arraste começa depois de 4 px; no toque, com pressão longa de
   250 ms (antes disso o dedo rola a tela). O cartão segue o ponteiro inclinado, o destino
   mostra um espaço reservado e, perto das bordas do quadro ou da coluna, a tela rola
   sozinha, mais rápido quanto mais perto da borda. Esc cancela. Grava por `tasks.move`,
@@ -200,7 +205,7 @@ cada pessoa fica em `ott.tasksView` e `ott.projectTasksView`). Funciona como o T
   tarefa-mãe em coluna de outra categoria (o status da mãe vem das filhas; dentro da mesma
   categoria, por exemplo "Em andamento" para "Em revisão", pode).
 - **Teclado**: com o cartão em foco, `Alt` + setas para cima e para baixo reordena e para
-  os lados leva para a coluna vizinha; Enter abre o painel.
+  os lados leva para a coluna vizinha; Enter abre a janela da tarefa.
 - **Subtarefas dentro do cartão**: uma subtarefa cuja mãe está no quadro não vira cartão
   próprio; aparece na lista do cartão da mãe. O selo "2/5" abre e fecha a lista (barra de
   progresso, status e nome de cada subtarefa, entrega). O ícone de status abre o menu com
@@ -210,7 +215,7 @@ cada pessoa fica em `ott.tasksView` e `ott.projectTasksView`). Funciona como o T
   ("Minhas tarefas", por exemplo) aparece como cartão, com o nome da mãe em cima.
 - **Adicionar tarefa** no pé da coluna abre um campo: Enter cria já com o status da coluna
   (e o projeto da aba, ou o responsável do filtro "Minhas tarefas") e mantém o campo
-  aberto; o botão de expandir leva o nome para o painel completo.
+  aberto; o botão de expandir leva o nome para a janela completa da tarefa.
 - Selos do cartão: prioridade, entrega (vermelha quando atrasada), tempo registrado sobre
   a estimativa, descrição, subtarefas e cronômetro rodando; pessoas à direita.
 
@@ -243,10 +248,17 @@ sequenceDiagram
   partir do próximo dia útil. Pede que a IA pergunte o que faltar e responda só com o JSON.
 - **Revisar** com texto que nem chega a virar tarefas (JSON quebrado, campo fora do
   formato) mostra os erros embaixo do editor. Com tarefas, abre a revisão: resumo
-  (tarefas, subtarefas, dependências, tags novas), erros que impedem a importação,
-  avisos, e uma tabela em árvore com projeto, datas finais (com marca quando a cascata
-  ou as subtarefas mudaram as datas do arquivo), estimativa, responsáveis, prioridade e
-  dependências. Linhas com erro ficam destacadas e o botão de importar fica desabilitado.
+  (tarefas, subtarefas, dependências, tags novas e onde os cartões entram no Quadro), erros
+  que impedem a importação, avisos, e uma tabela em árvore com status final (o da
+  tarefa-mãe aparece apagado, com o ícone de árvore: vem das subtarefas), projeto, datas
+  finais (com marca quando a cascata ou as subtarefas mudaram as datas do arquivo),
+  estimativa, responsáveis, prioridade e dependências. Linhas com erro ficam destacadas e
+  o botão de importar fica desabilitado.
+- **Ordem no Quadro**: as tarefas entram nas colunas na ordem do arquivo, no fim de cada
+  coluna (padrão, como tarefa nova) ou no topo, com `"boardPlacement": "top"`.
+- **Status das subtarefas**: cada subtarefa leva o próprio `status` (padrão ou customizado
+  do projeto) e a tarefa-mãe segue as filhas. Status pedido numa mãe que não bate com a
+  categoria calculada é ignorado com o aviso `PARENT_STATUS_DERIVED`.
 - **Voltar** mantém o texto para corrigir. Ao importar, o Gantt e as listas atualizam e
   um aviso mostra quantas tarefas entraram.
 - Formato do arquivo, regras de resolução de nomes e códigos dos problemas: documento
@@ -273,7 +285,7 @@ sequenceDiagram
 - Clicar numa linha sem datas agenda a tarefa no dia clicado, com duração estimada pela
   estimativa (8 h por dia) ou 1 dia.
 - Arrastar a bolinha da ponta de uma barra até outra cria dependência término-início.
-  Pelo painel dá para escolher o tipo (FS, SS, FF, SF) e o atraso.
+  Pela janela da tarefa dá para escolher o tipo (FS, SS, FF, SF) e o atraso.
 - A camada de dados recusa ligar a tarefa a ela mesma, mãe com filha, ligação repetida (em qualquer
   direção) e ciclos, inclusive ciclos que passam pela hierarquia.
 - Clicar numa seta pede confirmação e remove a dependência.
@@ -300,7 +312,7 @@ Há dois controles, complementares:
 |---|---|---|
 | Dias úteis do workspace | Configurações do workspace | Marcar sábado ou domingo torna o dia útil para todas as tarefas e para a capacidade |
 | Feriados do workspace | Configurações do workspace, seção Feriados | Datas que deixam de ser úteis mesmo caindo em dia útil |
-| "Fins de semana e feriados" na tarefa | Painel da tarefa | Só aquela tarefa usa todos os dias do calendário |
+| "Fins de semana e feriados" na tarefa | Janela da tarefa | Só aquela tarefa usa todos os dias do calendário |
 
 ```mermaid
 flowchart TD
@@ -352,7 +364,7 @@ sem workspace) escolhe-se a cor junto com o nome: "Ciano (padrão)" ou uma das 1
 projeto. Depois, a seção "Cor do workspace" das configurações (só administrador) troca a
 cor com um clique, gravando na hora (`workspaces.update` com `color`). A cor vale para
 todas as pessoas do workspace, nos dois temas de cada uma: botões, seleção, barra lateral,
-logotipo, fundos e textos levemente tingidos. Trocar de workspace troca a paleta; a bolinha
+logotipo, ícone da aba do navegador, fundos e textos levemente tingidos. Trocar de workspace troca a paleta; a bolinha
 ao lado de cada nome no seletor de workspace mostra a cor. Detalhes da derivação das
 paletas em [03-identidade-visual.md](03-identidade-visual.md), seção 3.8.
 

@@ -208,6 +208,11 @@ de renumerar a coluna a cada arraste.
   - Sem espaço entre os vizinhos (diferença até `BOARD_MIN_GAP`, 0,000001, depois de
     dezenas de cartões soltos no mesmo lugar): renumera os cartões com posição da coluna,
     1024, 2048, ..., já com o movido no lugar novo.
+- **Vários cartões no topo** (`boardTopPositions(coluna, quantidade)`, usado pela importação
+  com `"boardPlacement": "top"`): posições de 1024 em 1024 terminando 1024 abaixo do
+  primeiro cartão com posição, na ordem dada; coluna sem nenhuma posição recebe 1024, 2048,
+  ... (que já ficam antes dos sem posição). No fim não precisa de cálculo: cartão sem
+  posição já vai para o fim, pela data de criação.
 - A posição é global no workspace: no Quadro filtrado (um projeto, "Minhas tarefas"), soltar
   depois do cartão visível A põe o cartão logo depois de A na coluna inteira.
 

@@ -42,7 +42,7 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 | Tasks (lista agrupada, quadro, "My tasks", filtros, agrupar, ordenar) | Tarefas, com o Quadro como visão padrão | `[implementado]` |
 | Quadro do Trello (ordem manual dos cartões, arrastar entre listas, checklist no cartão, "Adicionar um cartão") | Quadro: reordenar e mover cartões com rolagem automática, subtarefas dentro do cartão com status, "Adicionar tarefa" na coluna | `[implementado]` |
 | Status de tarefa personalizados (Toggl Plan) | Status customizados no workspace ou no projeto, com ícone e cor, cada um contando como A fazer, Em andamento ou Concluída | `[implementado]` |
-| Painel lateral de tarefa (projeto, datas, estimativa total ou por dia, prioridade, tags, responsável, status, faturável, subtarefas, alocação, notas) | Painel de tarefa | `[implementado]` |
+| Painel lateral de tarefa (projeto, datas, estimativa total ou por dia, prioridade, tags, responsável, status, faturável, subtarefas, alocação, notas) | Janela da tarefa centralizada, como o cartão aberto do Trello (propriedades numa coluna à direita) | `[implementado]` |
 | Anexos em tarefa | | `[planejado]` |
 | Tarefa privada (cadeado) | | `[planejado]` |
 | Timeline (capacidade por pessoa, "Xh free") | Linha do tempo | `[implementado]` |
@@ -63,9 +63,10 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 Diferenças intencionais em relação ao Toggl: marca e ilustrações próprias; interface em
 português por padrão; feriados nacionais do Brasil; caminho crítico e tipos de
 dependência além do término para início; convite por link em vez de e-mail; modo local
-que funciona sem nenhum serviço externo; tema de cor por workspace; Quadro como visão
-principal das tarefas, no jeito do Trello; edição de tarefa com botão Salvar (o Toggl
-grava cada campo na hora).
+que funciona sem nenhum serviço externo; tema de cor por workspace (inclusive no ícone da
+aba); Quadro como visão
+principal das tarefas, no jeito do Trello; tarefa aberta numa janela centralizada (o Toggl
+usa painel lateral) e editada com botão Salvar (o Toggl grava cada campo na hora).
 
 ## 9.4 Glossário
 
@@ -116,6 +117,9 @@ afetados.
 | Tarefas, painel, quadro, subtarefas, dependências | `[implementado]` |
 | Quadro no estilo do Trello como visão padrão: ordem manual dos cartões, arraste com rolagem automática e no toque, subtarefas com status dentro do cartão, criar na coluna, Alt + setas | `[implementado]` |
 | Botão Salvar na edição de tarefa, com aviso ao sair com alterações pendentes | `[implementado]` |
+| Janela da tarefa centralizada (criação e edição), em duas colunas em telas largas | `[implementado]` |
+| Ícone da aba na cor do tema do workspace | `[implementado]` |
+| Importação por JSON com a ordem dos cartões no Quadro (`boardPlacement`) e o status de cada subtarefa | `[implementado]` |
 | Reordenar subtarefas arrastando dentro do cartão e do painel (hoje seguem a ordem do Gantt) | `[planejado]` |
 | Projetos, visão geral, Gantt, caminho crítico, cascata | `[implementado]` |
 | Linha do tempo de capacidade | `[implementado]` |

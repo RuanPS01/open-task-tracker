@@ -61,14 +61,14 @@ emoji (regra 3 do [documento 00](00-regras-para-ia.md)).
 ## 5.5 Granularidade
 
 - Componente com mais de ~300 linhas ou mais de uma responsabilidade visual: quebre em
-  arquivos na mesma pasta (veja como o painel de tarefa foi dividido em `TaskFields`,
+  arquivos na mesma pasta (veja como a janela da tarefa foi dividida em `TaskFields`,
   `SubtaskSection`, `DependencySection`, `AllocationSection`).
 - Lógica que não depende de React vai para um `*.ts` puro com teste.
 - Algoritmo usado pela camada de dados e pela web vai para `packages/shared`; regra que
   lê ou grava dados vai para um serviço de `packages/data`.
 - Um hook de dados por operação; nada de "hook genérico que faz tudo".
 - Estado de tela local com `useState`; estado que outras telas precisam vai para contexto
-  (como o painel de tarefa) ou para o cache do React Query.
+  (como a janela da tarefa) ou para o cache do React Query.
 
 ## 5.6 Comentários
 

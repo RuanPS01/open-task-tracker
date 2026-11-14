@@ -1,6 +1,7 @@
 // Resultados da camada de dados que não são uma entidade simples.
 import type { Currency, DependencyType, EstimateMode, Priority, TaskStatus } from './constants';
 import type { Id, IsoDate, Task, User, Workspace } from './entities';
+import type { ImportBoardPlacement } from './schemas';
 
 export interface SessionResponse {
   user: User;
@@ -119,6 +120,8 @@ export interface TaskImportRow {
 
 export interface TaskImportPreview {
   rows: TaskImportRow[];
+  /** Onde os cartões entram nas colunas do Quadro (do arquivo; `bottom` se ausente). */
+  boardPlacement: ImportBoardPlacement;
   issues: TaskImportIssue[];
   /** Tags que não existem e serão criadas. */
   newTags: string[];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BOARD_STEP, compareBoardCards, planBoardMove, type BoardCard } from '../src/board';
+import { BOARD_STEP, boardTopPositions, compareBoardCards, planBoardMove, type BoardCard } from '../src/board';
 import { effectiveStatusKey } from '../src/statuses';
 
 const card = (id: string, boardPosition: number | null, createdAt = '2026-10-01T00:00:00.000Z', position = 1): BoardCard => ({
@@ -101,6 +101,19 @@ describe('ordem dos cartões no quadro', () => {
     expect(final[1]).toBe('x79');
     expect(final.at(-1)).toBe('b');
     expect(new Set(column.map((item) => item.boardPosition)).size).toBe(column.length);
+  });
+
+  it('cartões novos no topo ficam acima de todos, na ordem dada', () => {
+    const column = [card('a', 2048), card('b', 4096), card('n', null)];
+    const positions = boardTopPositions(column, 3);
+    expect(positions).toEqual([2048 - 3 * BOARD_STEP, 2048 - 2 * BOARD_STEP, 2048 - BOARD_STEP]);
+    const all = [...column, ...positions.map((value, index) => card(`x${index}`, value))];
+    expect(order(all)).toEqual(['x0', 'x1', 'x2', 'a', 'b', 'n']);
+    // Coluna sem nenhuma posição (só tarefas antigas): os novos também vêm antes.
+    const legacy = [card('n1', null), card('n2', null)];
+    const fresh = boardTopPositions(legacy, 2).map((value, index) => card(`y${index}`, value));
+    expect(order([...legacy, ...fresh])).toEqual(['y0', 'y1', 'n1', 'n2']);
+    expect(boardTopPositions([], 0)).toEqual([]);
   });
 
   it('status customizado excluído conta como o padrão da categoria', () => {

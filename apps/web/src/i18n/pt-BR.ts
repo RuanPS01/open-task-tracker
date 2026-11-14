@@ -471,6 +471,7 @@ export const ptBR = {
     unsavedTitle: 'Salvar as alterações?',
     unsavedText: 'Esta tarefa tem alterações que ainda não foram salvas.',
     keepEditing: 'Continuar editando',
+    details: 'Detalhes da tarefa',
   },
   taskImport: {
     button: 'Importar JSON',
@@ -495,6 +496,9 @@ export const ptBR = {
       `${plural(total, '1 tarefa', `${total} tarefas`)}${subtasks > 0 ? ` (${plural(subtasks, '1 subtarefa', `${subtasks} subtarefas`)})` : ''}`,
     summaryDependencies: (n: number) => plural(n, '1 dependência', `${n} dependências`),
     summaryNewTags: (names: string) => `Tags novas: ${names}`,
+    summaryBoard: (top: boolean) =>
+      top ? 'No Quadro, as tarefas entram no topo de cada coluna, na ordem do arquivo.' : 'No Quadro, as tarefas entram no fim de cada coluna, na ordem do arquivo.',
+    statusFromSubtasks: 'Calculado pelas subtarefas',
     errors: (n: number) => plural(n, '1 erro impede a importação', `${n} erros impedem a importação`),
     warnings: (n: number) => plural(n, '1 aviso', `${n} avisos`),
     taskLabel: (key: string, name: string) => `Tarefa ${key} (${name})`,
@@ -507,6 +511,7 @@ export const ptBR = {
       assignees: 'Responsáveis',
       priority: 'Prioridade',
       dependsOn: 'Depende de',
+      status: 'Status',
     },
     perDay: 'por dia',
     issues: {
@@ -524,6 +529,8 @@ export const ptBR = {
       UNKNOWN_STATUS: (p: IssueParams) =>
         `O status "${p.name}" não existe para esta tarefa. Use todo, in_progress, done ou o nome de um status do workspace ou do projeto da tarefa.`,
       SUBTASK_PROJECT_IGNORED: (p: IssueParams) => `Subtarefa fica no projeto da mãe: "${p.name}" foi ignorado.`,
+      PARENT_STATUS_DERIVED: (p: IssueParams) =>
+        `O status "${p.name}" foi ignorado: o status de uma tarefa com subtarefas é calculado pelo status delas.`,
       UNKNOWN_ASSIGNEE: (p: IssueParams) => `"${p.name}" não é membro do workspace e foi ignorado.`,
       INVALID_DATES: (p: IssueParams) => `O início (${p.start}) é depois da entrega (${p.due}).`,
       DURATION_WITHOUT_START: () => '"durationDays" sem "startDate" foi ignorado.',
@@ -537,6 +544,7 @@ export const ptBR = {
     },
     example: (d: ImportExampleDates) => `{
   "version": 1,
+  "boardPlacement": "bottom",
   "tasks": [
     {
       "ref": "planejamento",
@@ -550,6 +558,7 @@ export const ptBR = {
           "durationDays": 3,
           "estimateHours": 12,
           "priority": "high",
+          "status": "in_progress",
           "tags": ["Reunião"]
         },
         {
@@ -558,6 +567,7 @@ export const ptBR = {
           "startDate": "${d.second}",
           "durationDays": 2,
           "estimateHours": 8,
+          "status": "todo",
           "dependsOn": ["levantamento"]
         }
       ]
@@ -589,12 +599,16 @@ export const ptBR = {
 - Tarefas que já existem no projeto e podem aparecer em "dependsOn" pelo nome exato: ${list(c.existingTasks, 'nenhuma')}.
 
 # Formato do arquivo
-Um objeto com "version": 1, "project" (opcional, nome de um projeto existente, vale para todas as tarefas) e "tasks" (lista de tarefas). Cada tarefa aceita:
+Um objeto com "version": 1, "project" (opcional, nome de um projeto existente, vale para todas as tarefas), "boardPlacement" (opcional) e "tasks" (lista de tarefas).
+
+O Quadro (kanban) tem uma coluna por status. As tarefas entram nas colunas na mesma ordem em que aparecem no arquivo: escreva primeiro o que deve ficar em cima. "boardPlacement" diz onde elas entram em cada coluna: "bottom" (padrão) no fim, depois das que já existem, ou "top" no topo, antes de todas.
+
+Cada tarefa aceita:
 - "ref": texto curto e único no arquivo, usado para ligar dependências (por exemplo "design").
 - "name": nome da tarefa, até 200 caracteres. Único campo obrigatório.
 - "description": descrição curta. "notes": anotações longas.
 - "project": nome de um projeto existente. Só nas tarefas de primeiro nível: subtarefas ficam no projeto da mãe.
-- "status": "todo" (padrão), "in_progress", "done" ou o nome de um status customizado listado acima que valha para o projeto da tarefa.
+- "status": "todo" (padrão), "in_progress", "done" ou o nome de um status customizado listado acima que valha para o projeto da tarefa. Cada subtarefa tem o próprio "status"; numa tarefa com subtarefas não informe "status", porque ele é calculado pelas filhas.
 - "priority": "none", "low", "medium", "high" ou "urgent" (ou um número de 0 a 4).
 - "startDate" e "dueDate": datas no formato AAAA-MM-DD. Só o início vira tarefa de um dia.
 - "durationDays": duração em dias úteis contada a partir de "startDate", no lugar de "dueDate".
@@ -606,7 +620,7 @@ Um objeto com "version": 1, "project" (opcional, nome de um projeto existente, v
 - "assignees": lista de e-mails ou nomes de membros.
 - "tags": lista de nomes de tags.
 - "dependsOn": tarefas que precisam vir antes. Cada item é a "ref" de outra tarefa do arquivo (ou o nome exato de uma tarefa que já existe no projeto), ou um objeto { "task": "ref", "type": "FS", "lagDays": 0 }. Tipos: "FS" término para início (padrão), "SS" início para início, "FF" término para término, "SF" início para término. "lagDays" é o atraso em dias úteis e pode ser negativo.
-- "subtasks": lista de subtarefas no mesmo formato. A tarefa-mãe vira um grupo no Gantt e as datas, o progresso e o status dela são calculados pelas filhas.
+- "subtasks": lista de subtarefas no mesmo formato, na ordem em que devem aparecer. A tarefa-mãe vira um grupo no Gantt e um cartão no Quadro com a lista das subtarefas dentro; as datas, o progresso e o status dela são calculados pelas filhas (todas concluídas: concluída; alguma começada: em andamento; senão a fazer).
 
 # Regras
 1. Ao entregar o arquivo, responda apenas com JSON válido: sem comentários, sem vírgula sobrando, sem texto antes ou depois.
@@ -615,6 +629,7 @@ Um objeto com "version": 1, "project" (opcional, nome de um projeto existente, v
 4. Quando souber só a duração, use "startDate" com "durationDays".
 5. Use somente os projetos e membros listados acima. Projeto desconhecido impede a importação; membro desconhecido é ignorado.
 6. Limite de 500 tarefas por arquivo, contando as subtarefas.
+7. Informe o "status" de cada subtarefa conforme o andamento real; não informe "status" nem "progress" na tarefa-mãe.
 
 # Exemplo
 ${c.example}

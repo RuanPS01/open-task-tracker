@@ -24,7 +24,7 @@ for alterar o código (pessoa ou agente de IA) começa pelo documento 00.
 
 ## Telas
 
-| Tarefas no Quadro (subtarefas dentro dos cartões) | Painel da tarefa com a barra de salvar |
+| Tarefas no Quadro (subtarefas dentro dos cartões) | Janela da tarefa com a barra de salvar |
 |---|---|
 | ![Quadro](imagens/quadro.png) | ![Tarefas](imagens/tarefas.png) |
 
