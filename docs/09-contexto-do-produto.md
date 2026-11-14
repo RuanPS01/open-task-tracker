@@ -12,7 +12,7 @@ inglês.
 Ele responde a três perguntas de uma equipe pequena ou média:
 
 1. **O que cada pessoa precisa fazer e quando?** Tarefas com prioridade, datas,
-   estimativas, responsáveis, subtarefas e quadro.
+   estimativas, responsáveis, subtarefas e quadro kanban no estilo do Trello.
 2. **O projeto vai sair no prazo?** Cronograma em Gantt com dependências, cascata,
    caminho crítico, feriados e data de entrega prevista; Linha do tempo com a capacidade
    de cada pessoa.
@@ -39,7 +39,8 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 | Saved reports e compartilhamento | | `[planejado]` |
 | Projects (lista, cliente, status de tempo, equipe, fixar, arquivar) | Projetos | `[implementado]` |
 | Project dashboard | Visão geral do projeto | `[implementado]` |
-| Tasks (lista agrupada, quadro, "My tasks", filtros, agrupar, ordenar) | Tarefas | `[implementado]` |
+| Tasks (lista agrupada, quadro, "My tasks", filtros, agrupar, ordenar) | Tarefas, com o Quadro como visão padrão | `[implementado]` |
+| Quadro do Trello (ordem manual dos cartões, arrastar entre listas, checklist no cartão, "Adicionar um cartão") | Quadro: reordenar e mover cartões com rolagem automática, subtarefas dentro do cartão com status, "Adicionar tarefa" na coluna | `[implementado]` |
 | Status de tarefa personalizados (Toggl Plan) | Status customizados no workspace ou no projeto, com ícone e cor, cada um contando como A fazer, Em andamento ou Concluída | `[implementado]` |
 | Painel lateral de tarefa (projeto, datas, estimativa total ou por dia, prioridade, tags, responsável, status, faturável, subtarefas, alocação, notas) | Painel de tarefa | `[implementado]` |
 | Anexos em tarefa | | `[planejado]` |
@@ -62,7 +63,9 @@ Ele responde a três perguntas de uma equipe pequena ou média:
 Diferenças intencionais em relação ao Toggl: marca e ilustrações próprias; interface em
 português por padrão; feriados nacionais do Brasil; caminho crítico e tipos de
 dependência além do término para início; convite por link em vez de e-mail; modo local
-que funciona sem nenhum serviço externo; tema de cor por workspace.
+que funciona sem nenhum serviço externo; tema de cor por workspace; Quadro como visão
+principal das tarefas, no jeito do Trello; edição de tarefa com botão Salvar (o Toggl
+grava cada campo na hora).
 
 ## 9.4 Glossário
 
@@ -111,6 +114,9 @@ afetados.
 |---|---|
 | Cronômetro, apontamentos, calendário, lista, planilha | `[implementado]` |
 | Tarefas, painel, quadro, subtarefas, dependências | `[implementado]` |
+| Quadro no estilo do Trello como visão padrão: ordem manual dos cartões, arraste com rolagem automática e no toque, subtarefas com status dentro do cartão, criar na coluna, Alt + setas | `[implementado]` |
+| Botão Salvar na edição de tarefa, com aviso ao sair com alterações pendentes | `[implementado]` |
+| Reordenar subtarefas arrastando dentro do cartão e do painel (hoje seguem a ordem do Gantt) | `[planejado]` |
 | Projetos, visão geral, Gantt, caminho crítico, cascata | `[implementado]` |
 | Linha do tempo de capacidade | `[implementado]` |
 | Relatórios e CSV | `[implementado]` |
@@ -135,5 +141,6 @@ afetados.
 | Anexos e tarefas privadas | `[planejado]` |
 | Linha de base do cronograma (planejado x atual) | `[planejado]` |
 | Virtualização de linhas no Gantt e paginação de tarefas | `[planejado]` |
+| Dividir o pacote da web por rota (Relatórios, Gestão e Configurações já vêm sob demanda) | `[em andamento]` |
 | Atualização em tempo real entre pessoas (ouvintes do Firestore) | `[planejado]` |
 | Importação de apontamentos e tarefas do Toggl (CSV) | `[planejado]` |

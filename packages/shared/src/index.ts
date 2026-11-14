@@ -7,5 +7,6 @@ export * from './scheduling';
 export * from './capacity';
 export * from './holidays';
 export * from './statuses';
+export * from './board';
 export * from './ids';
 export * from './schemas';

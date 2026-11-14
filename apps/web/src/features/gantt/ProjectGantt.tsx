@@ -16,7 +16,7 @@ import { useT } from '../../i18n';
 import { useFormat } from '../../lib/format';
 import { useWorkCalendar } from '../../lib/calendar';
 import { useIsMobile, useStoredState } from '../../lib/hooks';
-import { TaskImportButton } from '../tasks/TaskImportDialog';
+import { TaskImportButton } from '../tasks/TaskImportButton';
 import { useTaskPanel } from '../tasks/TaskPanelContext';
 import { GanttChart } from './GanttChart';
 import type { Zoom } from './ganttModel';

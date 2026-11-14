@@ -25,6 +25,7 @@ function task(n: number, extra: Partial<Task> = {}): Task {
     allowNonWorkingDays: false,
     billable: false,
     position: n,
+    boardPosition: null,
     assigneeIds: [],
     tagIds: [],
     trackedSeconds: 0,

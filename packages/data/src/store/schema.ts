@@ -82,7 +82,7 @@ export type ProjectDoc = Omit<Project, 'pinned' | 'taskCount' | 'doneTaskCount' 
   updatedAt: IsoDateTime;
 };
 
-/** `statusId` falta nas tarefas antigas: `listTaskDocs` lê como nulo. */
+/** `statusId` e `boardPosition` faltam nas tarefas antigas: `listTaskDocs` lê como nulo. */
 export type TaskDoc = Task;
 export type StatusDoc = CustomStatus;
 export type DependencyDoc = TaskDependency & { createdAt: IsoDateTime };

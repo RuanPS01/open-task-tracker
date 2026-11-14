@@ -1,6 +1,6 @@
 # 8. Planejamento, Gantt e algoritmos
 
-> Código: `packages/shared/src/{dates,scheduling,capacity,holidays}.ts` (usados pela camada de dados e
+> Código: `packages/shared/src/{dates,scheduling,capacity,holidays,board}.ts` (usados pela camada de dados e
 > pela web) e os modelos de tela `apps/web/src/features/{gantt/ganttModel,timeline/timelineModel,timer/calendarLayout}.ts`.
 > Testes: `packages/shared/test/*` e os `*.test.ts` ao lado dos modelos.
 > Mudou uma regra? Atualize esta página e acrescente um caso de teste.
@@ -186,3 +186,30 @@ Christi em 4/6.
 - Digitação aceita `1:30`, `1:30:15`, `1h30`, `1h 30m`, `1,5h`, `90m`, `45s`, `2 horas` e
   número sem unidade (minutos no cronômetro, horas na estimativa e na planilha).
 - Hora digitada (`parseClockTime`) aceita `9`, `930`, `9:30`, `21:30` e `9:30pm`.
+
+## 8.12 Ordem dos cartões no Quadro (`board.ts`)
+
+Cada tarefa guarda `boardPosition`, um número que só compara cartões da mesma coluna
+(mesmo status, pela chave `effectiveStatusKey`: status customizado excluído conta como o
+padrão da categoria). Mover um cartão grava só ele, com um valor entre os vizinhos, em vez
+de renumerar a coluna a cada arraste.
+
+- **Ordem** (`compareBoardCards`): primeiro os cartões com posição, em ordem crescente;
+  depois os sem posição (nulo: tarefa nova, antiga ou que mudou de status fora do Quadro),
+  pela data de criação, depois `position` e id. Assim tarefa nova entra no fim sem gravar
+  nada além dela.
+- **Mover** (`planBoardMove(coluna, id, afterId)`): o cartão vai logo depois de `afterId`
+  (nulo: topo; id que não está na coluna: fim).
+  - Entre dois vizinhos com posição: a média dos dois.
+  - No topo: a posição do primeiro menos `BOARD_STEP` (1024). No fim, ou antes de um sem
+    posição: a do vizinho de cima mais 1024 (1024 se não houver).
+  - Cartões sem posição acima do ponto de inserção ganham posição em sequência (de 1024 em
+    1024 a partir do último com posição); os de baixo continuam sem posição.
+  - Sem espaço entre os vizinhos (diferença até `BOARD_MIN_GAP`, 0,000001, depois de
+    dezenas de cartões soltos no mesmo lugar): renumera os cartões com posição da coluna,
+    1024, 2048, ..., já com o movido no lugar novo.
+- A posição é global no workspace: no Quadro filtrado (um projeto, "Minhas tarefas"), soltar
+  depois do cartão visível A põe o cartão logo depois de A na coluna inteira.
+
+Exemplo: coluna com A (1024), B (2048) e C, D sem posição. Soltar X depois de C dá posição
+3072 a C e 4096 a X; D continua sem posição e fica abaixo de X.

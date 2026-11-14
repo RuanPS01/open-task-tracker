@@ -14,10 +14,13 @@ ou não responder, no próprio navegador com o **lowdb**. Publicação pronta pa
 - **Cronômetro** no estilo do Toggl: "No que você está trabalhando?", projeto ou tarefa,
   tags, faturável, modo manual e as visões Calendário (arraste para criar, mover e
   redimensionar), Lista e Planilha.
-- **Tarefas**: lista agrupada (data, projeto, status, prioridade, responsável), quadro
-  kanban, filtros, "Minhas tarefas", subtarefas e o painel lateral do Toggl (projeto,
-  datas, estimativa total ou por dia, prioridade, tags, responsáveis, status, faturável,
-  alocação, notas), iniciar o cronômetro na própria tarefa.
+- **Tarefas**: quadro kanban no estilo do Trello como visão principal (arraste para
+  reordenar os cartões e trocar de status, com rolagem automática perto das bordas e
+  pressão longa no celular; subtarefas dentro do cartão da mãe, com o status de cada uma;
+  "Adicionar tarefa" no pé de cada coluna), lista agrupada (data, projeto, status,
+  prioridade, responsável), filtros, "Minhas tarefas" e o painel lateral do Toggl
+  (projeto, datas, estimativa total ou por dia, prioridade, tags, responsáveis, status,
+  faturável, alocação, notas) com botão **Salvar**, iniciar o cronômetro na própria tarefa.
 - **Projetos** com visão geral (horas, estimativa, entrega prevista, horas por membro e
   por tarefa) e **cronograma em Gantt**: barras arrastáveis e redimensionáveis, marcos,
   grupos, dependências (término para início, início para início, término para término,
