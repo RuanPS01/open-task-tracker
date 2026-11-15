@@ -163,7 +163,7 @@ Toda entrada passa pelo esquema zod de `@ott/shared`.
 | `tasks.list`, `create`, `update`, `remove` | Tarefas (o workspace inteiro numa leitura). Status: `statusId` define a categoria (`status`) pelo status customizado; só `status` (ou `statusId` nulo) volta ao status padrão. Status de outro projeto dá `INVALID_STATUS`. Mudar a tarefa de projeto (e a árvore dela) devolve ao padrão quem usava status do projeto antigo. Tarefa nova entra sem `boardPosition` (fim da coluna); mudar o status por `update`, ou a tarefa-mãe mudar de categoria pelas filhas, também zera o `boardPosition` (o cartão vai para o fim da coluna nova) |
 | `tasks.move(workspaceId, id, { afterId, status?, statusId? })` | Arraste no Quadro: muda o status como o `update` (concluir, reabrir, `INVALID_STATUS`) e põe a tarefa logo depois de `afterId` na coluna (nulo: no topo), com `planBoardMove` de `@ott/shared` (seção 8.12). Grava a tarefa, os vizinhos sem posição que ficaram acima dela e o que o cronograma mudou; tarefa-mãe solta em outra categoria volta ao status das filhas. Devolve `{ tasks }` com tudo que mudou |
 | `tasks.schedule` | `{ updates: [{ id, startDate, dueDate }] }` do Gantt; devolve `{ tasks }` com tudo que mudou, inclusive pela cascata |
-| `tasks.previewImport(workspaceId, text, { defaultProjectId })` | Lê o JSON de importação e devolve `TaskImportPreview` sem gravar nada (seção abaixo) |
+| `tasks.previewImport(workspaceId, text, { defaultProjectId })` | Lê o JSON de importação e devolve `TaskImportPreview` sem gravar nada (seção abaixo), com o status final de cada tarefa e onde os cartões entram no Quadro |
 | `tasks.importJson(workspaceId, text, { defaultProjectId })` | Refaz a mesma análise e grava tudo num lote; devolve `{ created, tasks }` ou `IMPORT_INVALID` |
 | `dependencies.list`, `create`, `update`, `remove` | Dependências |
 | `timeEntries.list(workspaceId, from, to)` | Apontamentos da própria pessoa que tocam o intervalo |
@@ -183,6 +183,7 @@ e precisa mudar junto com ele.
 {
   "version": 1,
   "project": "Site institucional",
+  "boardPlacement": "bottom",
   "tasks": [
     {
       "ref": "levantamento",
@@ -192,7 +193,7 @@ e precisa mudar junto com ele.
       "estimateHours": 12,
       "assignees": ["ana@exemplo.com"],
       "tags": ["Reunião"],
-      "subtasks": [{ "name": "Entrevistas" }]
+      "subtasks": [{ "name": "Entrevistas", "status": "done" }, { "name": "Pesquisa", "status": "in_progress" }]
     },
     { "name": "Aprovação", "milestone": true, "dependsOn": [{ "task": "levantamento", "type": "FS", "lagDays": 1 }] }
   ]
@@ -206,11 +207,20 @@ e precisa mudar junto com ele.
   `allowNonWorkingDays`, `billable`, `assignees`, `tags`, `dependsOn`, `subtasks`
   (mesmo formato, recursivo). `null` vale como ausente. Uma lista solta no lugar do
   objeto também é aceita. Limite de `IMPORT_MAX_TASKS` (500) tarefas contando subtarefas.
+- **Arquivo**: `version`, `project` (projeto padrão do arquivo), `boardPlacement` (`bottom`,
+  o padrão, ou `top`) e `tasks`.
+- **Ordem no Quadro**: as tarefas entram nas colunas na ordem do arquivo (árvore achatada:
+  a mãe, as filhas dela, a próxima). Com `bottom`, a tarefa fica sem `boardPosition` e
+  cada uma é criada um milissegundo depois da anterior, então vão para o fim da coluna nessa
+  ordem. Com `top`, cada coluna (pelo status final, depois do resumo das mães) recebe
+  posições acima de todos os cartões que já existem (`boardTopPositions`, seção 8.12).
 - **Projeto**: subtarefa fica no projeto da mãe; tarefa de primeiro nível usa o
   `project` dela, senão o do arquivo, senão o `defaultProjectId` (o projeto da tela).
 - **Status**: `todo`, `in_progress`, `done` ou o nome de um status customizado que valha
   para o projeto da tarefa (comparado sem diferenciar maiúsculas nem acentos); a linha da
-  revisão traz `statusId`. Nome desconhecido dá `UNKNOWN_STATUS`.
+  revisão traz `statusId`. Nome desconhecido dá `UNKNOWN_STATUS`. Cada subtarefa tem o
+  próprio status; o da tarefa-mãe é calculado pelas filhas (`applyScheduling`), e o que o
+  arquivo pediu numa mãe só vale se a categoria bater (senão, aviso `PARENT_STATUS_DERIVED`).
 - **Nomes**: projeto, membro (e-mail ou nome) e tag são comparados sem diferenciar
   maiúsculas nem acentos. Tag que não existe é criada no mesmo lote.
 - **Dependências**: cada item de `dependsOn` é a `ref` de outra tarefa do arquivo ou o
@@ -220,7 +230,7 @@ e precisa mudar junto com ele.
   inteiro (cascata, se ligada, e resumo das mães). Tarefas existentes empurradas pela
   cascata são gravadas no mesmo lote.
 
-`TaskImportPreview` traz `rows` (uma por tarefa, em ordem de árvore, com `key` como
+`TaskImportPreview` traz `boardPlacement` (o do arquivo, `bottom` se ausente), `rows` (uma por tarefa, em ordem de árvore, com `key` como
 `1`, `1.1`, `parentKey`, `depth`, as datas finais e `rescheduled` quando as datas do
 arquivo mudaram), `issues`, `newTags`, `dependencyCount` e `canImport` (nenhum erro).
 Cada problema tem `level` (`error` impede a importação, `warning` só avisa), `code`,
@@ -238,6 +248,7 @@ das tarefas.
 | `DEPENDENCY_SELF`, `DEPENDENCY_HIERARCHY`, `DEPENDENCY_CYCLE` | erro | Ligação recusada (a ligação invertida de outra do arquivo conta como ciclo) |
 | `UNKNOWN_ASSIGNEE` | aviso | Responsável que não é membro do workspace: ignorado |
 | `SUBTASK_PROJECT_IGNORED` | aviso | `project` numa subtarefa: vale o da mãe |
+| `PARENT_STATUS_DERIVED` | aviso | `status` numa tarefa com subtarefas cuja categoria não bate com a calculada pelas filhas: ignorado |
 | `DUE_OVERRIDES_DURATION`, `DURATION_WITHOUT_START` | aviso | `durationDays` ignorado (já tem `dueDate`, ou não tem `startDate`) |
 | `DEPENDENCY_DUPLICATE` | aviso | A mesma ligação repetida: entra uma vez |
 

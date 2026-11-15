@@ -48,10 +48,121 @@
   background: var(--bg-hover);
 }
 
-.body {
+/* Janela da tarefa centralizada (Modal bare). Altura fixa para o layout não pular
+   quando uma seção abre ou fecha; o conteúdo rola por dentro. */
+.dialog {
+  width: min(680px, calc(100vw - 48px));
+  height: min(860px, calc(100vh - 48px));
+  overflow: hidden;
+  background: var(--bg-app);
+  border: 1px solid var(--border);
+}
+
+/* Tarefa nova tem menos conteúdo (sem tempo, subtarefas e dependências). */
+.dialogNew {
+  height: min(640px, calc(100vh - 48px));
+}
+
+/* Uma coluna (telas médias e celular): o conteúdo inteiro rola, com as propriedades
+   entre a descrição e as seções. `display: contents` na coluna principal deixa o topo e
+   o resto virarem itens da mesma grade. */
+.content {
   flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'top' 'side' 'rest';
+  align-content: start;
   overflow-y: auto;
-  padding: 16px 20px 32px;
+}
+
+.main {
+  display: contents;
+}
+
+.top {
+  grid-area: top;
+  padding: 16px 20px 0;
+}
+
+.side {
+  grid-area: side;
+  padding: 0 20px;
+}
+
+.rest {
+  grid-area: rest;
+  padding: 0 20px 32px;
+}
+
+/* Duas colunas, como o cartão aberto do Trello: conteúdo à esquerda e propriedades numa
+   coluna própria à direita, cada lado rolando sozinho. */
+@media (min-width: 900px) {
+  .dialog {
+    width: min(var(--task-dialog-width), calc(100vw - 48px));
+  }
+
+  .content {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-areas: 'main side';
+    align-content: stretch;
+    overflow: hidden;
+  }
+
+  .main {
+    display: block;
+    grid-area: main;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .top {
+    padding: 22px 28px 0;
+  }
+
+  .rest {
+    padding: 0 28px 32px;
+  }
+
+  .side {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px 18px 24px;
+    border-left: 1px solid var(--border-subtle);
+    background: var(--bg-muted);
+  }
+
+  .side .row {
+    grid-template-columns: 116px minmax(0, 1fr);
+  }
+
+  /* Coluna estreita: a explicação de "Fins de semana e feriados" vai para baixo da chave. */
+  .side .switchWithHint {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 4px 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .dialog,
+  .dialogNew {
+    width: 100%;
+    height: calc(100dvh - 20px);
+  }
+
+  .top {
+    padding: 14px 16px 0;
+  }
+
+  .side {
+    padding: 0 16px;
+  }
+
+  .rest {
+    padding: 0 16px 24px;
+  }
 }
 
 .name,

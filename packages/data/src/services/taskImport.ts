@@ -2,10 +2,13 @@
 // taskImportFileSchema, @ott/shared). A mesma montagem serve para a prévia (revisão na
 // tela, sem gravar nada) e para a importação: o arquivo é validado, nomes viram ids
 // (projeto, responsáveis, tags, dependências), a cascata e o resumo das tarefas-mãe
-// rodam em memória e só então tudo é gravado num lote.
+// rodam em memória e só então tudo é gravado num lote. As tarefas entram no Quadro na
+// ordem do arquivo, no fim (padrão) ou no topo de cada coluna (`boardPlacement`).
 import {
   addWorkdays,
+  boardTopPositions,
   calendarFor,
+  effectiveStatusKey,
   IMPORT_MAX_TASKS,
   PRIORITY_KEYS,
   statusesFor,
@@ -99,7 +102,7 @@ function schemaIssues(error: { issues: readonly { code: string; path: readonly P
 }
 
 const emptyPreview = (issues: TaskImportIssue[]): Plan => ({
-  preview: { rows: [], issues, newTags: [], dependencyCount: 0, canImport: false },
+  preview: { rows: [], boardPlacement: 'bottom', issues, newTags: [], dependencyCount: 0, canImport: false },
   batch: new Batch(),
   created: [],
 });
@@ -168,8 +171,11 @@ async function buildPlan(ctx: Ctx, workspaceId: Id, text: string, options: TaskI
   const byKey = new Map<string, Planned>();
   const refs = new Map<string, Planned>();
   let rootPosition = nextPosition(existingTasks, null) - 1;
+  // Criação um milissegundo depois da anterior, na ordem do arquivo: cartão sem posição no
+  // Quadro fica no fim da coluna pela data de criação, então o fim respeita o arquivo.
+  const created = Date.parse(now);
 
-  for (const entry of flat) {
+  for (const [index, entry] of flat.entries()) {
     const { node } = entry;
     const parent = entry.parentKey ? byKey.get(entry.parentKey)! : null;
     const item = entry as Planned;
@@ -272,7 +278,7 @@ async function buildPlan(ctx: Ctx, workspaceId: Id, text: string, options: TaskI
       tagIds,
       trackedSeconds: 0,
       createdBy: uid,
-      createdAt: now,
+      createdAt: new Date(created + index).toISOString(),
       updatedAt: now,
       completedAt: status === 'done' ? now : null,
     };
@@ -330,7 +336,37 @@ async function buildPlan(ctx: Ctx, workspaceId: Id, text: string, options: TaskI
   const original = new Map(existingTasks.map((task) => [task.id, task]));
   const working = cloneTasks(existingTasks);
   for (const item of planned) working.set(item.doc.id, item.doc);
+  // Categoria pedida no arquivo, antes do resumo das mães (que altera os mesmos documentos).
+  const requested = new Map(planned.map((item) => [item.key, item.doc.status]));
   applyScheduling(working, accepted, calendar, workspace.autoSchedule, now);
+
+  // Status da tarefa-mãe vem das filhas: o que o arquivo pediu numa mãe vale só se a
+  // categoria bater (um status customizado da mesma categoria, por exemplo).
+  const parentKeys = new Set(planned.map((item) => item.parentKey));
+  for (const item of planned) {
+    if (!item.node.status || !parentKeys.has(item.key)) continue;
+    if (item.doc.status !== requested.get(item.key)) add('warning', 'PARENT_STATUS_DERIVED', item, { name: item.node.status });
+  }
+
+  // No topo do Quadro: em cada coluna (pelo status final), acima de tudo o que já existe,
+  // na ordem do arquivo.
+  const boardPlacement = file.boardPlacement ?? 'bottom';
+  if (boardPlacement === 'top') {
+    const known = new Set(statuses.map((status) => status.id));
+    const imported = new Set(planned.map((item) => item.doc.id));
+    const columns = new Map<string, TaskDoc[]>();
+    for (const item of planned) {
+      const doc = working.get(item.doc.id)!;
+      const key = effectiveStatusKey(doc, known);
+      columns.set(key, [...(columns.get(key) ?? []), doc]);
+    }
+    for (const [key, docs] of columns) {
+      const current = [...working.values()].filter((task) => !imported.has(task.id) && effectiveStatusKey(task, known) === key);
+      boardTopPositions(current, docs.length).forEach((position, index) => {
+        docs[index]!.boardPosition = position;
+      });
+    }
+  }
 
   const rows: TaskImportRow[] = planned.map((item) => {
     const doc = working.get(item.doc.id)!;
@@ -373,6 +409,7 @@ async function buildPlan(ctx: Ctx, workspaceId: Id, text: string, options: TaskI
   return {
     preview: {
       rows,
+      boardPlacement,
       issues,
       newTags: [...newTags.values()].map((tag) => tag.name),
       dependencyCount: newDependencies.length,

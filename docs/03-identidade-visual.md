@@ -142,7 +142,7 @@ deixaria as duas séries parecidas.
 | `--radius-lg` | 12 px | Cartões, popovers, modais |
 | `--sidebar-width` | 212 px | Barra lateral aberta (trilho de 44 px + navegação) |
 | `--header-height` | 52 px | Cabeçalho de página |
-| `--panel-width` | 440 px | Painel lateral de tarefa |
+| `--task-dialog-width` | 1000 px | Janela da tarefa em duas colunas (telas a partir de 900 px; abaixo disso, 680 px e uma coluna) |
 
 Alturas padrão: botão 32 px (28 px pequeno), campo 34 px, chip de barra de ferramentas
 30 px, linha de lista 44 a 48 px, linha do Gantt 36 px.
@@ -167,6 +167,12 @@ Alturas padrão: botão 32 px (28 px pequeno), campo 34 px, chip de barra de fer
   `people`, `clock`, `chart`, `folders`.
 - Logotipo (`layout/Logo.tsx` e `public/favicon.svg`): relógio em tinta escura
   (`#00292e`) sobre círculo ciano.
+- Ícone da aba na cor do tema: depois de carregar, `syncFavicon` (`app/favicon.ts`, chamado
+  por `applyTheme` e `applyAccent`) troca o `favicon.svg` pelo mesmo desenho com o
+  preenchimento em `--accent` e a tinta em `--accent-contrast` do tema em uso, igual ao
+  logotipo da barra lateral. O desenho fica em `faviconSvg`, e um teste confere que, com as
+  cores padrão, ele é idêntico ao `favicon.svg`: mudou um, mude o outro. Os ícones do PWA e o
+  `apple-touch-icon` são arquivos fixos e continuam em ciano.
 - Ícones do PWA (`public/icons`): `icon-192.png` e `icon-512.png` (o círculo do logotipo
   com fundo transparente), `icon-maskable-512.png` e `apple-touch-icon.png` (quadrado
   ciano cheio com o relógio dentro da zona segura de 80%). Foram gerados a partir do desenho
@@ -231,7 +237,8 @@ em `ott.accent`; o `index.html` aplica essa cor antes do React, junto com o tema
 abertura não piscar em ciano. O `RootLayout` aplica a cor do workspace atual (a mesma
 escolha do `AuthGate`) e volta à padrão sem login. A cor se escolhe ao criar o workspace
 (barra lateral e tela sem workspace) e nas configurações do workspace (só administrador),
-pelo seletor `ColorSwatches` com a amostra "Ciano (padrão)".
+pelo seletor `ColorSwatches` com a amostra "Ciano (padrão)". O ícone da aba acompanha a
+cor (seção 3.6); até o React carregar, a aba mostra o ícone ciano do arquivo.
 
 **Mudou `PROJECT_COLORS` ou a derivação?** Rode `npm run themes`, que regrava o trecho; o
 `npm run check` roda `npm run check:themes` e falha se o `tokens.css` estiver diferente do

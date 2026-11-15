@@ -87,3 +87,17 @@ export function planBoardMove(column: readonly BoardCard[], movingId: Id, afterI
   });
   return changes;
 }
+
+/**
+ * Posições para `count` cartões novos no topo da coluna, na ordem dada: todos acima do
+ * primeiro cartão atual (com posição). Usado pela importação com `boardPlacement: "top"`.
+ * Para o fim não há o que calcular: cartão sem posição já fica no fim, pela criação.
+ */
+export function boardTopPositions(column: readonly BoardCard[], count: number): number[] {
+  let first: number | null = null;
+  for (const card of column) {
+    if (card.boardPosition !== null && (first === null || card.boardPosition < first)) first = card.boardPosition;
+  }
+  const top = first ?? (count + 1) * BOARD_STEP;
+  return Array.from({ length: count }, (_, index) => top - (count - index) * BOARD_STEP);
+}
