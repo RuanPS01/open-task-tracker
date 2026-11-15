@@ -446,6 +446,7 @@ export const en: Messages = {
     unsavedTitle: 'Save your changes?',
     unsavedText: 'This task has changes that have not been saved yet.',
     keepEditing: 'Keep editing',
+    details: 'Task details',
   },
   taskImport: {
     button: 'Import JSON',
@@ -470,6 +471,9 @@ export const en: Messages = {
       `${plural(total, '1 task', `${total} tasks`)}${subtasks > 0 ? ` (${plural(subtasks, '1 subtask', `${subtasks} subtasks`)})` : ''}`,
     summaryDependencies: (n: number) => plural(n, '1 dependency', `${n} dependencies`),
     summaryNewTags: (names: string) => `New tags: ${names}`,
+    summaryBoard: (top: boolean) =>
+      top ? 'On the Board, the tasks go to the top of each column, in the file order.' : 'On the Board, the tasks go to the bottom of each column, in the file order.',
+    statusFromSubtasks: 'Computed from the subtasks',
     errors: (n: number) => plural(n, '1 error blocks the import', `${n} errors block the import`),
     warnings: (n: number) => plural(n, '1 warning', `${n} warnings`),
     taskLabel: (key: string, name: string) => `Task ${key} (${name})`,
@@ -482,6 +486,7 @@ export const en: Messages = {
       assignees: 'Assignees',
       priority: 'Priority',
       dependsOn: 'Depends on',
+      status: 'Status',
     },
     perDay: 'per day',
     issues: {
@@ -499,6 +504,8 @@ export const en: Messages = {
       UNKNOWN_STATUS: (p: IssueParams) =>
         `The status "${p.name}" does not exist for this task. Use todo, in_progress, done or the name of a status of the workspace or of the task project.`,
       SUBTASK_PROJECT_IGNORED: (p: IssueParams) => `A subtask stays in its parent project: "${p.name}" was ignored.`,
+      PARENT_STATUS_DERIVED: (p: IssueParams) =>
+        `The status "${p.name}" was ignored: a task with subtasks gets its status from theirs.`,
       UNKNOWN_ASSIGNEE: (p: IssueParams) => `"${p.name}" is not a workspace member and was ignored.`,
       INVALID_DATES: (p: IssueParams) => `The start (${p.start}) is after the due date (${p.due}).`,
       DURATION_WITHOUT_START: () => '"durationDays" without "startDate" was ignored.',
@@ -512,6 +519,7 @@ export const en: Messages = {
     },
     example: (d: ImportExampleDates) => `{
   "version": 1,
+  "boardPlacement": "bottom",
   "tasks": [
     {
       "ref": "planning",
@@ -525,6 +533,7 @@ export const en: Messages = {
           "durationDays": 3,
           "estimateHours": 12,
           "priority": "high",
+          "status": "in_progress",
           "tags": ["Meeting"]
         },
         {
@@ -533,6 +542,7 @@ export const en: Messages = {
           "startDate": "${d.second}",
           "durationDays": 2,
           "estimateHours": 8,
+          "status": "todo",
           "dependsOn": ["requirements"]
         }
       ]
@@ -564,12 +574,16 @@ export const en: Messages = {
 - Tasks that already exist in the project and may appear in "dependsOn" by exact name: ${list(c.existingTasks, 'none')}.
 
 # File format
-An object with "version": 1, "project" (optional, name of an existing project, applies to every task) and "tasks" (list of tasks). Each task accepts:
+An object with "version": 1, "project" (optional, name of an existing project, applies to every task), "boardPlacement" (optional) and "tasks" (list of tasks).
+
+The Board (kanban) has one column per status. Tasks go into the columns in the same order they appear in the file: write first what should be on top. "boardPlacement" says where they go in each column: "bottom" (default) at the end, after the existing ones, or "top" at the top, before all of them.
+
+Each task accepts:
 - "ref": short text, unique in the file, used to link dependencies (for example "design").
 - "name": task name, up to 200 characters. The only required field.
 - "description": short description. "notes": long notes.
 - "project": name of an existing project. Only on top level tasks: subtasks stay in their parent project.
-- "status": "todo" (default), "in_progress", "done" or the name of a custom status listed above that applies to the task project.
+- "status": "todo" (default), "in_progress", "done" or the name of a custom status listed above that applies to the task project. Each subtask has its own "status"; do not set "status" on a task with subtasks, because it comes from the children.
 - "priority": "none", "low", "medium", "high" or "urgent" (or a number from 0 to 4).
 - "startDate" and "dueDate": dates as YYYY-MM-DD. A start alone makes a one day task.
 - "durationDays": duration in working days counted from "startDate", instead of "dueDate".
@@ -581,7 +595,7 @@ An object with "version": 1, "project" (optional, name of an existing project, a
 - "assignees": list of member emails or names.
 - "tags": list of tag names.
 - "dependsOn": tasks that must come first. Each item is the "ref" of another task in the file (or the exact name of a task that already exists in the project), or an object { "task": "ref", "type": "FS", "lagDays": 0 }. Types: "FS" finish to start (default), "SS" start to start, "FF" finish to finish, "SF" start to finish. "lagDays" is the delay in working days and may be negative.
-- "subtasks": list of subtasks in the same format. The parent becomes a group in the Gantt and its dates, progress and status come from the children.
+- "subtasks": list of subtasks in the same format, in the order they should appear. The parent becomes a group in the Gantt and a card on the Board with the subtask list inside; its dates, progress and status come from the children (all done: done; any started: in progress; otherwise to do).
 
 # Rules
 1. When you deliver the file, answer only with valid JSON: no comments, no trailing commas, no text before or after.
@@ -590,6 +604,7 @@ An object with "version": 1, "project" (optional, name of an existing project, a
 4. When you only know the duration, use "startDate" with "durationDays".
 5. Use only the projects and members listed above. An unknown project blocks the import; an unknown member is ignored.
 6. Limit of 500 tasks per file, subtasks included.
+7. Set the "status" of each subtask according to its real progress; do not set "status" or "progress" on the parent task.
 
 # Example
 ${c.example}

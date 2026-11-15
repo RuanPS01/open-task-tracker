@@ -49,7 +49,7 @@ esta tabela.
 | react, react-dom | 19.3.0 | Interface |
 | react-router-dom | 7.18.4 | Rotas (com `basename` para o subcaminho do GitHub Pages) |
 | @tanstack/react-query | 5.103.2 | Cache dos dados lidos pela camada de dados |
-| @floating-ui/react | 0.27.20 | Popovers, menus, modais, painel e dicas (posição, foco, Esc) |
+| @floating-ui/react | 0.27.20 | Popovers, menus, modais e dicas (posição, foco, Esc) |
 | lucide-react | 0.577.0 | Ícones |
 | date-fns | 4.4.0 | Aritmética de datas locais no cronômetro |
 | clsx | 2.1.1 | Composição de classes CSS |

@@ -1,4 +1,6 @@
-// Painel lateral de tarefa. Tarefa nova trabalha num rascunho e só grava ao clicar em
+// Janela da tarefa (modal centralizado, como o cartão aberto do Trello): à esquerda nome,
+// descrição, tempo, subtarefas, dependências, alocação e notas; à direita as
+// propriedades. Em telas estreitas vira uma coluna só. Tarefa nova trabalha num rascunho e só grava ao clicar em
 // "Criar tarefa". Tarefa existente também: nome, descrição, propriedades e notas ficam
 // num rascunho até "Salvar" (ou Ctrl+Enter), e fechar com alterações pendentes pergunta
 // antes. Subtarefas, dependências, cronômetro e o botão de concluir agem na hora, porque
@@ -15,7 +17,7 @@ import { Button, IconButton } from '../../components/ui/Button';
 import { useConfirm } from '../../components/ui/Confirm';
 import { LoadingBlock } from '../../components/ui/EmptyState';
 import { Menu } from '../../components/ui/Menu';
-import { SidePanel } from '../../components/ui/Modal';
+import { Modal } from '../../components/ui/Modal';
 import { toast } from '../../components/ui/Toast';
 import { useT } from '../../i18n';
 import { useFormat } from '../../lib/format';
@@ -83,15 +85,15 @@ export function TaskPanel({ state, onClose }: { state: Exclude<TaskPanelState, {
   if (state.mode === 'edit') {
     const task = tasks?.find((item) => item.id === state.taskId);
     return (
-      <SidePanel open onClose={onClose}>
+      <Modal open onClose={onClose} bare initialFocus={-1} className={styles.dialog}>
         {task ? <EditTask task={task} tasks={tasks ?? []} onClose={onClose} /> : isLoading ? <LoadingBlock /> : null}
-      </SidePanel>
+      </Modal>
     );
   }
   return (
-    <SidePanel open onClose={onClose} persistent>
+    <Modal open onClose={onClose} bare initialFocus={-1} persistent className={clsx(styles.dialog, styles.dialogNew)}>
       <NewTask defaults={state.defaults} onClose={onClose} />
-    </SidePanel>
+    </Modal>
   );
 }
 
@@ -142,32 +144,40 @@ function NewTask({ defaults, onClose }: { defaults: Partial<TaskDraft>; onClose:
         <span className={styles.headerTitle}>{t.tasks.newTask}</span>
         <IconButton icon={<X />} label={t.common.close} size="sm" onClick={onClose} />
       </header>
-      <div className={styles.body}>
-        <AutoTextArea
-          className={styles.name}
-          value={draft.name}
-          placeholder={t.tasks.namePlaceholder}
-          onChange={(name) => update({ name: name.replace(/\n/g, ' ') })}
-          autoFocus
-        />
-        <AutoTextArea
-          className={styles.description}
-          value={draft.description}
-          placeholder={t.tasks.descriptionPlaceholder}
-          onChange={(description) => update({ description })}
-        />
-        <TaskFields values={draft} onChange={update} />
-        {showNotes || draft.notes ? (
-          <Section title={t.tasks.notes}>
-            <AutoTextArea className={styles.notes} value={draft.notes} placeholder={t.tasks.notesPlaceholder} onChange={(notes) => update({ notes })} autoFocus />
-          </Section>
-        ) : (
-          <div className={styles.extraActions}>
-            <Button size="sm" icon={<NotebookPen />} onClick={() => setShowNotes(true)}>
-              {t.tasks.addNotes}
-            </Button>
+      <div className={styles.content}>
+        <div className={styles.main}>
+          <div className={styles.top}>
+            <AutoTextArea
+              className={styles.name}
+              value={draft.name}
+              placeholder={t.tasks.namePlaceholder}
+              onChange={(name) => update({ name: name.replace(/\n/g, ' ') })}
+              autoFocus
+            />
+            <AutoTextArea
+              className={styles.description}
+              value={draft.description}
+              placeholder={t.tasks.descriptionPlaceholder}
+              onChange={(description) => update({ description })}
+            />
           </div>
-        )}
+          <div className={styles.rest}>
+            {showNotes || draft.notes ? (
+              <Section title={t.tasks.notes}>
+                <AutoTextArea className={styles.notes} value={draft.notes} placeholder={t.tasks.notesPlaceholder} onChange={(notes) => update({ notes })} autoFocus />
+              </Section>
+            ) : (
+              <div className={styles.extraActions}>
+                <Button size="sm" icon={<NotebookPen />} onClick={() => setShowNotes(true)}>
+                  {t.tasks.addNotes}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        <aside className={styles.side} aria-label={t.tasks.details}>
+          <TaskFields values={draft} onChange={update} />
+        </aside>
       </div>
       <footer className={styles.footer}>
         <Button variant="ghost" onClick={onClose}>
@@ -332,76 +342,82 @@ function EditTask({ task, tasks, onClose }: { task: Task; tasks: Task[]; onClose
         />
         <IconButton icon={<X />} label={t.common.close} size="sm" onClick={() => panel.close()} />
       </header>
-      <div className={styles.body}>
-        <AutoTextArea
-          className={styles.name}
-          value={values.name}
-          placeholder={t.tasks.namePlaceholder}
-          onChange={(value) => edit({ name: value.replace(/\n/g, ' ') })}
-        />
-        <AutoTextArea
-          className={styles.description}
-          value={values.description}
-          placeholder={t.tasks.descriptionPlaceholder}
-          onChange={(description) => edit({ description })}
-        />
-
-        <div className={styles.tracked}>
-          <div className={styles.trackedInfo}>
-            <span className={styles.trackedLabel}>{t.tasks.tracked}</span>
-            <span className="tabular">
-              {task.estimateSeconds
-                ? t.tasks.trackedOf(format.hours(task.trackedSeconds), format.hours(task.estimateSeconds))
-                : format.hours(task.trackedSeconds)}
-            </span>
-            {task.estimateSeconds ? (
-              <span className={styles.trackedBar}>
-                <span
-                  style={{ width: `${trackedRatio * 100}%` }}
-                  className={task.trackedSeconds > task.estimateSeconds ? styles.trackedOver : undefined}
-                />
-              </span>
-            ) : null}
-          </div>
-          {timerHere ? (
-            <Button size="sm" variant="primary" icon={<Square fill="currentColor" />} onClick={() => running && stopTimer.mutate(running)}>
-              {t.tasks.stopTimer}
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="subtle"
-              icon={<Play fill="currentColor" />}
-              onClick={() => startTimer.mutate({ taskId: task.id, description: task.name })}
-            >
-              {t.tasks.startTimer}
-            </Button>
-          )}
-        </div>
-
-        <TaskFields values={values} onChange={edit} isSummary={isSummary} showProgress />
-
-        <SubtaskSection task={task} subtasks={children} />
-        <DependencySection task={task} tasks={tasks} />
-        <AllocationSection task={task} tasks={tasks} />
-
-        {showNotes || values.notes || task.notes ? (
-          <Section title={t.tasks.notes}>
+      <div className={styles.content}>
+        <div className={styles.main}>
+          <div className={styles.top}>
             <AutoTextArea
-              className={styles.notes}
-              value={values.notes}
-              placeholder={t.tasks.notesPlaceholder}
-              onChange={(notes) => edit({ notes })}
-              autoFocus={showNotes && !task.notes}
+              className={styles.name}
+              value={values.name}
+              placeholder={t.tasks.namePlaceholder}
+              onChange={(value) => edit({ name: value.replace(/\n/g, ' ') })}
             />
-          </Section>
-        ) : (
-          <div className={styles.extraActions}>
-            <Button size="sm" icon={<NotebookPen />} onClick={() => setShowNotes(true)}>
-              {t.tasks.addNotes}
-            </Button>
+            <AutoTextArea
+              className={styles.description}
+              value={values.description}
+              placeholder={t.tasks.descriptionPlaceholder}
+              onChange={(description) => edit({ description })}
+            />
+
+            <div className={styles.tracked}>
+              <div className={styles.trackedInfo}>
+                <span className={styles.trackedLabel}>{t.tasks.tracked}</span>
+                <span className="tabular">
+                  {task.estimateSeconds
+                    ? t.tasks.trackedOf(format.hours(task.trackedSeconds), format.hours(task.estimateSeconds))
+                    : format.hours(task.trackedSeconds)}
+                </span>
+                {task.estimateSeconds ? (
+                  <span className={styles.trackedBar}>
+                    <span
+                      style={{ width: `${trackedRatio * 100}%` }}
+                      className={task.trackedSeconds > task.estimateSeconds ? styles.trackedOver : undefined}
+                    />
+                  </span>
+                ) : null}
+              </div>
+              {timerHere ? (
+                <Button size="sm" variant="primary" icon={<Square fill="currentColor" />} onClick={() => running && stopTimer.mutate(running)}>
+                  {t.tasks.stopTimer}
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="subtle"
+                  icon={<Play fill="currentColor" />}
+                  onClick={() => startTimer.mutate({ taskId: task.id, description: task.name })}
+                >
+                  {t.tasks.startTimer}
+                </Button>
+              )}
+            </div>
           </div>
-        )}
+          <div className={styles.rest}>
+            <SubtaskSection task={task} subtasks={children} />
+            <DependencySection task={task} tasks={tasks} />
+            <AllocationSection task={task} tasks={tasks} />
+
+            {showNotes || values.notes || task.notes ? (
+              <Section title={t.tasks.notes}>
+                <AutoTextArea
+                  className={styles.notes}
+                  value={values.notes}
+                  placeholder={t.tasks.notesPlaceholder}
+                  onChange={(notes) => edit({ notes })}
+                  autoFocus={showNotes && !task.notes}
+                />
+              </Section>
+            ) : (
+              <div className={styles.extraActions}>
+                <Button size="sm" icon={<NotebookPen />} onClick={() => setShowNotes(true)}>
+                  {t.tasks.addNotes}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        <aside className={styles.side} aria-label={t.tasks.details}>
+          <TaskFields values={values} onChange={edit} isSummary={isSummary} showProgress />
+        </aside>
       </div>
       <footer className={clsx(styles.footer, styles.saveBar, leaving && styles.saveBarAsk)} aria-live="polite">
         {leaving ? (

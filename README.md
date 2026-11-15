@@ -18,9 +18,10 @@ ou não responder, no próprio navegador com o **lowdb**. Publicação pronta pa
   reordenar os cartões e trocar de status, com rolagem automática perto das bordas e
   pressão longa no celular; subtarefas dentro do cartão da mãe, com o status de cada uma;
   "Adicionar tarefa" no pé de cada coluna), lista agrupada (data, projeto, status,
-  prioridade, responsável), filtros, "Minhas tarefas" e o painel lateral do Toggl
-  (projeto, datas, estimativa total ou por dia, prioridade, tags, responsáveis, status,
-  faturável, alocação, notas) com botão **Salvar**, iniciar o cronômetro na própria tarefa.
+  prioridade, responsável), filtros, "Minhas tarefas" e a janela da tarefa, centralizada
+  como o cartão aberto do Trello (projeto, datas, estimativa total ou por dia, prioridade,
+  tags, responsáveis, status, faturável, alocação, notas) com botão **Salvar**, iniciar o
+  cronômetro na própria tarefa.
 - **Projetos** com visão geral (horas, estimativa, entrega prevista, horas por membro e
   por tarefa) e **cronograma em Gantt**: barras arrastáveis e redimensionáveis, marcos,
   grupos, dependências (término para início, início para início, término para término,
@@ -28,9 +29,9 @@ ou não responder, no próprio navegador com o **lowdb**. Publicação pronta pa
   automática, caminho crítico e zoom por dias, semanas e meses.
 - **Importação de tarefas por JSON**: cole ou carregue um arquivo com várias tarefas
   (subtarefas, datas, duração em dias úteis, estimativas, responsáveis, tags e
-  dependências), revise tudo num modal antes de gravar e use o botão "Copiar prompt para
-  IA" para pedir o JSON pronto a qualquer assistente, já com os projetos, membros, tags e
-  feriados do workspace.
+  dependências, status de cada subtarefa e a ordem dos cartões no Quadro), revise tudo num
+  modal antes de gravar e use o botão "Copiar prompt para IA" para pedir o JSON pronto a
+  qualquer assistente, já com os projetos, membros, tags e feriados do workspace.
 - **Fins de semana e feriados**: dias úteis configuráveis, feriados por workspace
   (cadastro manual e importação dos feriados nacionais do Brasil) e opção por tarefa para
   trabalhar em dias não úteis.

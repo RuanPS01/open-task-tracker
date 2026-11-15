@@ -1,4 +1,5 @@
 import type { Theme } from '@ott/shared';
+import { syncFavicon } from './favicon';
 
 /** Barra do sistema (celular e app instalado) na cor do fundo do tema e do workspace em uso. */
 function syncThemeColor(): void {
@@ -21,6 +22,7 @@ export function applyTheme(theme: Theme): void {
     theme === 'system' ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : theme;
   document.documentElement.dataset.theme = resolved;
   syncThemeColor();
+  syncFavicon();
   remember('ott.theme', theme);
 }
 
@@ -34,5 +36,7 @@ export function applyAccent(color: string | null): void {
   if (accent) document.documentElement.dataset.accent = accent;
   else delete document.documentElement.dataset.accent;
   syncThemeColor();
+  // O ícone da aba acompanha o tema de cor do workspace (fica igual ao logotipo da barra lateral).
+  syncFavicon();
   remember('ott.accent', accent);
 }

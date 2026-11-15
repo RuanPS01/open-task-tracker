@@ -309,6 +309,10 @@ export type ReportQuery = z.output<typeof reportQuerySchema>;
 
 export const IMPORT_MAX_TASKS = 500;
 
+/** Onde as tarefas importadas entram em cada coluna do Quadro (na ordem do arquivo). */
+export const IMPORT_BOARD_PLACEMENTS = ['bottom', 'top'] as const;
+export type ImportBoardPlacement = (typeof IMPORT_BOARD_PLACEMENTS)[number];
+
 const importText = (max: number) => z.string().trim().min(1).max(max);
 
 const importDependencySchema = z.union([
@@ -353,6 +357,8 @@ export type ImportTaskInput = z.infer<typeof importTaskSchema>;
 export const taskImportFileSchema = z.object({
   version: z.literal(1).nullish(),
   project: importText(200).nullish(),
+  /** `bottom` (padrão): fim de cada coluna do Quadro; `top`: topo. Sempre na ordem do arquivo. */
+  boardPlacement: z.enum(IMPORT_BOARD_PLACEMENTS).nullish(),
   tasks: z.array(importTaskSchema).max(IMPORT_MAX_TASKS),
 });
 export type TaskImportFile = z.infer<typeof taskImportFileSchema>;

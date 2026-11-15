@@ -1,14 +1,10 @@
-.overlay,
-.panelOverlay {
+.overlay {
   z-index: var(--z-overlay);
   background: var(--bg-overlay);
   display: grid;
-  animation: fade 0.12s ease-out;
-}
-
-.overlay {
   place-items: center;
   padding: 24px;
+  animation: fade 0.12s ease-out;
 }
 
 .modal {
@@ -50,22 +46,6 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-.panelOverlay {
-  justify-items: end;
-}
-
-.panel {
-  width: min(var(--panel-width), 100vw);
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-app);
-  border-left: 1px solid var(--border);
-  box-shadow: var(--shadow-panel);
-  outline: none;
-  animation: slide 0.16s ease-out;
-}
-
 @keyframes fade {
   from {
     opacity: 0;
@@ -79,14 +59,7 @@
   }
 }
 
-@keyframes slide {
-  from {
-    transform: translateX(24px);
-    opacity: 0.6;
-  }
-}
-
-/* Celular: modal ocupa quase toda a tela e o painel lateral, a tela inteira. */
+/* Celular: o modal ocupa quase toda a tela. */
 @media (max-width: 760px) {
   .overlay {
     grid-template-columns: minmax(0, 1fr);
@@ -110,11 +83,5 @@
   .footer {
     flex-wrap: wrap;
     padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
-  }
-
-  .panel {
-    width: 100vw;
-    height: 100dvh;
-    border-left: 0;
   }
 }

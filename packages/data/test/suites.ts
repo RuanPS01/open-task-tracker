@@ -865,6 +865,75 @@ export function registerSuites(makeEnv: () => Promise<TestEnv>): void {
       expect(await api().tasks.list(wid())).toHaveLength(before);
     });
 
+    it('entra no Quadro na ordem do arquivo, no fim ou no topo de cada coluna', async () => {
+      const site = await api().projects.create(wid(), { name: 'Site', color: '#0b83d9' });
+      await api().tasks.create(wid(), { name: 'Antiga', projectId: site.id });
+      const arrastada = await api().tasks.create(wid(), { name: 'Arrastada', projectId: site.id });
+      await api().tasks.move(wid(), arrastada.id, { afterId: null });
+      const column = async (key: string) =>
+        (await api().tasks.list(wid()))
+          .filter((task) => (task.statusId ?? task.status) === key && task.parentId === null)
+          .sort(compareBoardCards)
+          .map((task) => task.name);
+      expect(await column('todo')).toEqual(['Arrastada', 'Antiga']);
+
+      // Sem boardPlacement: fim da coluna, na ordem do arquivo (mesmo criadas no mesmo lote).
+      const fim = await api().tasks.previewImport(wid(), json({ tasks: [{ name: 'F1' }, { name: 'F2' }, { name: 'F3' }] }), {
+        defaultProjectId: site.id,
+      });
+      expect(fim.boardPlacement).toBe('bottom');
+      await api().tasks.importJson(wid(), json({ tasks: [{ name: 'F1' }, { name: 'F2' }, { name: 'F3', status: 'done' }] }), {
+        defaultProjectId: site.id,
+      });
+      expect(await column('todo')).toEqual(['Arrastada', 'Antiga', 'F1', 'F2']);
+
+      // No topo: acima de tudo, inclusive do cartão arrastado, e cada uma na coluna do status dela.
+      await api().tasks.importJson(
+        wid(),
+        json({ boardPlacement: 'top', tasks: [{ name: 'T1' }, { name: 'T2', status: 'done' }, { name: 'T3' }] }),
+        { defaultProjectId: site.id },
+      );
+      expect(await column('todo')).toEqual(['T1', 'T3', 'Arrastada', 'Antiga', 'F1', 'F2']);
+      expect(await column('done')).toEqual(['T2', 'F3']);
+      expect((await api().tasks.previewImport(wid(), json({ boardPlacement: 'meio', tasks: [{ name: 'X' }] }))).issues[0]?.code).toBe(
+        'SCHEMA_VALUE',
+      );
+    });
+
+    it('cada subtarefa tem o próprio status e a mãe segue as filhas, com aviso se o arquivo pediu outro', async () => {
+      const site = await api().projects.create(wid(), { name: 'Site', color: '#0b83d9' });
+      const waiting = await api().statuses.create(wid(), { name: 'Aguardando cliente', category: 'todo', icon: 'hourglass', color: '#bf7000', projectId: site.id });
+      const file = json({
+        project: 'Site',
+        tasks: [
+          {
+            name: 'Fase',
+            status: 'done',
+            subtasks: [
+              { name: 'A', status: 'done' },
+              { name: 'B', status: 'in_progress' },
+              { name: 'C', status: 'aguardando cliente' },
+            ],
+          },
+        ],
+      });
+      const preview = await api().tasks.previewImport(wid(), file);
+      expect(preview.canImport).toBe(true);
+      expect(preview.rows.map((row) => [row.name, row.status, row.statusId])).toEqual([
+        ['Fase', 'in_progress', null],
+        ['A', 'done', null],
+        ['B', 'in_progress', null],
+        ['C', 'todo', waiting.id],
+      ]);
+      expect(preview.issues.map((issue) => [issue.code, issue.taskKey, issue.params])).toEqual([
+        ['PARENT_STATUS_DERIVED', '1', { name: 'done' }],
+      ]);
+      await api().tasks.importJson(wid(), file);
+      const tasks = await api().tasks.list(wid());
+      expect(tasks.find((task) => task.name === 'C')).toMatchObject({ status: 'todo', statusId: waiting.id });
+      expect(tasks.find((task) => task.name === 'Fase')?.status).toBe('in_progress');
+    });
+
     it('importa tudo de uma vez: tarefas, subtarefas, dependências e tags novas', async () => {
       const site = await api().projects.create(wid(), { name: 'Site', color: '#0b83d9' });
       const result = await api().tasks.importJson(

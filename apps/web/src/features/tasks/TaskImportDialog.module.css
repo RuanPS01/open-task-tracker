@@ -242,6 +242,18 @@
   white-space: nowrap;
 }
 
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Status da tarefa-mãe: vem das subtarefas, por isso apagado e com o ícone de árvore. */
+.derived {
+  display: inline-flex;
+  color: var(--text-muted);
+}
+
 .deps {
   min-width: 140px;
   color: var(--text-secondary);

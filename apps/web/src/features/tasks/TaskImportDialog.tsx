@@ -11,7 +11,7 @@ import {
   type TaskImportRow,
 } from '@ott/shared';
 import clsx from 'clsx';
-import { CalendarClock, CircleAlert, Diamond, Sparkles, TriangleAlert, Upload } from 'lucide-react';
+import { CalendarClock, CircleAlert, Diamond, ListTree, Sparkles, TriangleAlert, Upload } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useWorkspace } from '../../app/session';
 import { useProjectMap } from '../../data/projects';
@@ -247,6 +247,8 @@ function ImportReview({ preview }: { preview: TaskImportPreview }) {
   const warnings = preview.issues.filter((issue) => issue.level === 'warning');
   const errorKeys = new Set(errors.map((issue) => issue.taskKey));
   const subtasks = preview.rows.filter((row) => row.parentKey !== null).length;
+  const parents = new Set(preview.rows.map((row) => row.parentKey));
+  const catalog = useStatusCatalog();
 
   const dates = (row: TaskImportRow) => {
     if (!row.startDate || !row.dueDate) return '-';
@@ -259,6 +261,7 @@ function ImportReview({ preview }: { preview: TaskImportPreview }) {
         <strong>{t.taskImport.summaryTasks(preview.rows.length, subtasks)}</strong>
         {preview.dependencyCount > 0 && <span>{t.taskImport.summaryDependencies(preview.dependencyCount)}</span>}
         {preview.newTags.length > 0 && <span>{t.taskImport.summaryNewTags(preview.newTags.join(', '))}</span>}
+        {preview.rows.length > 0 && <span>{t.taskImport.summaryBoard(preview.boardPlacement === 'top')}</span>}
       </p>
       {errors.length > 0 && (
         <IssueList kind="error" title={t.taskImport.errors(errors.length)} items={errors.map(issueText)} />
@@ -272,6 +275,7 @@ function ImportReview({ preview }: { preview: TaskImportPreview }) {
             <thead>
               <tr>
                 <th>{t.taskImport.columns.task}</th>
+                <th>{t.taskImport.columns.status}</th>
                 <th>{t.taskImport.columns.project}</th>
                 <th>{t.taskImport.columns.dates}</th>
                 <th>{t.taskImport.columns.estimate}</th>
@@ -306,6 +310,16 @@ function ImportReview({ preview }: { preview: TaskImportPreview }) {
                           ))}
                         </div>
                       )}
+                    </td>
+                    <td className={styles.nowrap}>
+                      <span className={clsx(styles.status, parents.has(row.key) && styles.muted)}>
+                        {catalog.forTask(row).label}
+                        {parents.has(row.key) && (
+                          <span className={styles.derived} title={t.taskImport.statusFromSubtasks}>
+                            <ListTree size={13} aria-label={t.taskImport.statusFromSubtasks} />
+                          </span>
+                        )}
+                      </span>
                     </td>
                     <td>
                       {project ? (

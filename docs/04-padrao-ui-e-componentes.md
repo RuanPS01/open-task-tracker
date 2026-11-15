@@ -53,7 +53,8 @@ sem rolagem horizontal da página.
 - `Toolbar`: não quebra linha; rola na horizontal.
 - `PageHeader`: título com reticências; ação secundária pode virar só ícone com
   `Button mobileIconOnly` (o texto vira `aria-label` e dica).
-- `Modal` ocupa a largura da tela e o `SidePanel` (painel de tarefa) a tela inteira.
+- `Modal` ocupa a largura da tela; a janela da tarefa ocupa a tela quase inteira, numa
+  coluna só.
 - Listas em grade (tarefas, lista do cronômetro) usam `grid-template-areas` para virar
   duas linhas: o nome em cima e os detalhes embaixo.
 - Tabelas: colunas secundárias recebem a classe `mobileHidden` (somem) e a informação vai
@@ -78,7 +79,7 @@ sem rolagem horizontal da página.
 | Ação principal da página | `Button variant="primary"` no `PageHeader` | "Adicionar tarefa" |
 | Filtro, agrupar, ordenar | `ChipButton` dentro de `Menu` ou `Popover` | "Agrupar por: Data" |
 | Alternar visão | `Segmented` | Calendário, Lista, Planilha |
-| Criar ou editar item rico | Painel lateral (`SidePanel`) ou `Modal` | Painel de tarefa, editor de apontamento |
+| Criar ou editar item rico | `Modal` centralizado; com layout próprio (cabeçalho, colunas e rodapé), `Modal bare` | Janela da tarefa, editor de apontamento |
 | Confirmar exclusão | `await confirm({ ..., danger: true })` de `useConfirm` | Excluir projeto |
 | Confirmar exclusão que apaga dados de todas as pessoas | `Modal` com o nome digitado para liberar o botão `danger` | Excluir workspace (`DeleteWorkspaceSection`) |
 | Avisar resultado | `toast.success()`; erros de mutação já viram aviso sozinhos | "Tarefa criada" |
@@ -86,14 +87,14 @@ sem rolagem horizontal da página.
 | Tela sem dados | `EmptyState` com ilustração, título, texto e ação | Tarefas vazias |
 | Carregando | `LoadingBlock` na primeira carga; esmaecer na recarga | Relatórios |
 | Edição na própria linha | Campo que grava ao sair (blur) ou Enter, Esc cancela | Descrição na Lista do cronômetro |
-| Salvamento | Painel de tarefa trabalha num rascunho, nova ou existente: "Criar tarefa" ou "Salvar" (Ctrl+Enter) grava. Na existente a barra do rodapé mostra "Tudo salvo" ou "Alterações não salvas" com Descartar; fechar ou abrir outra tarefa com alterações pendentes faz a barra perguntar (Continuar editando, Descartar, Salvar) em vez de abrir outro diálogo. Listas de outros registros (subtarefas, dependências) e ações rápidas (concluir no cabeçalho, cronômetro) gravam na hora | Painel de tarefa |
+| Salvamento | Janela da tarefa trabalha num rascunho, nova ou existente: "Criar tarefa" ou "Salvar" (Ctrl+Enter) grava. Na existente a barra do rodapé mostra "Tudo salvo" ou "Alterações não salvas" com Descartar; fechar ou abrir outra tarefa com alterações pendentes faz a barra perguntar (Continuar editando, Descartar, Salvar) em vez de abrir outro diálogo. Listas de outros registros (subtarefas, dependências) e ações rápidas (concluir no cabeçalho, cronômetro) gravam na hora | Janela da tarefa |
 | Arrastar para ordenar | Eventos de ponteiro com cartão fantasma seguindo o ponteiro, espaço reservado no destino e rolagem automática nos dois eixos perto das bordas (`useBoardDrag`); Esc cancela; destino que recusa fica com borda vermelha; Alt + setas faz o mesmo pelo teclado | Cartões do Quadro |
-| Criar no lugar | Botão no pé da lista abre um campo; Enter cria e mantém aberto para a próxima, Esc fecha, botão de expandir leva o texto para o painel | "Adicionar tarefa" nas colunas do Quadro |
+| Criar no lugar | Botão no pé da lista abre um campo; Enter cria e mantém aberto para a próxima, Esc fecha, botão de expandir leva o texto para a janela da tarefa | "Adicionar tarefa" nas colunas do Quadro |
 
 Atalhos globais (`layout/AppShell.tsx`): `S` inicia ou para o cronômetro, `N` nova
 tarefa, `Ctrl K` busca rápida, `T` vai para o Cronômetro, `?` mostra os atalhos.
 Atalhos não disparam com o foco num campo de texto. Atalhos locais: `Ctrl Enter` (ou
-`Ctrl S`) salva a tarefa aberta no painel, inclusive com o foco num campo; `Alt` + setas
+`Ctrl S`) salva a tarefa aberta na janela, inclusive com o foco num campo; `Alt` + setas
 move o cartão em foco no Quadro. Os dois aparecem na lista do `?`.
 
 ## 4.3 Inventário: kit de interface (`apps/web/src/components/ui`)
@@ -103,7 +104,7 @@ move o cartão em foco no Quadro. Os dois aparecem na lista do `?`.
 | `Button`, `IconButton` | `Button.tsx` | Botões (primary, secondary, ghost, subtle, danger; sm, md, lg). `IconButton` exige `label` (vira `aria-label` e dica nativa). `mobileIconOnly` mostra só o ícone no celular |
 | `Popover` | `Popover.tsx` | Base de todo conteúdo flutuante: posiciona, fecha com Esc e clique fora, devolve o foco |
 | `Menu`, `MenuList` | `Menu.tsx` | Menu suspenso com itens, títulos, separadores e marca de selecionado |
-| `Modal`, `SidePanel` | `Modal.tsx` | Diálogo central e painel lateral com fundo escurecido e foco preso |
+| `Modal` | `Modal.tsx` | Diálogo central com fundo escurecido e foco preso. `bare` tira o cabeçalho, o corpo e o rodapé próprios (o conteúdo monta o layout e a largura vem do `className`); `initialFocus` escolhe o que recebe o foco (-1 para nenhum) |
 | `ConfirmProvider`, `useConfirm` | `Confirm.tsx` | Confirmação assíncrona |
 | `Toaster`, `toast` | `Toast.tsx` | Avisos no rodapé (no celular, acima da barra inferior); `toast` funciona fora do React; `toast.persistent` não some sozinho |
 | `Field`, `Input`, `TextArea`, `Select`, `Switch`, `Checkbox` | `Field.tsx` | Controles de formulário com rótulo, dica e erro |
@@ -142,7 +143,8 @@ Estilos compartilhados dos seletores: `Picker.module.css` (`trigger`, `dashed`,
 | `BootScreen`, `BootError` | `app/BootScreen.tsx` | Abertura antes da camada de dados: "Carregando..." e o erro quando o Firebase é obrigatório e falhou |
 | `usePwa`, `registerServiceWorker`, `listenInstallPrompt` | `app/pwa.ts` | PWA: versão nova (`applyUpdate`), convite de instalação (`install`) e se está aberto como app (`standalone`) |
 | `Sidebar` | `layout/Sidebar.tsx` | Barra lateral: workspace (com a bolinha da cor de cada um e o modal "Novo workspace" com nome, cor e dados de exemplo), busca, cronômetro rodando, seções, usuário, tema |
-| `applyTheme`, `applyAccent` | `app/theme.ts` | Tema escuro ou claro e tema de cor do workspace no `<html>` (`data-theme`, `data-accent`), lembrados para a próxima abertura |
+| `applyTheme`, `applyAccent` | `app/theme.ts` | Tema escuro ou claro e tema de cor do workspace no `<html>` (`data-theme`, `data-accent`), lembrados para a próxima abertura; os dois atualizam a barra do sistema e o ícone da aba |
+| `syncFavicon`, `faviconSvg` | `app/favicon.ts` | Ícone da aba com o desenho do `favicon.svg` nas cores do tema em uso (`--accent`, `--accent-contrast`) |
 | `PageHeader`, `PageBody` | `layout/PageHeader.tsx` | Cabeçalho de página |
 | `LogoMark` | `layout/Logo.tsx` | Logotipo |
 | `useFormat`, `createFormatters`, `useErrorMessage` | `lib/format.ts` | Datas, horas, durações, dinheiro e intervalos no idioma e preferências do usuário |
@@ -150,8 +152,8 @@ Estilos compartilhados dos seletores: `Picker.module.css` (`trigger`, `dashed`,
 | `useNow`, `useStoredState`, `useHotkey`, `useIsMobile`, `MOBILE_MEDIA` | `lib/hooks.ts` | Relógio, estado salvo no navegador, atalhos, tela de celular (até 760 px) |
 | `useSession`, `useWorkspace`, `useWorkspaceId`, `useCurrentUser`, `usePreferences`, `useIsAdmin` | `app/session.tsx` | Dados da sessão dentro das rotas internas |
 | `useT`, `useLocale`, `I18nProvider` | `i18n/index.tsx` | Textos traduzidos |
-| `useTaskPanel` | `features/tasks/TaskPanelContext.tsx` | Abrir o painel de tarefa de qualquer tela (`openTask`, `openNew`, `close`). Toda abertura e fechamento passa pela guarda que o painel de edição registra (`setGuard`): com alterações não salvas a ação fica segurada até a pessoa escolher |
-| `SubtaskChecklist` | `features/tasks/SubtaskChecklist.tsx` | Lista de subtarefas com menu de status completo (padrão e customizados do projeto) em cada uma, nome que abre o painel e campo para acrescentar. `compact` é a versão do cartão do Quadro, com barra de progresso. Usada no painel (`SubtaskSection`) e no `BoardCard` |
+| `useTaskPanel` | `features/tasks/TaskPanelContext.tsx` | Abrir a janela da tarefa de qualquer tela (`openTask`, `openNew`, `close`). Toda abertura e fechamento passa pela guarda que a janela de edição registra (`setGuard`): com alterações não salvas a ação fica segurada até a pessoa escolher |
+| `SubtaskChecklist` | `features/tasks/SubtaskChecklist.tsx` | Lista de subtarefas com menu de status completo (padrão e customizados do projeto) em cada uma, nome que abre a janela da tarefa e campo para acrescentar. `compact` é a versão do cartão do Quadro, com barra de progresso. Usada na janela da tarefa (`SubtaskSection`) e no `BoardCard` |
 | `TaskImportButton` | `features/tasks/TaskImportButton.tsx` | Botão "Importar JSON". Recebe o projeto padrão (`projectId`) e fica no Gantt, na aba Tarefas do projeto e na tela de Tarefas. Abre o `TaskImportDialog` (`TaskImportDialog.tsx`: prompt para IA, revisão e confirmação), que vem num pedaço separado do build |
 
 Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backend()`
@@ -173,7 +175,7 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 | Tela | Componentes principais |
 |---|---|
 | Cronômetro | `TimerBar` (barra do topo, modo manual, sugestões), `CalendarView` (+ `calendarLayout.ts`), `ListView`, `TimesheetView`, `EntryEditor` |
-| Tarefas | `TasksPage` (exporta `TaskListView`, `TaskFiltersButton` (com `projectId`, só os status do projeto), `GroupSortControls`, `useTaskRowContext`), `TaskRow`, `TaskBoard` (Quadro no estilo do Trello: uma coluna por status, padrão e customizados, cada uma rolando os próprios cartões; arraste, "Adicionar tarefa" no pé da coluna (`ColumnComposer`) e Alt + setas; recebe `defaults` para as tarefas criadas e `hideProject` na aba do projeto), `BoardCard` (cartão: projeto, nome, selos de prioridade, entrega, tempo, descrição, subtarefas e cronômetro, pessoas; lista de subtarefas dentro do cartão), `boardModel.ts` (`buildBoard`: cartões por coluna e subtarefas; `dropIndex`, `afterIdAt`, `isSamePlace`, `edgeSpeed`), `useBoardDrag.ts` (arraste por ponteiro, fantasma, espaço reservado, rolagem automática, pressão longa no toque), `taskGrouping.ts` (`statusOrder`: colunas e grupos), `TaskPanel` (barra de salvar), `taskDraft.ts` (rascunho da edição: `draftFrom`, `mergeChanges`, `withoutSaved`), `TaskFields`, `SubtaskSection`, `DependencySection`, `AllocationSection`, `TaskImportDialog` (+ `taskImportModel.ts`: contexto do prompt para IA e datas do exemplo) |
+| Tarefas | `TasksPage` (exporta `TaskListView`, `TaskFiltersButton` (com `projectId`, só os status do projeto), `GroupSortControls`, `useTaskRowContext`), `TaskRow`, `TaskBoard` (Quadro no estilo do Trello: uma coluna por status, padrão e customizados, cada uma rolando os próprios cartões; arraste, "Adicionar tarefa" no pé da coluna (`ColumnComposer`) e Alt + setas; recebe `defaults` para as tarefas criadas e `hideProject` na aba do projeto), `BoardCard` (cartão: projeto, nome, selos de prioridade, entrega, tempo, descrição, subtarefas e cronômetro, pessoas; lista de subtarefas dentro do cartão), `boardModel.ts` (`buildBoard`: cartões por coluna e subtarefas; `dropIndex`, `afterIdAt`, `isSamePlace`, `edgeSpeed`), `useBoardDrag.ts` (arraste por ponteiro, fantasma, espaço reservado, rolagem automática, pressão longa no toque), `taskGrouping.ts` (`statusOrder`: colunas e grupos), `TaskPanel` (janela da tarefa: `Modal bare` centralizado, conteúdo à esquerda e propriedades numa coluna à direita a partir de 900 px, uma coluna só abaixo disso; barra de salvar no rodapé), `taskDraft.ts` (rascunho da edição: `draftFrom`, `mergeChanges`, `withoutSaved`), `TaskFields`, `SubtaskSection`, `DependencySection`, `AllocationSection`, `TaskImportDialog` (+ `taskImportModel.ts`: contexto do prompt para IA e datas do exemplo) |
 | Projetos | `ProjectsPage` (exporta `TimeStatus`), `ProjectDialog`, `ProjectPage` (visão geral, aba Tarefas e o botão "Status do projeto" no cabeçalho) |
 | Gantt | `ProjectGantt` (barra de ferramentas), `GanttChart`, `ganttModel.ts` |
 | Linha do tempo | `TimelinePage`, `timelineModel.ts` |
@@ -208,11 +210,11 @@ Hooks de dados (`apps/web/src/data/`), um arquivo por grupo. Todos chamam `backe
 ## 4.8 Acessibilidade
 
 - Todo botão só de ícone tem `aria-label` (por `IconButton` ou atributo direto).
-- Popovers, menus, modais e painel prendem e devolvem o foco e fecham com Esc.
+- Popovers, menus e modais (inclusive a janela da tarefa) prendem e devolvem o foco e fecham com Esc.
 - Status, prioridade, faturável e capacidade nunca dependem só de cor: há ícone, rótulo
   ou texto ("6h acima").
 - Todo arraste tem alternativa pelo teclado ou por menu: no Quadro, Alt + setas no cartão
-  em foco (Enter abre o painel); o status também muda pelo painel e pelo menu de status.
+  em foco (Enter abre a janela da tarefa); o status também muda pela janela e pelo menu de status.
 - Gráficos têm tabela equivalente na mesma tela.
 - Testar as telas em 1366x768 e 1920x1080 e num celular (412x915), nos dois temas.
 - Alvos de toque no celular com pelo menos 30 px; a barra inferior tem 58 px de altura.
